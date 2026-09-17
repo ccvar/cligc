@@ -18,6 +18,7 @@ import (
 	"image/gif"
 	_ "image/jpeg"
 	_ "image/png"
+	"io"
 
 	"github.com/gen2brain/webp"
 	xdraw "golang.org/x/image/draw"
@@ -163,4 +164,17 @@ func animated(data []byte) bool {
 		return true // 读不明白就当它是动图，不碰
 	}
 	return len(g.Image) > 1
+}
+
+// Dimensions 只读文件头拿像素尺寸，不解码。
+//
+// 放在这个包里而不是调用方自己 image.DecodeConfig：认得哪些格式取决于
+// 谁 import 了对应的解码器，而那些 import 在这里。调用方靠"碰巧传递地
+// import 到了"能跑，等哪天依赖变了就会变成"PNG 认得、WebP 不认得"。
+func Dimensions(r io.Reader) (int, int, error) {
+	cfg, _, err := image.DecodeConfig(r)
+	if err != nil {
+		return 0, 0, err
+	}
+	return cfg.Width, cfg.Height, nil
 }

@@ -1207,3 +1207,50 @@ func TestCoverSurvivesAndDetaches(t *testing.T) {
 		t.Errorf("传 0 没能取消封面：%v", after.CoverMediaID)
 	}
 }
+
+// TestBackfillMediaSizes 尺寸列是后加的，升级上来的库里存量图片是 0×0。
+//
+// 不补的话，老文章正文里的 <img> 永远写不出 width/height——渲染时查到 0
+// 就当没有，跑多少次 rerender 都一样。
+func TestBackfillMediaSizes(t *testing.T) {
+	ctx := context.Background()
+	d := open(t)
+	u, _ := d.CreateUser(ctx, "a@b.com", "作者", "password123", "author")
+	root := t.TempDir()
+
+	m, err := d.SaveMedia(ctx, root, u.ID, "a.png", "image/png", testPNG(t, 128, 96), 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	// 装成升级前的样子
+	if _, err := d.W.ExecContext(ctx, `update media set width=0,height=0 where id=?`, m.ID); err != nil {
+		t.Fatal(err)
+	}
+	// 再放一条指向不存在文件的记录：一条读不出来不该让整批停下
+	if _, err := d.W.ExecContext(ctx,
+		`insert into media(user_id,sha256,filename,mime,size,path,width,height,created_at)
+		 values(?,?,?,?,?,?,0,0,?)`,
+		u.ID, "deadbeef", "gone.png", "image/png", 1, "zz/gone.png", now()); err != nil {
+		t.Fatal(err)
+	}
+
+	n, err := d.BackfillMediaSizes(ctx, root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if n != 1 {
+		t.Errorf("补上了 %d 条，想要 1 条（另一条的文件不在）", n)
+	}
+	got, err := d.MediaByID(ctx, m.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got.Width != 128 || got.Height != 96 {
+		t.Errorf("补出来是 %dx%d，想要 128x96", got.Width, got.Height)
+	}
+
+	// 已经有尺寸的不该被重新算一遍
+	if again, err := d.BackfillMediaSizes(ctx, root); err != nil || again != 0 {
+		t.Errorf("第二次补了 %d 条（err=%v），应该一条都不动", again, err)
+	}
+}

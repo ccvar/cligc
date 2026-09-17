@@ -652,6 +652,12 @@ mark {
   object-fit: cover;
 }
 
+/* 头条那张是整栏宽的，1200/630 铺开就有 320 px 高——第一屏会变成"一张图
+   加半个标题"。这一页的主角是标题，所以头条的封面压成更扁的一条横幅，
+   多出来的部分裁掉（object-fit: cover 已经在做这件事）。
+   后两条本来就只有半栏宽，不需要压。 */
+.featured-lead .feat-cover img { aspect-ratio: 5 / 2; }
+
 @media (max-width: 34rem) {
   /* 窄屏上并排的缩略图只剩一条，不如摞起来。 */
   .card.has-cover { display: block; }

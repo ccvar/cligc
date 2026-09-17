@@ -245,3 +245,56 @@ func (d *DB) mediaSize(src string) (int, int, bool) {
 	}
 	return w, h, true
 }
+
+// BackfillMediaSizes 给还没有像素尺寸的媒体补上宽高，返回补上的条数。
+//
+// 尺寸这一列是后加的，升级上来的库里存量图片全是 0×0。而正文里的 <img>
+// 靠它写 width/height——不补的话，老文章里的图仍然会在加载完的瞬间把下面
+// 的正文往下顶，而且跑多少次 rerender 都没用：渲染时查到 0 就当没有。
+//
+// 只读文件头，不重新编码。转码是有损的，对着已经存进库的图再来一遍，
+// 是拿画质换一个这里根本不需要的东西。
+func (d *DB) BackfillMediaSizes(ctx context.Context, root string) (int, error) {
+	rows, err := d.R.QueryContext(ctx,
+		`select id, path from media where width<=0 or height<=0 order by id`)
+	if err != nil {
+		return 0, err
+	}
+	type item struct {
+		id   int64
+		path string
+	}
+	var todo []item
+	for rows.Next() {
+		var it item
+		if err := rows.Scan(&it.id, &it.path); err != nil {
+			rows.Close()
+			return 0, err
+		}
+		todo = append(todo, it)
+	}
+	rows.Close()
+	if err := rows.Err(); err != nil {
+		return 0, err
+	}
+
+	n := 0
+	for _, it := range todo {
+		f, err := os.Open(filepath.Join(root, it.path))
+		if err != nil {
+			continue // 文件不在了就跳过，一条读不出来不该让整批停下
+		}
+		w, h, err := imaging.Dimensions(f)
+		f.Close()
+		if err != nil || w <= 0 || h <= 0 {
+			continue
+		}
+		if _, err := d.W.ExecContext(ctx,
+			`update media set width=?, height=? where id=?`,
+			w, h, it.id); err != nil {
+			return n, err
+		}
+		n++
+	}
+	return n, nil
+}

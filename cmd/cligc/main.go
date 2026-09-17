@@ -527,6 +527,7 @@ func cmdRerender(args []string) error {
 	dbPath := fs.String("db", env("CLIGC_DB", "data/cligc.db"), "SQLite 数据库路径")
 	baseURL := fs.String("base-url", env("CLIGC_BASE_URL", "http://localhost:8866"),
 		"站点地址，用于识别站外链接")
+	mediaDir := fs.String("media", env("CLIGC_MEDIA", "data/media"), "上传文件目录")
 	fs.Parse(args)
 
 	db, err := openDB(*dbPath, hostOf(*baseURL))
@@ -534,6 +535,16 @@ func cmdRerender(args []string) error {
 		return err
 	}
 	defer db.Close()
+
+	// 先补图片尺寸，再重刷 HTML。
+	//
+	// 顺序不能反：正文里的 <img> 是在重刷的那一刻去查尺寸的，先刷 HTML
+	// 再补尺寸，等于这次白刷——而人不会想到要再跑一遍。
+	if m, err := db.BackfillMediaSizes(context.Background(), *mediaDir); err != nil {
+		return fmt.Errorf("补图片尺寸失败: %w", err)
+	} else if m > 0 {
+		fmt.Printf("已补上 %d 张图片的像素尺寸\n", m)
+	}
 
 	n, err := db.RerenderAll(context.Background())
 	if err != nil {
