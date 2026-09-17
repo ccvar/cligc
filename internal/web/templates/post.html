@@ -34,6 +34,16 @@
         {{end}}
       </header>
 
+      {{if $p.CoverPath}}
+      {{/* 封面在抬头之后、正文之前。放在标题上面的话，读者进来第一眼
+           看到的是一张图而不是"这篇讲什么"。 */}}
+      <figure class="article-cover">
+        <img src="/media/{{$p.CoverPath}}" alt="{{$p.CoverAlt}}"
+             {{if $p.CoverW}}width="{{itoa $p.CoverW}}" height="{{itoa $p.CoverH}}"{{end}}
+             decoding="async">
+      </figure>
+      {{end}}
+
       {{/* BodyHTML 来自 goldmark，原始 HTML 已在渲染时转义，可安全输出 */}}
       <div class="prose">{{safeHTML $p.BodyHTML}}</div>
 

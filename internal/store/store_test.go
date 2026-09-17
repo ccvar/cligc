@@ -1,9 +1,13 @@
 package store
 
 import (
+	"bytes"
 	"context"
 	"database/sql"
 	"errors"
+	"image"
+	"image/color"
+	"image/png"
 	"os"
 	"path/filepath"
 	"strings"
@@ -292,19 +296,19 @@ func TestMediaDedupe(t *testing.T) {
 	u, _ := d.CreateUser(ctx, "a@b.com", "作者", "password123", "author")
 	root := t.TempDir()
 
-	png := []byte("\x89PNG\r\n\x1a\nfake image bytes")
-	m1, err := d.SaveMedia(ctx, root, u.ID, "a.png", "image/png", png)
+	img := testPNG(t, 32, 24)
+	m1, err := d.SaveMedia(ctx, root, u.ID, "a.png", "image/png", img, 0)
 	if err != nil {
 		t.Fatal(err)
 	}
-	m2, err := d.SaveMedia(ctx, root, u.ID, "b.png", "image/png", png)
+	m2, err := d.SaveMedia(ctx, root, u.ID, "b.png", "image/png", img, 0)
 	if err != nil {
 		t.Fatal(err)
 	}
 	if m1.ID != m2.ID {
 		t.Errorf("same bytes produced two records")
 	}
-	if _, err := d.SaveMedia(ctx, root, u.ID, "x.exe", "application/octet-stream", png); !errors.Is(err, ErrInvalidInput) {
+	if _, err := d.SaveMedia(ctx, root, u.ID, "x.exe", "application/octet-stream", img, 0); !errors.Is(err, ErrInvalidInput) {
 		t.Errorf("disallowed MIME accepted: %v", err)
 	}
 }
@@ -548,8 +552,7 @@ func TestMediaDeleteRemovesFile(t *testing.T) {
 	u, _ := d.CreateUser(ctx, "a@b.com", "作者", "password123", "author")
 	root := t.TempDir()
 
-	png := []byte("\x89PNG\r\n\x1a\nfake")
-	m, err := d.SaveMedia(ctx, root, u.ID, "a.png", "image/png", png)
+	m, err := d.SaveMedia(ctx, root, u.ID, "a.png", "image/png", testPNG(t, 40, 30), 0)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1046,5 +1049,161 @@ func TestCommentsDefaultOnForUntouchedSite(t *testing.T) {
 	}
 	if !d.Settings(ctx).CommentsEnabled {
 		t.Error("开回来失败了")
+	}
+}
+
+// testPNG 造一张真的 PNG。不能再用"\x89PNG"加几个字节糊弄过去——
+// SaveMedia 现在要真的把图解开（转 WebP 顺带拿尺寸），解不开的直接拒收。
+func testPNG(t *testing.T, w, h int) []byte {
+	t.Helper()
+	m := image.NewRGBA(image.Rect(0, 0, w, h))
+	for y := range h {
+		for x := range w {
+			m.Set(x, y, color.RGBA{uint8(x * 6), uint8(y * 8), 90, 255})
+		}
+	}
+	var b bytes.Buffer
+	if err := png.Encode(&b, m); err != nil {
+		t.Fatal(err)
+	}
+	return b.Bytes()
+}
+
+// TestMediaConvertsToWebP 上传的图存下来应该是 WebP，并且带上像素尺寸。
+//
+// 尺寸不是附赠品：<img> 上的 width/height 靠它，没有就会在图片加载完的
+// 瞬间把下面的正文往下顶。
+func TestMediaConvertsToWebP(t *testing.T) {
+	ctx := context.Background()
+	d := open(t)
+	u, _ := d.CreateUser(ctx, "a@b.com", "作者", "password123", "author")
+	root := t.TempDir()
+
+	src := testPNG(t, 200, 120)
+	m, err := d.SaveMedia(ctx, root, u.ID, "shot.png", "image/png", src, 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if m.MIME != "image/webp" {
+		t.Errorf("mime = %s，想要 image/webp", m.MIME)
+	}
+	if !strings.HasSuffix(m.Path, ".webp") || !strings.HasSuffix(m.Filename, ".webp") {
+		t.Errorf("路径/文件名没跟着改：path=%s filename=%s", m.Path, m.Filename)
+	}
+	if m.Width != 200 || m.Height != 120 {
+		t.Errorf("尺寸 %dx%d，想要 200x120", m.Width, m.Height)
+	}
+	if m.Size >= int64(len(src)) {
+		t.Errorf("转完 %d 字节，原图 %d 字节，没变小", m.Size, len(src))
+	}
+	// 存回来的记录要和刚才返回的一致——尺寸列真的写进库了。
+	got, err := d.MediaByID(ctx, m.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got.Width != m.Width || got.Height != m.Height || got.MIME != m.MIME {
+		t.Errorf("读回来是 %dx%d %s，写进去是 %dx%d %s",
+			got.Width, got.Height, got.MIME, m.Width, m.Height, m.MIME)
+	}
+}
+
+// TestMediaResizesOversized 超过长边上限的图要被缩掉。
+func TestMediaResizesOversized(t *testing.T) {
+	ctx := context.Background()
+	d := open(t)
+	u, _ := d.CreateUser(ctx, "a@b.com", "作者", "password123", "author")
+
+	m, err := d.SaveMedia(ctx, t.TempDir(), u.ID, "big.png", "image/png",
+		testPNG(t, 1200, 600), 400)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if m.Width != 400 || m.Height != 200 {
+		t.Errorf("缩成 %dx%d，想要 400x200", m.Width, m.Height)
+	}
+}
+
+// TestMediaRejectsNonImage MIME 是客户端说的。一个存进媒体库的 .png
+// 实际上是别的东西，就是个货真价实的问题——/media 和站点同源。
+func TestMediaRejectsNonImage(t *testing.T) {
+	ctx := context.Background()
+	d := open(t)
+	u, _ := d.CreateUser(ctx, "a@b.com", "作者", "password123", "author")
+
+	_, err := d.SaveMedia(ctx, t.TempDir(), u.ID, "x.png", "image/png",
+		[]byte("\x89PNG\r\n\x1a\nnot actually a png"), 0)
+	if !errors.Is(err, ErrInvalidInput) {
+		t.Errorf("伪装成 PNG 的文件 = %v，想要 ErrInvalidInput", err)
+	}
+}
+
+// TestCoverSurvivesAndDetaches 封面要能设、能读回、能取消，
+// 并且删掉媒体库里那张图时**文章不能跟着没**。
+func TestCoverSurvivesAndDetaches(t *testing.T) {
+	ctx := context.Background()
+	d := open(t)
+	u, _ := d.CreateUser(ctx, "a@b.com", "作者", "password123", "author")
+	root := t.TempDir()
+	a := Actor{UserID: u.ID, Kind: "web"}
+
+	m, err := d.SaveMedia(ctx, root, u.ID, "cover.png", "image/png", testPNG(t, 240, 135), 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	p, err := d.CreatePost(ctx, a, CreatePostInput{
+		Title: "带封面的一篇", BodyMD: "正文", CoverMediaID: &m.ID, CoverAlt: "  一张图  ",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if p.CoverMediaID == nil || *p.CoverMediaID != m.ID {
+		t.Fatalf("封面没存上：%v", p.CoverMediaID)
+	}
+	if p.CoverAlt != "一张图" {
+		t.Errorf("alt = %q，前后空白该被去掉", p.CoverAlt)
+	}
+	// 尺寸是 join 出来的，模板要靠它写 width/height 防止版面跳动。
+	if p.CoverPath == "" || p.CoverW != 240 || p.CoverH != 135 {
+		t.Errorf("封面尺寸没带出来：path=%q %dx%d", p.CoverPath, p.CoverW, p.CoverH)
+	}
+
+	// 列表页也得有封面，卡片就是靠它出图。
+	list, _, err := d.ListPosts(ctx, ListFilter{UserID: u.ID, Limit: 10})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(list) != 1 || list[0].CoverPath != p.CoverPath {
+		t.Errorf("列表里的封面 = %q，想要 %q", list[0].CoverPath, p.CoverPath)
+	}
+
+	// 删图只该清掉封面，不该把文章一起带走（on delete set null）。
+	if err := d.DeleteMedia(ctx, a, root, m.ID); err != nil {
+		t.Fatal(err)
+	}
+	got, err := d.PostByID(ctx, p.ID)
+	if err != nil {
+		t.Fatalf("删掉封面图之后文章没了：%v", err)
+	}
+	if got.CoverMediaID != nil || got.CoverPath != "" {
+		t.Errorf("图删了封面还在：%v %q", got.CoverMediaID, got.CoverPath)
+	}
+
+	// 传 0 是取消封面，nil 是不改——这两者不能混。
+	again, _ := d.CreatePost(ctx, a, CreatePostInput{Title: "另一篇", BodyMD: "x"})
+	if again.CoverMediaID != nil {
+		t.Error("没给封面却存上了")
+	}
+	m2, _ := d.SaveMedia(ctx, root, u.ID, "b.png", "image/png", testPNG(t, 60, 40), 0)
+	if _, err := d.UpdatePost(ctx, a, again.ID, UpdatePostInput{CoverMediaID: &m2.ID}); err != nil {
+		t.Fatal(err)
+	}
+	zero := int64(0)
+	after, err := d.UpdatePost(ctx, a, again.ID, UpdatePostInput{CoverMediaID: &zero})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if after.CoverMediaID != nil {
+		t.Errorf("传 0 没能取消封面：%v", after.CoverMediaID)
 	}
 }

@@ -184,7 +184,7 @@
   "admin.media.title": "Mídia",
   "admin.media.upload": "Enviar imagem",
   "admin.media.uploadBtn": "Enviar",
-  "admin.media.hint": "JPEG / PNG / GIF / WebP, até {0} MB por arquivo. O tipo é determinado pelo conteúdo do arquivo, então trocar a extensão não adianta. Arquivos idênticos são reaproveitados automaticamente.",
+  "admin.media.hint": "JPEG / PNG / GIF / WebP, até {0} MB cada. Ao enviar, a imagem vira WebP e é reduzida até o limite de tamanho — se a conversão ficar maior, o original é mantido, e GIFs animados não são tocados. O tipo vem dos bytes do arquivo, então trocar a extensão não adianta. Reenviar o mesmo conteúdo reaproveita o arquivo existente.",
   "admin.media.count": {
    "one": "{n} arquivo",
    "other": "{n} arquivos"
@@ -348,6 +348,20 @@
   "admin.site.langDefault": "Padrão",
   "admin.site.langEmpty": "Ainda sem conteúdo",
   "admin.site.copyHint": "Guardado por idioma. O <title> e a meta description vão direto para os resultados de busca, então uma página em inglês com título em português é trabalho jogado fora. O idioma que ficar vazio herda o do idioma padrão.",
-  "admin.site.fromCatalog": "Este valor vem do seu catálogo -lang-dir; o que você digitar aqui não tem efeito."
+  "admin.site.fromCatalog": "Este valor vem do seu catálogo -lang-dir; o que você digitar aqui não tem efeito.",
+  "admin.edit.cover": "Imagem de capa",
+  "admin.edit.coverHint": "Aparece nos cartões das listas, no topo do texto e como imagem grande ao compartilhar (og:image). Paisagem funciona melhor, por volta de 1200×630.",
+  "admin.edit.coverPick": "Escolher capa",
+  "admin.edit.coverChange": "Trocar",
+  "admin.edit.coverRemove": "Remover a capa",
+  "admin.edit.coverAlt": "Texto alternativo da capa",
+  "admin.edit.coverAltHint": "Uma linha sobre o que aparece na imagem. É o que os leitores de tela leem e o que surge se a imagem não carregar.",
+  "admin.edit.insertImage": "Inserir imagem",
+  "admin.edit.dropHint": "Você também pode arrastar uma imagem para o corpo do texto, ou colar.",
+  "admin.media.pickTitle": "Escolher uma imagem",
+  "admin.media.pickEmpty": "A biblioteca ainda está vazia — envie uma primeiro.",
+  "admin.media.uploading": "Enviando…",
+  "admin.media.uploadErr": "Falha ao enviar: {0}",
+  "admin.edit.coverNone": "Sem capa"
  }
 }

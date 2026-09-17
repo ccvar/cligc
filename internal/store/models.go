@@ -153,6 +153,17 @@ type Post struct {
 	// 所以"等待发布"的文章不会从任何入口漏出去，不需要额外的过滤条件。
 	PublishAt *time.Time
 
+	// 封面。CoverMediaID 为 nil 表示没有封面。
+	//
+	// CoverPath / CoverW / CoverH 是 join 媒体表拿到的，方便模板直接写
+	// <img src width height>——尺寸必须有，否则图片加载完会把下面的正文
+	// 往下顶一截（CLS），那是 Core Web Vitals 里最容易踩的一项。
+	CoverMediaID *int64
+	CoverAlt     string
+	CoverPath    string
+	CoverW       int
+	CoverH       int
+
 	// 分类：一篇最多一个。CategoryID 为 nil 表示未分类。
 	// Slug 和 Name 是查询时 join 出来的，方便模板直接用。
 	CategoryID   *int64
@@ -204,5 +215,7 @@ type Media struct {
 	MIME      string
 	Size      int64
 	Path      string
+	Width     int
+	Height    int
 	CreatedAt time.Time
 }

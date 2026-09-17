@@ -4,7 +4,7 @@ import "strings"
 import "testing"
 
 func TestExternalLinksGetUGCRel(t *testing.T) {
-	r := New("cligc.com")
+	r := New("cligc.com", nil)
 	got := r.Render("[x](https://evil.example/spam) [y](/about) [z](https://cligc.com/p/1)").HTML
 	if !strings.Contains(got, `rel="ugc nofollow noopener"`) {
 		t.Fatalf("external link missing rel: %s", got)
@@ -15,7 +15,7 @@ func TestExternalLinksGetUGCRel(t *testing.T) {
 }
 
 func TestRawHTMLIsEscaped(t *testing.T) {
-	r := New("cligc.com")
+	r := New("cligc.com", nil)
 	got := r.Render(`<script>alert(1)</script>`).HTML
 	if strings.Contains(got, "<script>") {
 		t.Fatalf("raw HTML not escaped: %s", got)
@@ -23,7 +23,7 @@ func TestRawHTMLIsEscaped(t *testing.T) {
 }
 
 func TestPlainAndSummary(t *testing.T) {
-	r := New("cligc.com")
+	r := New("cligc.com", nil)
 	res := r.Render("# 标题\n\n这是正文。还有第二句。\n\n```go\nfmt.Println(1)\n```")
 	if !strings.Contains(res.Plain, "这是正文") || !strings.Contains(res.Plain, "fmt.Println") {
 		t.Fatalf("plain text incomplete: %q", res.Plain)
@@ -43,7 +43,7 @@ func TestPlainAndSummary(t *testing.T) {
 // 它后面所有已经被分享出去的深链会全部静默错位**——页面照常打开，只是跳到了
 // 别的段落，没有任何报错。
 func TestHeadingIDsSurviveReordering(t *testing.T) {
-	r := New("cligc.com")
+	r := New("cligc.com", nil)
 
 	before := r.Render("## 三条路\n\n正文\n\n## 选了第三条\n\n正文")
 	// 在两个标题之间插入一节
@@ -73,7 +73,7 @@ func TestHeadingIDsSurviveReordering(t *testing.T) {
 }
 
 func TestHeadingCollection(t *testing.T) {
-	r := New("cligc.com")
+	r := New("cligc.com", nil)
 	res := r.Render("# 不该出现在大纲里\n\n## 二级\n\n### 三级\n\n#### 四级太深\n\n正文")
 	var got []string
 	for _, h := range res.Headings {
@@ -87,5 +87,44 @@ func TestHeadingCollection(t *testing.T) {
 	dup := r.Render("## 同名\n\n正文\n\n## 同名\n\n正文")
 	if len(dup.Headings) != 2 || dup.Headings[0].ID == dup.Headings[1].ID {
 		t.Errorf("duplicate headings share an anchor: %+v", dup.Headings)
+	}
+}
+
+// TestImagesGetLazyLoadingAndSize 正文里的图要带上延迟加载和像素尺寸。
+//
+// 尺寸是要紧的那个：没有 width/height，图片下载完会把下面的正文整段
+// 往下顶，长文里每张图顶一次。
+func TestImagesGetLazyLoadingAndSize(t *testing.T) {
+	size := func(src string) (int, int, bool) {
+		if src == "/media/ab/pic.webp" {
+			return 1200, 800, true
+		}
+		return 0, 0, false
+	}
+	r := New("cligc.com", size)
+	got := r.Render("![一张图](/media/ab/pic.webp)\n\n![外站图](https://example.com/x.png)\n\n![没登记](/media/zz/unknown.webp)").HTML
+
+	for _, want := range []string{`loading="lazy"`, `decoding="async"`, `width="1200"`, `height="800"`} {
+		if !strings.Contains(got, want) {
+			t.Errorf("少了 %s：\n%s", want, got)
+		}
+	}
+	// 站外图片不查尺寸——为此发请求会让渲染一篇文章变成对着别人的服务器
+	// 打一串同步请求。
+	if strings.Count(got, `width=`) != 1 {
+		t.Errorf("给查不到尺寸的图也写了 width：\n%s", got)
+	}
+	// 但延迟加载三张都要有。
+	if n := strings.Count(got, `loading="lazy"`); n != 3 {
+		t.Errorf("loading=lazy 出现 %d 次，想要 3 次", n)
+	}
+}
+
+// TestImageRenderingStaysEscaped 图片的 alt 和地址仍然是用户输入。
+func TestImageRenderingStaysEscaped(t *testing.T) {
+	r := New("cligc.com", nil)
+	got := r.Render(`![" onerror="alert(1)](/media/a.webp)`).HTML
+	if strings.Contains(got, `onerror="alert`) {
+		t.Errorf("alt 里的引号没转义，属性被撑开了：\n%s", got)
 	}
 }

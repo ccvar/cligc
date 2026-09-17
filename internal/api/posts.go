@@ -36,6 +36,11 @@ type postDTO struct {
 	UpdatedAt   time.Time  `json:"updated_at"`
 	PublishedAt *time.Time `json:"published_at,omitempty"`
 
+	// 封面。CoverURL 是绝对地址，方便直接展示；写回去要用 CoverMediaID。
+	CoverMediaID *int64 `json:"cover_media_id,omitempty"`
+	CoverURL     string `json:"cover_url,omitempty"`
+	CoverAlt     string `json:"cover_alt,omitempty"`
+
 	// 以下字段仅在 full=true 时填充
 	BodyMD       string `json:"body_md,omitempty"`
 	Indexable    *bool  `json:"indexable,omitempty"`
@@ -55,6 +60,10 @@ func (s *Server) dto(p *store.Post, full bool) postDTO {
 		URL:       strings.TrimRight(s.cfg.BaseURL, "/") + "/p/" + p.Slug,
 		Author:    p.AuthorName,
 		CreatedAt: p.CreatedAt, UpdatedAt: p.UpdatedAt, PublishedAt: p.PublishedAt,
+		CoverMediaID: p.CoverMediaID, CoverAlt: p.CoverAlt,
+	}
+	if p.CoverPath != "" {
+		d.CoverURL = strings.TrimRight(s.cfg.BaseURL, "/") + "/media/" + p.CoverPath
 	}
 	if full {
 		ni := p.NoIndex()
@@ -221,6 +230,9 @@ type createReq struct {
 	Category       string   `json:"category"` // 分类 slug，留空表示未分类
 	TranslationOf  int64    `json:"translation_of"`
 	IdempotencyKey string   `json:"idempotency_key"`
+	// CoverMediaID 是封面图在媒体库里的 ID，先用 POST /media 传上去拿到它。
+	CoverMediaID int64  `json:"cover_media_id"`
+	CoverAlt     string `json:"cover_alt"`
 }
 
 // handleCreatePost 新建草稿。注意：永远是草稿，这个接口不能直接发布。
@@ -240,6 +252,7 @@ func (s *Server) handleCreatePost(w http.ResponseWriter, r *http.Request) {
 		Title: in.Title, BodyMD: in.BodyMD, Slug: in.Slug, Summary: in.Summary,
 		Tags: in.Tags, Source: in.Source, CanonicalURL: in.CanonicalURL,
 		Indexable: in.Indexable, Lang: in.Lang, CategorySlug: in.Category,
+		CoverMediaID: &in.CoverMediaID, CoverAlt: in.CoverAlt,
 		IdempotencyKey: key,
 	})
 	if err != nil {
@@ -273,6 +286,9 @@ type updateReq struct {
 	Indexable    *bool     `json:"indexable"`
 	Lang         *string   `json:"lang"`
 	Category     *string   `json:"category"` // 空串取消分类，缺省不改
+	// CoverMediaID 传 0 取消封面，缺省不改。
+	CoverMediaID *int64  `json:"cover_media_id"`
+	CoverAlt     *string `json:"cover_alt"`
 }
 
 func (s *Server) handleUpdatePost(w http.ResponseWriter, r *http.Request) {
@@ -290,6 +306,7 @@ func (s *Server) handleUpdatePost(w http.ResponseWriter, r *http.Request) {
 		Title: in.Title, BodyMD: in.BodyMD, Slug: in.Slug, Summary: in.Summary,
 		Tags: in.Tags, Source: in.Source, CanonicalURL: in.CanonicalURL,
 		Indexable: in.Indexable, Lang: in.Lang, CategorySlug: in.Category,
+		CoverMediaID: in.CoverMediaID, CoverAlt: in.CoverAlt,
 	})
 	if err != nil {
 		fail(w, err)
@@ -381,6 +398,7 @@ func (s *Server) handleListMedia(w http.ResponseWriter, r *http.Request) {
 func (s *Server) mediaDTO(m *store.Media) map[string]any {
 	return map[string]any{
 		"id": m.ID, "filename": m.Filename, "mime": m.MIME, "size": m.Size,
+		"width": m.Width, "height": m.Height,
 		"url":         strings.TrimRight(s.cfg.BaseURL, "/") + "/media/" + m.Path,
 		"markdown":    "![" + m.Filename + "](/media/" + m.Path + ")",
 		"uploaded_at": m.CreatedAt,
@@ -407,12 +425,18 @@ func (s *Server) handleUploadMedia(w http.ResponseWriter, r *http.Request) {
 		fail(w, err)
 		return
 	}
-	mime := hdr.Header.Get("Content-Type")
-	if v := r.FormValue("mime"); v != "" {
-		mime = v
+	// 类型按字节内容判断，和后台上传那条路一致。
+	//
+	// 原先信的是 multipart 分段里的 Content-Type，而很多 HTTP 客户端根本
+	// 不给分段设这个头（Go 自己的 CreateFormFile 就写死成
+	// application/octet-stream），结果是一张好端端的 PNG 被 400 挡回去。
+	// 反过来它也不能当安全依据——那是客户端随便写的。
+	mime := http.DetectContentType(data)
+	if i := strings.IndexByte(mime, ';'); i >= 0 {
+		mime = mime[:i]
 	}
 	m, err := s.db.SaveMedia(r.Context(), s.cfg.MediaRoot, userFrom(r.Context()).ID,
-		hdr.Filename, strings.ToLower(strings.TrimSpace(mime)), data)
+		hdr.Filename, mime, data, s.cfg.ImageMaxDim)
 	if err != nil {
 		fail(w, err)
 		return

@@ -65,7 +65,11 @@ create table if not exists posts (
   published_at  integer,
   -- 定时发布：到点由后台任务改成 published。设了它的文章仍然是 draft，
   -- 所以公开列表、sitemap、feed 全都自动看不到它，不需要额外的过滤。
-  publish_at    integer
+  publish_at    integer,
+  -- 封面。on delete set null 而不是 cascade：在媒体库里删掉一张图，
+  -- 该掉的是封面，不是文章。
+  cover_media_id integer references media(id) on delete set null,
+  cover_alt      text not null default ''
 );
 create index if not exists idx_posts_pub  on posts(status, published_at desc);
 -- 注意：依赖后加列（如 featured_at）的索引不能写在这里。这个文件整体跑在
@@ -139,6 +143,11 @@ create table if not exists media (
   mime       text    not null,
   size       integer not null,
   path       text    not null,
+  -- 像素尺寸。存下来是为了给 <img> 写 width/height：浏览器据此先把位置
+  -- 留出来，图片加载完不会把下面的正文往下顶（CLS）。解码的时候顺手就
+  -- 拿到了，不存反而要在渲染时重新读一遍文件。
+  width      integer not null default 0,
+  height     integer not null default 0,
   created_at integer not null
 );
 

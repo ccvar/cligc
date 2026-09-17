@@ -208,7 +208,7 @@
   "admin.media.title": "الوسائط",
   "admin.media.upload": "ارفع صورة",
   "admin.media.uploadBtn": "رفع",
-  "admin.media.hint": "JPEG / PNG / GIF / WebP، بحدّ أقصى {0} ميغابايت للملف. يُحدَّد النوع من محتوى الملف نفسه، فتغيير الامتداد لا يفيد. والملفات المتطابقة يُعاد استخدامها تلقائيًا.",
+  "admin.media.hint": "‏JPEG / PNG / GIF / WebP، وحتى {0} ميغابايت للملف. ويُحوَّل المرفوع إلى WebP ويُصغَّر حتى الحد الأقصى للضلع الأطول — فإن جاء التحويل أكبر بقي الأصل كما هو، وصور GIF المتحركة لا تُمَس. ويُعرف النوع من محتوى الملف نفسه، فتغيير الامتداد لا يفيد شيئًا. وإعادة رفع المحتوى نفسه تستعمل الملف الموجود.",
   "admin.media.count": {
    "zero": "لا ملفات",
    "one": "ملف واحد",
@@ -376,6 +376,20 @@
   "admin.site.langDefault": "الافتراضية",
   "admin.site.langEmpty": "لا محتوى بعد",
   "admin.site.copyHint": "يُحفظ لكل لغة على حدة. فـ <title> ووصف meta يذهبان كما هما إلى نتائج البحث، وصفحة إنجليزية تحمل عنوانًا عربيًا جهد ضائع. وأي لغة تتركها فارغة تأخذ نسخة اللغة الافتراضية.",
-  "admin.site.fromCatalog": "هذه القيمة تأتي من معجم -lang-dir، وما تكتبه هنا لا يُطبَّق."
+  "admin.site.fromCatalog": "هذه القيمة تأتي من معجم -lang-dir، وما تكتبه هنا لا يُطبَّق.",
+  "admin.edit.cover": "صورة الغلاف",
+  "admin.edit.coverHint": "تظهر في بطاقات القوائم، وفي صدر المقالة، وبوصفها الصورة الكبيرة عند المشاركة (og:image). والأفقية أنسب، بنحو 1200×630.",
+  "admin.edit.coverPick": "اختر غلافًا",
+  "admin.edit.coverChange": "استبدال",
+  "admin.edit.coverRemove": "إزالة الغلاف",
+  "admin.edit.coverAlt": "النص البديل للغلاف",
+  "admin.edit.coverAltHint": "سطر يصف ما في الصورة. تقرؤه برامج قراءة الشاشة، وهو ما يظهر إن تعذّر تحميل الصورة.",
+  "admin.edit.insertImage": "إدراج صورة",
+  "admin.edit.dropHint": "ويمكنك أيضًا سحب صورة إلى المتن أو لصقها.",
+  "admin.media.pickTitle": "اختر صورة",
+  "admin.media.pickEmpty": "المكتبة فارغة بعد — ارفع واحدة أولًا.",
+  "admin.media.uploading": "جارٍ الرفع…",
+  "admin.media.uploadErr": "تعذّر الرفع: {0}",
+  "admin.edit.coverNone": "بلا غلاف"
  }
 }

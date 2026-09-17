@@ -103,8 +103,37 @@ func (s *Server) handleAdminNew(w http.ResponseWriter, r *http.Request) {
 		Data: map[string]any{
 			"Post": &store.Post{Indexable: true, Source: store.SourceHuman, Lang: i18n.Default().Code},
 			"New":  true, "TransOf": "", "Cats": s.cats(r),
+			"Media": s.coverChoices(r, nil), "CoverID": int64(0),
 		},
 	})
+}
+
+// coverChoices 是封面下拉里的候选图：最近上传的若干张。
+//
+// cur 是这篇文章当前的封面。它必须在列表里，哪怕已经翻出了"最近"的范围——
+// 否则打开一篇旧文章，下拉里选不到它自己的封面，一保存封面就没了。
+func (s *Server) coverChoices(r *http.Request, cur *int64) []store.Media {
+	u := userFrom(r.Context())
+	var scope int64
+	if !u.IsAdmin() {
+		scope = u.ID
+	}
+	items, err := s.db.ListMediaPage(r.Context(), scope, 60, 0)
+	if err != nil {
+		return nil
+	}
+	if cur == nil {
+		return items
+	}
+	for _, m := range items {
+		if m.ID == *cur {
+			return items
+		}
+	}
+	if m, err := s.db.MediaByID(r.Context(), *cur); err == nil {
+		return append([]store.Media{*m}, items...)
+	}
+	return items
 }
 
 func (s *Server) handleAdminEdit(w http.ResponseWriter, r *http.Request) {
@@ -126,6 +155,8 @@ func (s *Server) handleAdminEdit(w http.ResponseWriter, r *http.Request) {
 			"Post": p, "TagsCSV": strings.Join(tagNamesOf(p), ", "), "TransOf": transOf,
 			"TransCandidates": s.transCandidates(r, p),
 			"Cats":            s.cats(r),
+			"Media":           s.coverChoices(r, p.CoverMediaID),
+			"CoverID":         deref(p.CoverMediaID),
 		},
 	})
 }
@@ -196,6 +227,23 @@ func (s *Server) loadOwned(w http.ResponseWriter, r *http.Request) (*store.Post,
 	return p, true
 }
 
+// formID 读一个表单里的数字 ID，读不出来就是 0。
+func formID(r *http.Request, name string) int64 {
+	n, _ := strconv.ParseInt(strings.TrimSpace(r.FormValue(name)), 10, 64)
+	if n < 0 {
+		return 0
+	}
+	return n
+}
+
+// deref 把可空的 ID 摊平成 0，给模板比较用——模板里没法解引用指针。
+func deref(p *int64) int64 {
+	if p == nil {
+		return 0
+	}
+	return *p
+}
+
 func tagNamesOf(p *store.Post) []string {
 	out := make([]string, 0, len(p.Tags))
 	for _, t := range p.Tags {
@@ -222,12 +270,14 @@ func (s *Server) handleAdminCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	idx := r.FormValue("indexable") != ""
+	cover := formID(r, "cover_media_id")
 	p, err := s.db.CreatePost(r.Context(), actorOf(r), store.CreatePostInput{
 		Title: r.FormValue("title"), BodyMD: r.FormValue("body_md"),
 		Slug: r.FormValue("slug"), Summary: r.FormValue("summary"),
 		Tags: splitTags(r.FormValue("tags")), Source: r.FormValue("source"),
 		CanonicalURL: r.FormValue("canonical_url"), Lang: r.FormValue("lang"), Indexable: &idx,
 		CategorySlug: r.FormValue("category"),
+		CoverMediaID: &cover, CoverAlt: r.FormValue("cover_alt"),
 	})
 	if err != nil {
 		s.renderError(w, r, http.StatusBadRequest, s.tr(r, "flash.saveFailed", err.Error()))
@@ -248,12 +298,16 @@ func (s *Server) handleAdminSave(w http.ResponseWriter, r *http.Request) {
 	get := func(k string) *string { v := r.FormValue(k); return &v }
 	idx := r.FormValue("indexable") != ""
 	tags := splitTags(r.FormValue("tags"))
+	// 空串 = 取消封面。表单里的"无封面"那一项就是空串，和"没提交这个字段"
+	// 在 HTML 表单里分不开——所以这里一律当成"用户表达了一个选择"。
+	cover := formID(r, "cover_media_id")
 
 	if _, err := s.db.UpdatePost(r.Context(), actorOf(r), p.ID, store.UpdatePostInput{
 		Title: get("title"), BodyMD: get("body_md"), Slug: get("slug"),
 		Summary: get("summary"), Tags: &tags, Source: get("source"),
 		CanonicalURL: get("canonical_url"), Lang: get("lang"), Indexable: &idx,
 		CategorySlug: get("category"),
+		CoverMediaID: &cover, CoverAlt: get("cover_alt"),
 	}); err != nil {
 		s.renderError(w, r, http.StatusBadRequest, s.tr(r, "flash.saveFailed", err.Error()))
 		return

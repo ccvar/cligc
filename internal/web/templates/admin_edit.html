@@ -65,11 +65,18 @@
       <input type="text" name="title" value="{{$p.Title}}" required autofocus placeholder="{{t "admin.edit.titlePlace"}}">
     </label>
 
-    <label class="field field-body">
-      <span class="label">{{t "admin.edit.body"}}</span>
-      <textarea name="body_md" required
+    <div class="field field-body">
+      <span class="label label-row">
+        {{t "admin.edit.body"}}
+        {{/* 插图按钮挨着正文，不在右边那栏：插图是写到一半的动作，
+             手不该为它离开正文。拖进来和粘贴走的是同一条上传口。 */}}
+        <button type="button" class="btn small ghost" data-insert-image>
+          {{template "icon-image"}}{{t "admin.edit.insertImage"}}</button>
+      </span>
+      <textarea name="body_md" required data-imagedrop
                 placeholder="{{t "admin.edit.bodyPlace"}}">{{$p.BodyMD}}</textarea>
-    </label>
+      <span class="hint">{{t "admin.edit.dropHint"}}</span>
+    </div>
   </div>
 
   <aside class="editor-side">
@@ -103,6 +110,38 @@
     <label class="field">
       <span class="label">{{t "admin.edit.summary"}}</span>
       <textarea name="summary" rows="3" placeholder="{{t "admin.edit.summaryPlace"}}">{{$p.Summary}}</textarea>
+    </label>
+
+    {{/* 封面紧挨着摘要：卡片上就是这两样东西并排出现，在后台也让它们
+         挨着，比分散在表单两端更容易一起想。
+
+         真正提交的是这个 <select>，缩略图那套是 JS 套在它外面的。关掉 JS
+         剩下一个按文件名选图的原生下拉——朴素，但能用。 */}}
+    <div class="field cover-field" data-cover>
+      <span class="label">{{t "admin.edit.cover"}}</span>
+      <div class="cover-preview" data-cover-preview hidden>
+        <img src="{{if $p.CoverPath}}/media/{{$p.CoverPath}}{{end}}"
+             {{if $p.CoverW}}width="{{itoa $p.CoverW}}" height="{{itoa $p.CoverH}}"{{end}}
+             alt="" data-cover-img>
+      </div>
+      <select name="cover_media_id" data-native data-cover-select>
+        <option value="">{{t "admin.edit.coverNone"}}</option>
+        {{range $d.Media}}
+        <option value="{{.ID}}" data-url="/media/{{.Path}}" data-w="{{itoa .Width}}" data-h="{{itoa .Height}}"
+                {{if eq .ID $d.CoverID}}selected{{end}}>{{.Filename}}</option>
+        {{end}}
+      </select>
+      <span class="cover-acts" data-cover-acts hidden>
+        <button type="button" class="btn small" data-cover-pick>{{t "admin.edit.coverPick"}}</button>
+        <button type="button" class="btn small danger ghost" data-cover-clear>{{t "admin.edit.coverRemove"}}</button>
+      </span>
+      <span class="hint">{{t "admin.edit.coverHint"}}</span>
+    </div>
+
+    <label class="field" data-cover-altfield>
+      <span class="label">{{t "admin.edit.coverAlt"}}</span>
+      <input type="text" name="cover_alt" value="{{$p.CoverAlt}}">
+      <span class="hint">{{t "admin.edit.coverAltHint"}}</span>
     </label>
 
     <label class="field">
@@ -164,5 +203,27 @@
     </label>
   </aside>
 </form>
+
+{{/* 选图弹窗。封面和正文插图共用这一个：两件事要的都是"从库里挑一张，
+     或者当场传一张"，做成两套只会有两套 bug。 */}}
+<dialog class="dialog media-pick" data-mediapick
+        data-empty="{{t "admin.media.pickEmpty"}}"
+        data-uploading="{{t "admin.media.uploading"}}"
+        data-failed="{{t "err.internal"}}"
+        data-err-prefix="{{t "admin.media.uploadErr"}}"
+        data-choose="{{t "admin.edit.coverPick"}}"
+        data-change="{{t "admin.edit.coverChange"}}">
+  <div class="dialog-head">
+    <p class="dialog-title">{{t "admin.media.pickTitle"}}</p>
+    <label class="btn small" data-mediapick-upload>
+      {{t "admin.media.upload"}}
+      <input type="file" accept="image/*" multiple hidden data-mediapick-file>
+    </label>
+    <button type="button" class="dialog-close" data-mediapick-close
+            aria-label="{{t "common.cancel"}}">&times;</button>
+  </div>
+  <p class="hint media-pick-msg" data-mediapick-msg hidden></p>
+  <div class="media-pick-grid thin-scroll" data-mediapick-grid></div>
+</dialog>
 
 {{end}}

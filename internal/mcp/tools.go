@@ -92,6 +92,8 @@ func toolDefs() []tool {
 				"slug":            str("Optional URL slug. Non-ASCII titles fall back to a random short code, so pass an ASCII slug if the URL matters."),
 				"source":          map[string]any{"type": "string", "enum": []string{"human", "ai-assisted", "ai-generated"}, "description": "Who wrote it. Default 'ai-assisted' when created through this tool."},
 				"canonical_url":   str("Set only if this text was first published elsewhere. Points search engines at the original and marks this copy noindex."),
+				"cover_media_id":  num("Media id from upload_media, to use as this post's cover image. It shows on list cards, above the article, and as the share preview (og:image)."),
+				"cover_alt":       str("One line describing the cover image, for screen readers and for when the image fails to load. Write it whenever you set a cover."),
 				"lang":            str("Language of THIS post, as a BCP 47 code. Defaults to the site's primary language. Use only a code listed in whoami's site_langs: any other language has no public pages, so the post would be published to a URL that 404s. An unrecognised code is silently filed under the primary language."),
 				"translation_of":  num("Numeric id of the same content in another language. Links the two so the site emits reciprocal hreflang. Use this when writing a translation."),
 				"idempotency_key": str("Stable key for this creation, e.g. a hash of the title plus date. Strongly recommended."),
@@ -102,16 +104,18 @@ func toolDefs() []tool {
 			Description: "Edit an existing post. Only the fields you pass are changed; everything else is " +
 				"left alone. Changing the body re-renders it and rebuilds the search index.",
 			InputSchema: obj(map[string]any{
-				"id":            num("Numeric post id."),
-				"title":         str("New title."),
-				"body_md":       str("New Markdown body (replaces the whole body)."),
-				"tags":          strs("Replaces the full tag list."),
-				"summary":       str("New summary. Pass an empty string to regenerate it from the body."),
-				"slug":          str("New URL slug. Changing this breaks existing links."),
-				"source":        map[string]any{"type": "string", "enum": []string{"human", "ai-assisted", "ai-generated"}},
-				"canonical_url": str("External original URL, or empty string to clear."),
-				"indexable":     bl("Whether search engines may index this page."),
-				"lang":          str("Language of this post, as a BCP 47 code. Same rule as create_draft: stick to whoami's site_langs."),
+				"id":             num("Numeric post id."),
+				"title":          str("New title."),
+				"body_md":        str("New Markdown body (replaces the whole body)."),
+				"tags":           strs("Replaces the full tag list."),
+				"summary":        str("New summary. Pass an empty string to regenerate it from the body."),
+				"slug":           str("New URL slug. Changing this breaks existing links."),
+				"source":         map[string]any{"type": "string", "enum": []string{"human", "ai-assisted", "ai-generated"}},
+				"canonical_url":  str("External original URL, or empty string to clear."),
+				"indexable":      bl("Whether search engines may index this page."),
+				"lang":           str("Language of this post, as a BCP 47 code. Same rule as create_draft: stick to whoami's site_langs."),
+				"cover_media_id": num("Media id from upload_media to use as the cover. Pass 0 to remove the cover; omit to leave it alone."),
+				"cover_alt":      str("One line describing the cover image."),
 			}, "id"),
 		},
 		{
@@ -150,9 +154,12 @@ func toolDefs() []tool {
 		},
 		{
 			Name: "upload_media",
-			Description: "Upload an image and get back a URL plus a ready-to-paste Markdown image tag. " +
-				"Provide either 'path' (a file on this machine, stdio mode only) or 'data_base64'. " +
-				"Only real JPEG/PNG/GIF/WebP images are accepted; the file content is verified, not just its name.",
+			Description: "Upload an image and get back its media id, URL and a ready-to-paste Markdown " +
+				"image tag. Provide either 'path' (a file on this machine, stdio mode only) or " +
+				"'data_base64'. Only real JPEG/PNG/GIF/WebP images are accepted; the file content is " +
+				"verified, not just its name. Images are converted to WebP and scaled down to the site's " +
+				"size limit, so the returned width/height may differ from what you sent. " +
+				"Use the returned id as 'cover_media_id' to make it a post's cover image.",
 			InputSchema: obj(map[string]any{
 				"path":        str("Absolute path to an image file on the machine running this MCP server."),
 				"data_base64": str("Base64-encoded image bytes, as an alternative to 'path'."),
@@ -346,13 +353,16 @@ func (s *Server) createDraft(ctx context.Context, c *Client, a map[string]any) *
 		src = "ai-assisted"
 	}
 	body["source"] = src
-	for _, k := range []string{"summary", "slug", "canonical_url", "idempotency_key", "lang"} {
+	for _, k := range []string{"summary", "slug", "canonical_url", "idempotency_key", "lang", "cover_alt"} {
 		if v := argStr(a, k); v != "" {
 			body[k] = v
 		}
 	}
 	if n, ok := argInt(a, "translation_of"); ok && n != 0 {
 		body["translation_of"] = n
+	}
+	if n, ok := argInt(a, "cover_media_id"); ok && n != 0 {
+		body["cover_media_id"] = n
 	}
 	if tags, ok := argStrs(a, "tags"); ok {
 		body["tags"] = *tags
@@ -373,7 +383,7 @@ func (s *Server) updatePost(ctx context.Context, c *Client, a map[string]any) *c
 		return errResult("id is required and must be the numeric post id.")
 	}
 	body := map[string]any{}
-	for _, k := range []string{"title", "body_md", "slug", "summary", "source", "canonical_url", "lang"} {
+	for _, k := range []string{"title", "body_md", "slug", "summary", "source", "canonical_url", "lang", "cover_alt"} {
 		if p := argStrPtr(a, k); p != nil {
 			body[k] = *p
 		}
@@ -383,6 +393,10 @@ func (s *Server) updatePost(ctx context.Context, c *Client, a map[string]any) *c
 	}
 	if b := argBool(a, "indexable"); b != nil {
 		body["indexable"] = *b
+	}
+	// 0 是"取掉封面"，所以这里不能像 translation_of 那样把 0 当成没给。
+	if n, ok := argInt(a, "cover_media_id"); ok {
+		body["cover_media_id"] = n
 	}
 	if len(body) == 0 {
 		return errResult("Nothing to update: pass at least one field to change.")

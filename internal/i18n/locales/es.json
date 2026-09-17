@@ -184,7 +184,7 @@
   "admin.media.title": "Medios",
   "admin.media.upload": "Subir imagen",
   "admin.media.uploadBtn": "Subir",
-  "admin.media.hint": "JPEG / PNG / GIF / WebP, hasta {0} MB por archivo. El tipo se deduce del contenido, así que cambiar la extensión no sirve de nada. Los archivos idénticos se reutilizan automáticamente.",
+  "admin.media.hint": "JPEG / PNG / GIF / WebP, hasta {0} MB cada uno. Al subirlos se convierten a WebP y se reducen hasta el límite de tamaño; si la conversión sale más grande se conserva el original, y los GIF animados no se tocan. El tipo se deduce de los bytes del archivo, así que cambiar la extensión no sirve de nada. Subir dos veces el mismo contenido reutiliza el archivo existente.",
   "admin.media.count": {
    "one": "{n} archivo",
    "other": "{n} archivos"
@@ -348,6 +348,20 @@
   "admin.site.langDefault": "Predeterminado",
   "admin.site.langEmpty": "Todavía sin contenido",
   "admin.site.copyHint": "Se guarda por idioma. El <title> y la meta description van directos a los resultados de búsqueda, así que una página en inglés con el título en español es trabajo perdido. El idioma que dejes vacío hereda el del idioma predeterminado.",
-  "admin.site.fromCatalog": "Este valor viene de tu catálogo -lang-dir; lo que escribas aquí no surte efecto."
+  "admin.site.fromCatalog": "Este valor viene de tu catálogo -lang-dir; lo que escribas aquí no surte efecto.",
+  "admin.edit.cover": "Imagen de portada",
+  "admin.edit.coverHint": "Aparece en las tarjetas del listado, encima del artículo y como imagen grande al compartirlo (og:image). Lo apaisado funciona mejor: en torno a 1200×630.",
+  "admin.edit.coverPick": "Elegir portada",
+  "admin.edit.coverChange": "Cambiar",
+  "admin.edit.coverRemove": "Quitar la portada",
+  "admin.edit.coverAlt": "Texto alternativo de la portada",
+  "admin.edit.coverAltHint": "Una línea sobre qué se ve en la imagen. Es lo que leen los lectores de pantalla y lo que aparece si la imagen no carga.",
+  "admin.edit.insertImage": "Insertar imagen",
+  "admin.edit.dropHint": "También puedes arrastrar una imagen al cuerpo o pegarla.",
+  "admin.media.pickTitle": "Elegir una imagen",
+  "admin.media.pickEmpty": "La biblioteca está vacía; sube una primero.",
+  "admin.media.uploading": "Subiendo…",
+  "admin.media.uploadErr": "No se pudo subir: {0}",
+  "admin.edit.coverNone": "Sin portada"
  }
 }

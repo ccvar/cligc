@@ -598,3 +598,63 @@ mark {
   font-weight: 550;
 }
 .sec-tag:hover { text-decoration: underline; }
+
+/* --- 封面 --- */
+
+/* 文章页顶部的封面。宽度跟着正文栏走而不是撑满容器：一张比正文宽出
+   一截的图会把读者的视线从字上拽开，而这一页的主角是字。 */
+.article-cover {
+  margin: 0 0 var(--s5);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background: var(--surface-2);
+}
+.article-cover img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* 列表卡片上的封面。缩略图在左、文字在右——竖排的话每张卡片都要占掉
+   一屏的一大半，列表就不再是列表了。 */
+.card-cover {
+  flex: 0 0 auto;
+  width: 8.5rem;
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--surface-2);
+}
+.card-cover img {
+  display: block;
+  width: 100%;
+  height: 5.6rem;
+  object-fit: cover;
+}
+.card.has-cover {
+  display: flex;
+  gap: var(--s4);
+  align-items: flex-start;
+}
+.card.has-cover .card-body { min-width: 0; flex: 1; }
+
+/* 精选那张卡片本来就更大，封面也横过来铺满上沿。 */
+.feat-cover {
+  margin: 0 0 var(--s3);
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--surface-2);
+}
+.feat-cover img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1200 / 630;
+  object-fit: cover;
+}
+
+@media (max-width: 34rem) {
+  /* 窄屏上并排的缩略图只剩一条，不如摞起来。 */
+  .card.has-cover { display: block; }
+  .card-cover { width: 100%; margin-bottom: var(--s3); }
+  .card-cover img { height: auto; aspect-ratio: 1200 / 630; }
+}

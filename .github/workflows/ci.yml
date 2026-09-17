@@ -43,7 +43,9 @@ jobs:
         run: go test -race ./...
 
       - name: 构建
-        run: CGO_ENABLED=0 go build -trimpath ./cmd/cligc
+        # -tags nodynamic：不去 dlopen 宿主机的 libwebp，用编译进来的那份
+        # 解码上传的图片。见 deploy.yml 里的同一条注释。
+        run: CGO_ENABLED=0 go build -trimpath -tags nodynamic ./cmd/cligc
 
       - name: 检查 JS 语法
         # 前端没有构建步骤，也就没有任何东西会在发布前解析这些文件。

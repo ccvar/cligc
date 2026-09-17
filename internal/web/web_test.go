@@ -12,6 +12,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"slices"
 	"strconv"
 	"strings"
 	"testing"
@@ -1114,6 +1115,35 @@ func TestEveryScrollContainerHasThinScrollbar(t *testing.T) {
 		t.Fatal("样式表里找不到 ::-webkit-scrollbar 规则，细滚动条整段没了")
 	}
 
+	// .thin-scroll 那条出路以前只写在报错信息里，检查本身并不认它——
+	// 照着提示加了 class，测试照样红。现在从模板里收一遍：和 thin-scroll
+	// 写在同一个 class= 里的类名，算已经挂上了。
+	//
+	// 这条出路是给只在一个分层里出现的容器用的（比如后台弹窗里的图片墙）。
+	// 为它往 base.css 那四组共用选择器里塞一个后台专用的类，等于让前端
+	// 样式表知道后台有哪些部件。
+	withThinScroll := map[string]bool{}
+	tmpls, err := fs.Glob(tmplFS, "templates/*.html")
+	if err != nil {
+		t.Fatal(err)
+	}
+	attr := regexp.MustCompile(`class="([^"]*)"`)
+	for _, n := range tmpls {
+		body, err := fs.ReadFile(tmplFS, n)
+		if err != nil {
+			t.Fatal(err)
+		}
+		for _, m := range attr.FindAllStringSubmatch(string(body), -1) {
+			classes := strings.Fields(m[1])
+			if !slices.Contains(classes, "thin-scroll") {
+				continue
+			}
+			for _, c := range classes {
+				withThinScroll[c] = true
+			}
+		}
+	}
+
 	for _, m := range rule.FindAllStringSubmatch(src, -1) {
 		if !scrolls.MatchString(m[2]) {
 			continue
@@ -1128,9 +1158,10 @@ func TestEveryScrollContainerHasThinScrollbar(t *testing.T) {
 			if sel == "html" {
 				continue
 			}
-			if !covered[sel] {
+			if !covered[sel] && !withThinScroll[strings.TrimPrefix(sel, ".")] {
 				t.Errorf("%q 会产生内部滚动条，但没挂细滚动条 —— "+
-					"把它加进 ::-webkit-scrollbar 那组选择器，或者给它加 .thin-scroll", sel)
+					"把它加进 ::-webkit-scrollbar 那组选择器，或者在模板里"+
+					"给这个元素加 .thin-scroll", sel)
 			}
 		}
 	}

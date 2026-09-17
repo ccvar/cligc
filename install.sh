@@ -60,7 +60,9 @@ fi
 
 # --- 构建 -----------------------------------------------------------------
 say "构建"
-( cd "$DIR" && CGO_ENABLED=0 go build -trimpath -o cligc ./cmd/cligc )
+# -tags nodynamic：图片解码用编译进来的 libwebp，不去 dlopen 系统那份。
+# 要拿它处理陌生人上传的图片，宿主机上那份是什么年份的没人保证。
+( cd "$DIR" && CGO_ENABLED=0 go build -trimpath -tags nodynamic -o cligc ./cmd/cligc )
 info "$(cd "$DIR" && pwd)/cligc"
 
 # 没有 cgo：modernc.org/sqlite 是纯 Go 实现，产物是静态二进制，

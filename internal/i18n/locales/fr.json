@@ -184,7 +184,7 @@
   "admin.media.title": "Médias",
   "admin.media.upload": "Importer une image",
   "admin.media.uploadBtn": "Importer",
-  "admin.media.hint": "JPEG / PNG / GIF / WebP, {0} Mo maximum par fichier. Le type est déduit du contenu du fichier : changer l’extension ne sert à rien. Deux fichiers identiques sont automatiquement mutualisés.",
+  "admin.media.hint": "JPEG / PNG / GIF / WebP, {0} Mo maximum par fichier. À l’envoi, l’image est convertie en WebP et réduite à la limite de taille — si la conversion pèse plus lourd, l’original est conservé, et les GIF animés ne sont pas touchés. Le type est déduit du contenu du fichier : renommer l’extension ne change rien. Réenvoyer un contenu identique réutilise le fichier existant.",
   "admin.media.count": {
    "one": "{n} fichier",
    "other": "{n} fichiers"
@@ -348,6 +348,20 @@
   "admin.site.langDefault": "Par défaut",
   "admin.site.langEmpty": "Pas encore de contenu",
   "admin.site.copyHint": "Enregistré par langue. Le <title> et la meta description partent tels quels dans les résultats de recherche : une page anglaise coiffée d’un titre français, c’est du travail perdu. Une langue laissée vide reprend celle de la langue par défaut.",
-  "admin.site.fromCatalog": "Cette valeur vient de ton catalogue -lang-dir ; ce que tu saisis ici n’a aucun effet."
+  "admin.site.fromCatalog": "Cette valeur vient de ton catalogue -lang-dir ; ce que tu saisis ici n’a aucun effet.",
+  "admin.edit.cover": "Image de couverture",
+  "admin.edit.coverHint": "Apparaît sur les cartes des listes, en tête de l’article, et comme grande image lors du partage (og:image). Le format paysage rend le mieux, autour de 1200×630.",
+  "admin.edit.coverPick": "Choisir une couverture",
+  "admin.edit.coverChange": "Remplacer",
+  "admin.edit.coverRemove": "Retirer la couverture",
+  "admin.edit.coverAlt": "Texte alternatif de la couverture",
+  "admin.edit.coverAltHint": "Une ligne décrivant ce qu’on voit. C’est ce que lisent les lecteurs d’écran, et ce qui s’affiche si l’image ne charge pas.",
+  "admin.edit.insertImage": "Insérer une image",
+  "admin.edit.dropHint": "Tu peux aussi glisser une image dans le corps du texte, ou la coller.",
+  "admin.media.pickTitle": "Choisir une image",
+  "admin.media.pickEmpty": "La bibliothèque est encore vide — envoie-en une.",
+  "admin.media.uploading": "Envoi…",
+  "admin.media.uploadErr": "Échec de l’envoi : {0}",
+  "admin.edit.coverNone": "Sans couverture"
  }
 }

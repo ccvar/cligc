@@ -172,4 +172,200 @@
       form.toggleAttribute('data-multilang', on > 1);
     });
   }
+
+  // 6. 选图：封面和正文插图共用一个弹窗。
+  //
+  // 两件事要的都是"从库里挑一张，或者当场传一张"。做成两套只会有两套 bug。
+  const picker = document.querySelector('[data-mediapick]');
+  if (picker) {
+    const grid = picker.querySelector('[data-mediapick-grid]');
+    const msg = picker.querySelector('[data-mediapick-msg]');
+    const file = picker.querySelector('[data-mediapick-file]');
+    const t = picker.dataset;
+    let onPick = null;
+    let loaded = false;
+
+    const say = (text) => {
+      msg.textContent = text || '';
+      msg.hidden = !text;
+    };
+
+    const tile = (it) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'media-pick-item';
+      b.title = it.name;
+      const img = document.createElement('img');
+      img.src = it.url;
+      img.alt = it.name;
+      img.loading = 'lazy';
+      img.decoding = 'async';
+      if (it.w) { img.width = it.w; img.height = it.h; }
+      b.appendChild(img);
+      b.addEventListener('click', () => {
+        picker.close();
+        if (onPick) onPick(it);
+      });
+      return b;
+    };
+
+    const render = (items) => {
+      grid.replaceChildren(...items.map(tile));
+      if (!items.length) say(t.empty);
+    };
+
+    const load = async () => {
+      if (loaded) return;
+      try {
+        const r = await fetch('/admin/media.json', { headers: { Accept: 'application/json' } });
+        const d = await r.json();
+        loaded = true;
+        render(d.items || []);
+      } catch (_) { say(t.failed); }
+    };
+
+    // 上传走同一条口子：弹窗里的按钮、拖进正文、粘贴，三处都调它。
+    const upload = async (files) => {
+      const fd = new FormData();
+      for (const f of files) fd.append('file', f);
+      const r = await fetch('/admin/media.json', { method: 'POST', body: fd });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok || !d.items || !d.items.length) {
+        throw new Error(d.error || t.failed);
+      }
+      return d.items;
+    };
+
+    file.addEventListener('change', async () => {
+      if (!file.files.length) return;
+      say(t.uploading);
+      try {
+        const items = await upload(file.files);
+        loaded = false;
+        await load();
+        say('');
+        // 只传了一张就直接用它——多按一下"选择"没有任何信息量。
+        if (items.length === 1) { picker.close(); if (onPick) onPick(items[0]); }
+      } catch (e) {
+        say(t.errPrefix.replace('{0}', e.message));
+      }
+      file.value = '';
+    });
+
+    picker.querySelector('[data-mediapick-close]')
+      .addEventListener('click', () => picker.close());
+    picker.addEventListener('click', (e) => { if (e.target === picker) picker.close(); });
+
+    const open = (cb) => { onPick = cb; say(''); picker.showModal(); load(); };
+
+    // --- 封面 ---
+    const cover = document.querySelector('[data-cover]');
+    if (cover) {
+      const sel = cover.querySelector('[data-cover-select]');
+      const prev = cover.querySelector('[data-cover-preview]');
+      const img = cover.querySelector('[data-cover-img]');
+      const acts = cover.querySelector('[data-cover-acts]');
+      const pick = cover.querySelector('[data-cover-pick]');
+      const clear = cover.querySelector('[data-cover-clear]');
+      const altField = document.querySelector('[data-cover-altfield]');
+
+      // 原生下拉是关掉 JS 时的退路，有 JS 就把它藏起来——但它仍然是
+      // 真正被提交的那个控件，缩略图只是套在外面的一层。
+      sel.hidden = true;
+      acts.hidden = false;
+
+      const sync = () => {
+        const o = sel.selectedOptions[0];
+        const url = o && o.dataset.url;
+        prev.hidden = !url;
+        clear.hidden = !url;
+        if (altField) altField.hidden = !url;
+        pick.textContent = url ? t.change : t.choose;
+        if (url) {
+          img.src = url;
+          if (o.dataset.w) { img.width = o.dataset.w; img.height = o.dataset.h; }
+        }
+      };
+
+      pick.addEventListener('click', () => open((it) => {
+        let o = [...sel.options].find((x) => x.value === String(it.id));
+        if (!o) {
+          o = new Option(it.name, String(it.id));
+          o.dataset.url = it.url;
+          o.dataset.w = it.w;
+          o.dataset.h = it.h;
+          sel.add(o, 1);
+        }
+        sel.value = String(it.id);
+        sync();
+        sel.dispatchEvent(new Event('change', { bubbles: true }));
+      }));
+
+      clear.addEventListener('click', () => {
+        sel.value = '';
+        sync();
+        sel.dispatchEvent(new Event('change', { bubbles: true }));
+      });
+
+      sync();
+    }
+
+    // --- 正文插图 ---
+    const body = document.querySelector('[data-imagedrop]');
+    if (body) {
+      // 插在光标处，并把光标停在 ![] 的方括号中间：紧接着要写的就是
+      // 替代文字，而它是最容易被跳过、也最不该跳过的那一格。
+      const insert = (it) => {
+        const md = '![](' + it.url + ')';
+        const at = body.selectionStart;
+        const before = body.value.slice(0, at);
+        const after = body.value.slice(body.selectionEnd);
+        const pad = before && !before.endsWith('\n') ? '\n\n' : '';
+        body.value = before + pad + md + after;
+        const caret = at + pad.length + 2;
+        body.focus();
+        body.setSelectionRange(caret, caret);
+        body.dispatchEvent(new Event('input', { bubbles: true }));
+      };
+
+      const btn = document.querySelector('[data-insert-image]');
+      if (btn) btn.addEventListener('click', () => open(insert));
+
+      const take = async (files) => {
+        const imgs = [...files].filter((f) => f.type.startsWith('image/'));
+        if (!imgs.length) return false;
+        body.classList.add('busy');
+        try {
+          for (const it of await upload(imgs)) insert(it);
+          loaded = false;
+        } catch (e) {
+          alert(t.errPrefix.replace('{0}', e.message));
+        }
+        body.classList.remove('busy');
+        return true;
+      };
+
+      body.addEventListener('dragover', (e) => {
+        if (e.dataTransfer && [...e.dataTransfer.types].includes('Files')) {
+          e.preventDefault();
+          body.classList.add('dropping');
+        }
+      });
+      body.addEventListener('dragleave', () => body.classList.remove('dropping'));
+      body.addEventListener('drop', (e) => {
+        if (!e.dataTransfer || !e.dataTransfer.files.length) return;
+        e.preventDefault();
+        body.classList.remove('dropping');
+        take(e.dataTransfer.files);
+      });
+      // 粘贴：剪贴板里同时有图和文字时（从网页复制常常如此），有图就走图。
+      body.addEventListener('paste', (e) => {
+        if (!e.clipboardData || !e.clipboardData.files.length) return;
+        const imgs = [...e.clipboardData.files].filter((f) => f.type.startsWith('image/'));
+        if (!imgs.length) return;
+        e.preventDefault();
+        take(imgs);
+      });
+    }
+  }
 })();

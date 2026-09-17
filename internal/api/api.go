@@ -27,6 +27,7 @@ import (
 type Config struct {
 	BaseURL         string // 用于拼出文章的绝对 URL，如 https://cligc.com
 	MediaRoot       string // 上传文件落盘根目录
+	ImageMaxDim     int    // 上传图片的长边上限，<=0 表示不缩
 	DailyPublishCap int    // 每用户每日发布上限，<=0 表示不限
 
 	// OnSettingsSaved 在站点设置通过 API 改动后被调用。

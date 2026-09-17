@@ -178,7 +178,7 @@
   "admin.media.title": "미디어",
   "admin.media.upload": "이미지 올리기",
   "admin.media.uploadBtn": "올리기",
-  "admin.media.hint": "JPEG / PNG / GIF / WebP, 파일당 최대 {0} MB. 파일 내용으로 형식을 판별하므로 확장자만 바꿔도 소용없습니다. 같은 파일은 자동으로 재사용됩니다.",
+  "admin.media.hint": "JPEG / PNG / GIF / WebP, 개당 {0} MB까지. 올리면 WebP로 바꾸고 긴 변을 상한까지 줄입니다 — 바꾼 쪽이 더 크면 원본을 그대로 두고, 움직이는 GIF는 건드리지 않습니다. 종류는 파일 내용으로 판별하므로 확장자만 바꿔도 소용없습니다. 같은 내용을 다시 올리면 기존 파일을 씁니다.",
   "admin.media.count": {
    "other": "파일 {n}개"
   },
@@ -342,6 +342,20 @@
   "admin.site.langDefault": "기본",
   "admin.site.langEmpty": "아직 글이 없습니다",
   "admin.site.copyHint": "언어마다 따로 저장합니다. <title>과 meta description은 검색 결과에 그대로 나오므로, 영어 페이지에 한국어 제목이 붙어 있으면 헛일입니다. 비워 둔 언어는 기본 언어의 것을 씁니다.",
-  "admin.site.fromCatalog": "이 항목은 -lang-dir 사전에서 옵니다. 여기에 입력해도 적용되지 않습니다."
+  "admin.site.fromCatalog": "이 항목은 -lang-dir 사전에서 옵니다. 여기에 입력해도 적용되지 않습니다.",
+  "admin.edit.cover": "대표 이미지",
+  "admin.edit.coverHint": "목록 카드와 글 맨 위, 그리고 공유했을 때의 큰 이미지(og:image)에 나옵니다. 가로가 길수록 좋고 1200×630쯤이 적당합니다.",
+  "admin.edit.coverPick": "대표 이미지 고르기",
+  "admin.edit.coverChange": "바꾸기",
+  "admin.edit.coverRemove": "대표 이미지 빼기",
+  "admin.edit.coverAlt": "대표 이미지 대체 텍스트",
+  "admin.edit.coverAltHint": "무엇이 담긴 그림인지 한 줄로. 화면 낭독기가 읽고, 이미지가 안 뜰 때도 이게 보입니다.",
+  "admin.edit.insertImage": "이미지 넣기",
+  "admin.edit.dropHint": "본문에 이미지를 끌어다 놓거나 붙여 넣어도 됩니다.",
+  "admin.media.pickTitle": "이미지 고르기",
+  "admin.media.pickEmpty": "보관함이 아직 비었습니다. 한 장 올려 보세요.",
+  "admin.media.uploading": "올리는 중…",
+  "admin.media.uploadErr": "올리지 못했습니다: {0}",
+  "admin.edit.coverNone": "대표 이미지 없음"
  }
 }

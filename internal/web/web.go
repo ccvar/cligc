@@ -34,10 +34,12 @@ var staticFS embed.FS
 
 // Config 是站点级设置。
 type Config struct {
-	BaseURL         string // 绝对地址，如 https://cligc.com（无尾斜杠）
-	Title           string
-	Description     string
-	MediaRoot       string
+	BaseURL     string // 绝对地址，如 https://cligc.com（无尾斜杠）
+	Title       string
+	Description string
+	MediaRoot   string
+	// ImageMaxDim 是上传图片的长边上限，超过就等比缩小。<=0 表示不缩。
+	ImageMaxDim     int
 	DailyPublishCap int
 	PerPage         int
 
@@ -225,6 +227,10 @@ func (s *Server) Routes(mux *http.ServeMux) {
 	mux.Handle("GET /admin/media", a(s.handleMediaList))
 	mux.Handle("POST /admin/media", a(s.handleMediaUpload))
 	mux.Handle("POST /admin/media/{id}/delete", a(s.handleMediaDelete))
+	// 编辑器里的选图弹窗和拖拽/粘贴上传。走 JSON 而不是表单跳转：
+	// 这两个动作要的是"刚存下来的图在哪"，好当场插进正文。
+	mux.Handle("GET /admin/media.json", a(s.handleMediaPick))
+	mux.Handle("POST /admin/media.json", a(s.handleMediaPickUpload))
 
 	mux.Handle("GET /admin/categories", a(s.handleCategories))
 	mux.Handle("POST /admin/categories", a(s.handleCategorySave))
@@ -304,6 +310,11 @@ type page struct {
 	// 由路径推导而不是让每个 handler 自己设：靠人记得设标志的方案，
 	// 迟早会有一个新页面忘了设，而表现是"这一页样式全丢了"。
 	IsAdmin bool
+	// Image 是分享到社交平台时那张大图的绝对地址，空则不发 og:image。
+	// ImageAlt 跟着它走：发了图不给 alt，读屏软件念出来的是一串文件名。
+	Image    string
+	ImageAlt string
+
 	// Alternates 是同一内容的其它语言版本。
 	//
 	// 三条规则错一条整套失效：必须**互相**引用（每个版本列出所有版本，

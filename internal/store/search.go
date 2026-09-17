@@ -68,6 +68,7 @@ func (d *DB) Search(ctx context.Context, q string, f SearchFilter) ([]SearchHit,
 		   join posts p on p.id=post_fts.rowid
 		   join users u on u.id=p.user_id
 		   left join categories c on c.id=p.category_id
+		   left join media m on m.id=p.cover_media_id
 		  where `+where+`
 		  order by post_fts.rank
 		  limit ? offset ?`, append(args, limit, f.Offset)...)

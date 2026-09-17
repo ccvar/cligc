@@ -184,7 +184,7 @@
   "admin.media.title": "Medien",
   "admin.media.upload": "Bild hochladen",
   "admin.media.uploadBtn": "Hochladen",
-  "admin.media.hint": "JPEG / PNG / GIF / WebP, höchstens {0} MB pro Datei. Der Typ wird am Dateiinhalt erkannt – die Endung zu ändern bringt nichts. Inhaltsgleiche Dateien werden automatisch wiederverwendet.",
+  "admin.media.hint": "JPEG / PNG / GIF / WebP, je {0} MB. Hochgeladenes wird in WebP umgewandelt und auf die Größengrenze verkleinert – fällt die Umwandlung größer aus, bleibt das Original, und animierte GIFs bleiben unangetastet. Der Typ wird aus den Bytes gelesen, das Umbenennen der Endung ändert also nichts. Gleicher Inhalt erneut hochgeladen verwendet die vorhandene Datei.",
   "admin.media.count": {
    "one": "{n} Datei",
    "other": "{n} Dateien"
@@ -348,6 +348,20 @@
   "admin.site.langDefault": "Standard",
   "admin.site.langEmpty": "Noch keine Inhalte",
   "admin.site.copyHint": "Wird je Sprache gespeichert. <title> und Meta-Description landen unverändert in den Suchergebnissen – eine englische Seite mit deutschem Titel ist vergebene Mühe. Lässt du eine Sprache leer, gilt die der Standardsprache.",
-  "admin.site.fromCatalog": "Dieser Wert kommt aus deinem -lang-dir-Wörterbuch; was du hier einträgst, bleibt wirkungslos."
+  "admin.site.fromCatalog": "Dieser Wert kommt aus deinem -lang-dir-Wörterbuch; was du hier einträgst, bleibt wirkungslos.",
+  "admin.edit.cover": "Titelbild",
+  "admin.edit.coverHint": "Erscheint auf den Karten der Listen, über dem Beitrag und als großes Bild beim Teilen (og:image). Querformat wirkt am besten, etwa 1200×630.",
+  "admin.edit.coverPick": "Titelbild wählen",
+  "admin.edit.coverChange": "Ersetzen",
+  "admin.edit.coverRemove": "Titelbild entfernen",
+  "admin.edit.coverAlt": "Alternativtext des Titelbilds",
+  "admin.edit.coverAltHint": "Eine Zeile dazu, was zu sehen ist. Screenreader lesen sie vor, und sie steht da, wenn das Bild nicht lädt.",
+  "admin.edit.insertImage": "Bild einfügen",
+  "admin.edit.dropHint": "Du kannst ein Bild auch in den Text ziehen oder einfügen.",
+  "admin.media.pickTitle": "Bild wählen",
+  "admin.media.pickEmpty": "Die Mediathek ist noch leer – lade zuerst eines hoch.",
+  "admin.media.uploading": "Wird hochgeladen…",
+  "admin.media.uploadErr": "Hochladen fehlgeschlagen: {0}",
+  "admin.edit.coverNone": "Kein Titelbild"
  }
 }

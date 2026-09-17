@@ -583,3 +583,73 @@ table.data.cats td { white-space: normal; }
   padding-inline-start: 0;
 }
 .settings:not([data-multilang]) .sitecopy-head { display: none; }
+
+/* --- 封面与选图 --- */
+
+/* 正文标题那一行右边挂一个"插入图片"：插图是写到一半的动作，
+   手不该为它离开正文跑到右边那栏去。 */
+.label-row {
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+}
+.label-row .btn { margin-inline-start: auto; font-weight: 400; }
+
+.cover-field .cover-preview {
+  margin-bottom: var(--s2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--surface-2);
+}
+.cover-preview img {
+  display: block;
+  width: 100%;
+  height: auto;
+  /* 卡片和分享大图都是横的，这里按同样的比例裁着预览——让人在后台看到的
+     就是别人将来看到的那一块，而不是一整张再自己脑补。 */
+  aspect-ratio: 1200 / 630;
+  object-fit: cover;
+}
+.cover-acts { display: flex; gap: var(--s2); margin-bottom: var(--s2); }
+
+/* 拖拽落点。整块正文变色比在角落放一个小提示可靠——手往哪儿放很随意。 */
+[data-imagedrop].dropping {
+  border-color: var(--accent);
+  box-shadow: inset 0 0 0 2px var(--accent-soft);
+}
+[data-imagedrop].busy { opacity: 0.6; }
+
+.media-pick { width: min(46rem, 92vw); }
+.media-pick .dialog-head { gap: var(--s2); }
+.media-pick [data-mediapick-upload] { margin-inline-start: auto; cursor: pointer; }
+.media-pick-msg { margin: 0 var(--s4); }
+/* 加了 .thin-scroll：这块会自己滚，原生滚动条在弹窗里又粗又抢眼。 */
+.media-pick-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(7.5rem, 1fr));
+  gap: var(--s3);
+  padding: var(--s4);
+  max-height: min(60vh, 28rem);
+  overflow-y: auto;
+}
+.media-pick-item {
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface-2);
+  cursor: pointer;
+  overflow: hidden;
+  transition: border-color var(--ease), transform var(--ease);
+}
+.media-pick-item img {
+  display: block;
+  width: 100%;
+  height: 5.5rem;
+  object-fit: cover;
+}
+.media-pick-item:hover,
+.media-pick-item:focus-visible {
+  border-color: var(--accent);
+  transform: translateY(-1px);
+}

@@ -3,10 +3,15 @@ package api
 import (
 	"bytes"
 	"encoding/json"
+	"image"
+	"image/color"
+	"image/png"
+	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
 	"path/filepath"
 	"slices"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -368,4 +373,100 @@ func TestWhoamiListsPublicLanguages(t *testing.T) {
 	if got, want := langs(), []string{"zh-Hans", "en", "ja"}; !slices.Equal(got, want) {
 		t.Errorf("site_langs = %v，想要 %v", got, want)
 	}
+}
+
+// TestCoverThroughAPI 封面能通过 API 设上、读回、取消。
+//
+// AI 客户端配图走的就是这条路：先 POST /media 拿到 ID，再把 ID 写进文章。
+func TestCoverThroughAPI(t *testing.T) {
+	h := setup(t, 0)
+
+	var up map[string]any
+	if code := h.upload(t, "cover.png", testPNGBytes(t, 320, 180), &up); code != http.StatusCreated {
+		t.Fatalf("上传 = %d", code)
+	}
+	if up["mime"] != "image/webp" {
+		t.Errorf("mime = %v，上传后该是 WebP", up["mime"])
+	}
+	if up["width"].(float64) != 320 || up["height"].(float64) != 180 {
+		t.Errorf("尺寸 = %v x %v，想要 320x180", up["width"], up["height"])
+	}
+	id := int64(up["id"].(float64))
+
+	var created map[string]any
+	if code := h.req("POST", "/api/v1/posts", h.write, map[string]any{
+		"title": "配了图的一篇", "body_md": "正文", "cover_media_id": id, "cover_alt": "一张图",
+	}, &created); code != http.StatusCreated {
+		t.Fatalf("建草稿 = %d: %v", code, created)
+	}
+	if got := int64(created["cover_media_id"].(float64)); got != id {
+		t.Errorf("cover_media_id = %d，想要 %d", got, id)
+	}
+	if u, _ := created["cover_url"].(string); !strings.HasPrefix(u, "https://example.com/media/") {
+		t.Errorf("cover_url = %q，该是绝对地址", u)
+	}
+	if created["cover_alt"] != "一张图" {
+		t.Errorf("cover_alt = %v", created["cover_alt"])
+	}
+
+	// 传 0 取消封面；不传则不动。
+	// 每次都解进一张新 map：解 JSON 到非空 map 是合并而不是替换，
+	// 复用同一张的话，第二次响应里已经消失的字段还留着上一次的值。
+	path := "/api/v1/posts/" + strconv.FormatInt(int64(created["id"].(float64)), 10)
+	patch := func(body map[string]any) map[string]any {
+		t.Helper()
+		out := map[string]any{}
+		if code := h.req("PATCH", path, h.write, body, &out); code != http.StatusOK {
+			t.Fatalf("PATCH %v = %d：%v", body, code, out)
+		}
+		return out
+	}
+	if _, still := patch(map[string]any{"summary": "只改摘要"})["cover_media_id"]; !still {
+		t.Error("没提到封面的那次更新把封面弄没了")
+	}
+	if got := patch(map[string]any{"cover_media_id": 0}); got["cover_media_id"] != nil {
+		t.Errorf("传 0 没能取消封面：%v", got["cover_media_id"])
+	}
+}
+
+// upload 发一个 multipart 上传。
+func (h *harness) upload(t *testing.T, name string, data []byte, out any) int {
+	t.Helper()
+	var body bytes.Buffer
+	mw := multipart.NewWriter(&body)
+	fw, err := mw.CreateFormFile("file", name)
+	if err != nil {
+		t.Fatal(err)
+	}
+	fw.Write(data)
+	mw.Close()
+
+	r, err := http.NewRequest("POST", h.srv.URL+"/api/v1/media", &body)
+	if err != nil {
+		t.Fatal(err)
+	}
+	r.Header.Set("Authorization", "Bearer "+h.write)
+	r.Header.Set("Content-Type", mw.FormDataContentType())
+	resp, err := http.DefaultClient.Do(r)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer resp.Body.Close()
+	json.NewDecoder(resp.Body).Decode(out)
+	return resp.StatusCode
+}
+
+func testPNGBytes(t *testing.T, w, h int) []byte {
+	t.Helper()
+	m := image.NewRGBA(image.Rect(0, 0, w, h))
+	for y := range h {
+		for x := range w {
+			m.Set(x, y, color.RGBA{uint8(x), uint8(y), 120, 255})
+		}
+	}
+	var b bytes.Buffer
+	if err := png.Encode(&b, m); err != nil {
+		t.Fatal(err)
+	}
+	return b.Bytes()
 }

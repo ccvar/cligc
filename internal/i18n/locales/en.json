@@ -68,7 +68,7 @@
   "admin.media.deleted": "Deleted. Posts embedding it will show a broken image.",
   "admin.media.empty": "No files yet",
   "admin.media.emptyHint": "Upload one, or let an AI client use upload_media.",
-  "admin.media.hint": "JPEG / PNG / GIF / WebP, up to {0} MB each. The type is detected from the file contents, so renaming the extension does nothing. Identical files are reused automatically.",
+  "admin.media.hint": "JPEG / PNG / GIF / WebP, up to {0} MB each. Uploads are converted to WebP and scaled down to the size limit — if the conversion comes out larger, the original is kept, and animated GIFs are left alone. The type is read from the file's bytes, so renaming the extension changes nothing. Re-uploading identical content reuses the existing file.",
   "admin.media.noFile": "No file selected",
   "admin.media.title": "Media",
   "admin.media.tooBig": "Upload failed: file too large, or the form was malformed",
@@ -344,7 +344,21 @@
   "admin.site.langDefault": "Default",
   "admin.site.langEmpty": "No content yet",
   "admin.site.copyHint": "Stored per language. The <title> and meta description go straight into search results, so an English page carrying a Chinese title is wasted work. Leave a language empty and it falls back to the default one.",
-  "admin.site.fromCatalog": "This one comes from your -lang-dir catalogue; what you type here has no effect."
+  "admin.site.fromCatalog": "This one comes from your -lang-dir catalogue; what you type here has no effect.",
+  "admin.edit.cover": "Cover image",
+  "admin.edit.coverHint": "Shown on list cards, at the top of the post, and as the large image when the post is shared (og:image). Landscape works best — around 1200×630.",
+  "admin.edit.coverPick": "Choose a cover",
+  "admin.edit.coverChange": "Replace",
+  "admin.edit.coverRemove": "Remove cover",
+  "admin.edit.coverAlt": "Cover alt text",
+  "admin.edit.coverAltHint": "One line describing what is in the picture. Screen readers read this out, and it is what shows when the image fails to load.",
+  "admin.edit.insertImage": "Insert image",
+  "admin.edit.dropHint": "You can also drop an image straight into the body, or paste one.",
+  "admin.media.pickTitle": "Choose an image",
+  "admin.media.pickEmpty": "Nothing in the library yet — upload one first.",
+  "admin.media.uploading": "Uploading…",
+  "admin.media.uploadErr": "Upload failed: {0}",
+  "admin.edit.coverNone": "No cover"
  },
  "name": "English"
 }

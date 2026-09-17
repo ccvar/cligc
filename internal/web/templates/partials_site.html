@@ -6,7 +6,15 @@
 {{/* 收的是 dict：文章 + 是否多作者。单人站上署名不链作者页，
      而 postcard 的 . 是 store.Post，拿不到页面上的字段，只能传进来。 */}}
 {{$p := .P}}
-<article class="card">
+<article class="card{{if $p.CoverPath}} has-cover{{end}}">
+  {{if $p.CoverPath}}
+  <a class="card-cover" href="{{lurl (printf "/p/%s" $p.Slug)}}" tabindex="-1" aria-hidden="true">
+    <img src="/media/{{$p.CoverPath}}" alt=""
+         {{if $p.CoverW}}width="{{itoa $p.CoverW}}" height="{{itoa $p.CoverH}}"{{end}}
+         loading="lazy" decoding="async">
+  </a>
+  {{end}}
+  <div class="card-body">
   <h2><a href="{{lurl (printf "/p/%s" $p.Slug)}}">{{$p.Title}}</a></h2>
   <p class="meta">
     {{if $p.CategoryName}}<a class="sec-tag" href="{{lurl (printf "/c/%s" $p.CategorySlug)}}">{{$p.CategoryName}}</a>{{end}}
@@ -21,12 +29,20 @@
     {{range $p.Tags}}<li><a class="tag" href="{{lurl (printf "/t/%s" (urlp .Slug))}}">{{.Name}}</a></li>{{end}}
   </ul>
   {{end}}
+  </div>
 </article>
 {{end}}
 
 {{define "featured-card"}}
 {{$p := .P}}
 <article class="feat-card">
+  {{if $p.CoverPath}}
+  <a class="feat-cover" href="{{lurl (printf "/p/%s" $p.Slug)}}" tabindex="-1" aria-hidden="true">
+    <img src="/media/{{$p.CoverPath}}" alt=""
+         {{if $p.CoverW}}width="{{itoa $p.CoverW}}" height="{{itoa $p.CoverH}}"{{end}}
+         decoding="async">
+  </a>
+  {{end}}
   <h3><a href="{{lurl (printf "/p/%s" $p.Slug)}}">{{$p.Title}}</a></h3>
   {{if $p.Summary}}<p class="feat-summary">{{$p.Summary}}</p>{{end}}
   <p class="meta">

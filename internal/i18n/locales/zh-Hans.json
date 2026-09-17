@@ -59,7 +59,7 @@
   "admin.media.deleted": "已删除。引用了这张图的文章会显示裂图。",
   "admin.media.empty": "媒体库是空的",
   "admin.media.emptyHint": "上传一张图，或者让 AI 客户端通过 upload_media 传。",
-  "admin.media.hint": "支持 JPEG / PNG / GIF / WebP，单个不超过 {0} MB。类型按文件内容判断，改扩展名没有用。相同内容重复上传会自动复用同一份。",
+  "admin.media.hint": "支持 JPEG / PNG / GIF / WebP，单个不超过 {0} MB。上传后自动转成 WebP 并按长边缩到上限以内——转完比原图大就保持原样，动图不动。类型按文件内容判断，改扩展名没有用。相同内容重复上传会复用同一份。",
   "admin.media.noFile": "没有选择文件",
   "admin.media.title": "媒体库",
   "admin.media.tooBig": "上传失败：文件过大或表单格式不对",
@@ -330,7 +330,21 @@
   "admin.site.langDefault": "默认语言",
   "admin.site.langEmpty": "还没有内容",
   "admin.site.copyHint": "每个语言各存一份。<title> 和 meta description 直接进搜索结果，英文版挂着中文标题等于白做。某个语言留空就回退到默认语言那一份。",
-  "admin.site.fromCatalog": "这一项由 -lang-dir 词表提供，在这里填的不生效。"
+  "admin.site.fromCatalog": "这一项由 -lang-dir 词表提供，在这里填的不生效。",
+  "admin.edit.cover": "封面",
+  "admin.edit.coverHint": "出现在列表卡片、文章页顶部，以及分享到社交平台时的大图（og:image）。横图效果最好，1200×630 左右。",
+  "admin.edit.coverPick": "选择封面",
+  "admin.edit.coverChange": "更换",
+  "admin.edit.coverRemove": "移除封面",
+  "admin.edit.coverAlt": "封面替代文字",
+  "admin.edit.coverAltHint": "一句话说明图里是什么。读屏软件念的是它，图加载不出来时显示的也是它。",
+  "admin.edit.insertImage": "插入图片",
+  "admin.edit.dropHint": "也可以把图片直接拖进正文，或者粘贴。",
+  "admin.media.pickTitle": "选择图片",
+  "admin.media.pickEmpty": "媒体库还是空的，先传一张。",
+  "admin.media.uploading": "上传中…",
+  "admin.media.uploadErr": "上传失败：{0}",
+  "admin.edit.coverNone": "无封面"
  },
  "name": "中文"
 }

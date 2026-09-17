@@ -54,9 +54,15 @@ jobs:
       - name: 构建
         # 纯 Go（modernc.org/sqlite 无 cgo），产物是静态二进制。
         # 跑在自托管 Runner 上时 GOOS/GOARCH 就是本机，不需要交叉编译。
+        #
+        # -tags nodynamic 把 libwebp 钉在编译进来的那一份上。
+        # 不加的话，运行时会先试着 dlopen 系统的 libwebp——而我们要用它去
+        # 解码**陌生人上传的图片**。服务器上那份 libwebp 是什么年份的没人
+        # 保证（CVE-2023-4863 就是一个解码器堆溢出），把这件事交给宿主机
+        # 是拿攻击面换一点速度。顺带二进制还小一些。
         run: |
           CGO_ENABLED=0 GOOS=${{ vars.DEPLOY_OS || 'linux' }} GOARCH=${{ vars.DEPLOY_ARCH || 'amd64' }} \
-            go build -trimpath -ldflags="-s -w" -o cligc-deploy ./cmd/cligc
+            go build -trimpath -tags nodynamic -ldflags="-s -w" -o cligc-deploy ./cmd/cligc
           ls -la cligc-deploy
 
       # --- 路线一：自托管 Runner（默认）---

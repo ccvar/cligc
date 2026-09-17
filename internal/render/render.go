@@ -11,6 +11,7 @@ package render
 import (
 	"bytes"
 	"net/url"
+	"strconv"
 	"strings"
 	"unicode"
 
@@ -38,10 +39,16 @@ type Renderer struct {
 	md goldmark.Markdown
 }
 
+// SizeLookup 回答"站内这张图多大"。/media/ab/xxxx.webp 这样的站内路径
+// 传进来，返回像素宽高。
+//
+// 传函数而不是传媒体表：render 不该知道数据库的存在。它只需要这一个答案。
+type SizeLookup func(src string) (w, h int, ok bool)
+
 // New 构造渲染器。siteHost 用来区分站内外链接（如 "cligc.com"），留空则
 // 视所有绝对 URL 为站外。
-func New(siteHost string) *Renderer {
-	t := &ugcLinks{host: strings.ToLower(siteHost)}
+func New(siteHost string, size SizeLookup) *Renderer {
+	t := &ugcLinks{host: strings.ToLower(siteHost), size: size}
 	md := goldmark.New(
 		goldmark.WithExtensions(
 			extension.GFM,
@@ -125,7 +132,10 @@ func (r *Renderer) Render(src string) Result {
 // ugcLinks 是一个 AST transformer，给站外链接补上 rel / target 属性。
 // goldmark 的 HTML renderer 会把 node 上的属性按 LinkAttributeFilter 输出，
 // rel 与 target 都在白名单内。
-type ugcLinks struct{ host string }
+type ugcLinks struct {
+	host string
+	size SizeLookup
+}
 
 func (t *ugcLinks) Transform(doc *ast.Document, reader text.Reader, pc parser.Context) {
 	src := reader.Source()
@@ -142,9 +152,38 @@ func (t *ugcLinks) Transform(doc *ast.Document, reader text.Reader, pc parser.Co
 			if t.external(string(v.URL(src))) {
 				mark(v)
 			}
+		case *ast.Image:
+			t.markImage(v)
 		}
 		return ast.WalkContinue, nil
 	})
+}
+
+// markImage 给正文里的图片补上三样东西：延迟加载、异步解码、像素尺寸。
+//
+// 尺寸是其中真正要紧的那个。没有 width/height，浏览器在图片下载完之前
+// 不知道该留多高的位置，图一到位就把下面的正文整段往下顶——这是 Core
+// Web Vitals 里 CLS 那一项最常见的来源，而长文里每张图都会顶一次。
+//
+// loading="lazy" 不加在第一张图上：首屏的图延迟加载反而会拖慢 LCP。
+// 但正文里第一张图通常也不在首屏（上面还有标题和一段字），这里不为这个
+// 例外增加判断——判断错的代价比收益大。
+func (t *ugcLinks) markImage(n *ast.Image) {
+	n.SetAttributeString("loading", []byte("lazy"))
+	n.SetAttributeString("decoding", []byte("async"))
+	if t.size == nil {
+		return
+	}
+	dest := string(n.Destination)
+	// 只查站内的图。站外图片的尺寸这里拿不到，也不该为了拿它去发请求——
+	// 渲染一篇文章会变成对着别人的服务器打一串同步请求。
+	if !strings.HasPrefix(dest, "/") {
+		return
+	}
+	if w, h, ok := t.size(dest); ok && w > 0 && h > 0 {
+		n.SetAttributeString("width", []byte(strconv.Itoa(w)))
+		n.SetAttributeString("height", []byte(strconv.Itoa(h)))
+	}
 }
 
 func mark(n ast.Node) {

@@ -178,7 +178,7 @@
   "admin.media.title": "媒體庫",
   "admin.media.upload": "上傳圖片",
   "admin.media.uploadBtn": "上傳",
-  "admin.media.hint": "支援 JPEG / PNG / GIF / WebP，單一檔案不超過 {0} MB。類型是依檔案內容判斷的，改副檔名沒有用。內容相同的檔案重複上傳會自動沿用同一份。",
+  "admin.media.hint": "支援 JPEG / PNG / GIF / WebP，單個不超過 {0} MB。上傳後自動轉成 WebP 並按長邊縮到上限以內——轉完比原圖大就保持原樣，動圖不動。類型按檔案內容判斷，改副檔名沒有用。相同內容重複上傳會重用同一份。",
   "admin.media.count": {
    "other": "共 {n} 個檔案"
   },
@@ -342,6 +342,20 @@
   "admin.site.langDefault": "預設語言",
   "admin.site.langEmpty": "還沒有內容",
   "admin.site.copyHint": "每個語言各存一份。<title> 和 meta description 會直接進搜尋結果，英文版掛著中文標題等於白做。某個語言留空就回退到預設語言那一份。",
-  "admin.site.fromCatalog": "這一項由 -lang-dir 詞表提供，在這裡填的不生效。"
+  "admin.site.fromCatalog": "這一項由 -lang-dir 詞表提供，在這裡填的不生效。",
+  "admin.edit.cover": "封面",
+  "admin.edit.coverHint": "出現在列表卡片、文章頁頂部，以及分享到社群平台時的大圖（og:image）。橫圖效果最好，1200×630 左右。",
+  "admin.edit.coverPick": "選擇封面",
+  "admin.edit.coverChange": "更換",
+  "admin.edit.coverRemove": "移除封面",
+  "admin.edit.coverAlt": "封面替代文字",
+  "admin.edit.coverAltHint": "一句話說明圖裡是什麼。讀螢幕軟體念的是它，圖載不出來時顯示的也是它。",
+  "admin.edit.insertImage": "插入圖片",
+  "admin.edit.dropHint": "也可以把圖片直接拖進內文，或者貼上。",
+  "admin.media.pickTitle": "選擇圖片",
+  "admin.media.pickEmpty": "媒體庫還是空的，先傳一張。",
+  "admin.media.uploading": "上傳中…",
+  "admin.media.uploadErr": "上傳失敗：{0}",
+  "admin.edit.coverNone": "無封面"
  }
 }

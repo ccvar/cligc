@@ -178,7 +178,7 @@
   "admin.media.title": "メディア",
   "admin.media.upload": "画像をアップロード",
   "admin.media.uploadBtn": "アップロード",
-  "admin.media.hint": "JPEG / PNG / GIF / WebP、1 ファイル {0} MB まで。種類はファイルの中身から判定するため、拡張子を変えても意味がありません。同じ内容のファイルは自動で使い回されます。",
+  "admin.media.hint": "JPEG / PNG / GIF / WebP、1 件 {0} MB まで。アップロード後に WebP へ変換し、長辺を上限まで縮めます——変換して大きくなる場合は元のまま、アニメ GIF はそのままです。種類はファイルの中身で判定するので、拡張子を変えても意味がありません。同じ内容を上げ直すと既存のものを使い回します。",
   "admin.media.count": {
    "other": "{n} 個のファイル"
   },
@@ -342,6 +342,20 @@
   "admin.site.langDefault": "既定",
   "admin.site.langEmpty": "まだ記事がありません",
   "admin.site.copyHint": "言語ごとに保存します。<title> と meta description はそのまま検索結果に出るので、英語版に日本語の題名が付いていては意味がありません。空にした言語は既定の言語のものを使います。",
-  "admin.site.fromCatalog": "この項目は -lang-dir の辞書から来ています。ここに入力しても効きません。"
+  "admin.site.fromCatalog": "この項目は -lang-dir の辞書から来ています。ここに入力しても効きません。",
+  "admin.edit.cover": "カバー画像",
+  "admin.edit.coverHint": "一覧のカードと記事の冒頭、それに SNS で共有したときの大きな画像（og:image）に出ます。横長が向いていて、1200×630 くらいが目安です。",
+  "admin.edit.coverPick": "カバーを選ぶ",
+  "admin.edit.coverChange": "差し替え",
+  "admin.edit.coverRemove": "カバーを外す",
+  "admin.edit.coverAlt": "カバーの代替テキスト",
+  "admin.edit.coverAltHint": "何が写っているかを一行で。スクリーンリーダーが読み上げ、画像が出ないときにも表示されます。",
+  "admin.edit.insertImage": "画像を挿入",
+  "admin.edit.dropHint": "本文に画像をドラッグしたり、貼り付けたりもできます。",
+  "admin.media.pickTitle": "画像を選ぶ",
+  "admin.media.pickEmpty": "ライブラリはまだ空です。まず一枚どうぞ。",
+  "admin.media.uploading": "アップロード中…",
+  "admin.media.uploadErr": "アップロードに失敗しました：{0}",
+  "admin.edit.coverNone": "カバーなし"
  }
 }

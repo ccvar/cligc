@@ -10,6 +10,8 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
+	"cligc.com/internal/imaging"
 )
 
 // 允许上传的类型白名单。不做通用文件托管——一个内容站的上传口
@@ -28,20 +30,37 @@ var allowedMIME = map[string]string{
 // MaxMediaSize 是单个文件的上限。
 const MaxMediaSize = 8 << 20 // 8 MiB
 
-// SaveMedia 落盘并登记一个上传文件，按内容哈希去重。
+// SaveMedia 落盘并登记一个上传文件：先转成 WebP，再按**转换后**的内容
+// 哈希去重。
 //
-// 同一份内容重复上传会直接复用已有记录——AI 客户端重试时尤其常见。
-func (d *DB) SaveMedia(ctx context.Context, root string, userID int64, filename, mime string, data []byte) (*Media, error) {
+// 哈希取转换后的字节，是因为它同时充当文件名和去重键。取原始字节的话，
+// 同一张图换个 JPEG 质量重新导出一次就是一条新记录，而那两条最终落盘的
+// WebP 可能一模一样。
+//
+// maxDim 是长边上限，<=0 表示不缩。
+func (d *DB) SaveMedia(ctx context.Context, root string, userID int64, filename, mime string, data []byte, maxDim int) (*Media, error) {
 	if len(data) == 0 {
 		return nil, fmt.Errorf("%w: empty file", ErrInvalidInput)
 	}
 	if len(data) > MaxMediaSize {
 		return nil, fmt.Errorf("%w: file exceeds %d bytes", ErrInvalidInput, MaxMediaSize)
 	}
-	ext, ok := allowedMIME[mime]
-	if !ok {
+	if _, ok := allowedMIME[mime]; !ok {
 		return nil, fmt.Errorf("%w: unsupported type %q", ErrInvalidInput, mime)
 	}
+
+	// 转换失败不该让上传失败：Process 的失败模式是"什么都没做"，原图照收。
+	// 但解不出来的东西要拦住——MIME 是客户端说的，做不得数，而一个存进
+	// 媒体库的 .png 实际上是别的东西，是个货真价实的问题。
+	img, err := imaging.Process(data, mime, maxDim)
+	if err != nil {
+		if errors.Is(err, imaging.ErrTooLarge) {
+			return nil, fmt.Errorf("%w: image is too large to process", ErrInvalidInput)
+		}
+		return nil, fmt.Errorf("%w: not a readable image", ErrInvalidInput)
+	}
+	data, mime = img.Data, img.MIME
+	ext := allowedMIME[mime]
 
 	sum := sha256.Sum256(data)
 	hash := hex.EncodeToString(sum[:])
@@ -67,25 +86,33 @@ func (d *DB) SaveMedia(ctx context.Context, root string, userID int64, filename,
 	if name == "" || name == "." || name == "/" {
 		name = hash[:8] + ext
 	}
+	// 转换过就把扩展名也改掉：一个叫 photo.png 的 WebP 文件，下载下来
+	// 双击打不开是小事，贴到别处被当成 PNG 处理是麻烦事。
+	if img.Converted {
+		name = strings.TrimSuffix(name, filepath.Ext(name)) + ext
+	}
 	n := now()
 	res, err := d.W.ExecContext(ctx,
-		`insert into media(user_id,sha256,filename,mime,size,path,created_at) values(?,?,?,?,?,?,?)`,
-		userID, hash, name, mime, len(data), rel, n)
+		`insert into media(user_id,sha256,filename,mime,size,path,width,height,created_at)
+		 values(?,?,?,?,?,?,?,?,?)`,
+		userID, hash, name, mime, len(data), rel, img.Width, img.Height, n)
 	if err != nil {
 		os.Remove(abs)
 		return nil, err
 	}
 	id, _ := res.LastInsertId()
 	return &Media{ID: id, UserID: userID, SHA256: hash, Filename: name,
-		MIME: mime, Size: int64(len(data)), Path: rel, CreatedAt: ts(n)}, nil
+		MIME: mime, Size: int64(len(data)), Path: rel,
+		Width: img.Width, Height: img.Height, CreatedAt: ts(n)}, nil
 }
 
-const mediaCols = `id,user_id,sha256,filename,mime,size,path,created_at`
+const mediaCols = `id,user_id,sha256,filename,mime,size,path,width,height,created_at`
 
 func scanMedia(sc interface{ Scan(...any) error }) (*Media, error) {
 	var m Media
 	var created int64
-	err := sc.Scan(&m.ID, &m.UserID, &m.SHA256, &m.Filename, &m.MIME, &m.Size, &m.Path, &created)
+	err := sc.Scan(&m.ID, &m.UserID, &m.SHA256, &m.Filename, &m.MIME, &m.Size, &m.Path,
+		&m.Width, &m.Height, &created)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, ErrNotFound
 	}
@@ -200,4 +227,21 @@ func (d *DB) DeleteMedia(ctx context.Context, a Actor, root string, id int64) er
 		os.Remove(abs)
 	}
 	return nil
+}
+
+// mediaSize 回答"/media/ab/xxxx.webp 这张图多大"，给渲染器写 width/height 用。
+//
+// 每渲染一张站内图片查一次库。这看着频繁，但渲染只发生在**写**的时候
+// （正文 HTML 存在库里），读页面一次都不查。
+func (d *DB) mediaSize(src string) (int, int, bool) {
+	rel, ok := strings.CutPrefix(src, "/media/")
+	if !ok || rel == "" {
+		return 0, 0, false
+	}
+	var w, h int
+	err := d.R.QueryRow(`select width,height from media where path=?`, rel).Scan(&w, &h)
+	if err != nil || w <= 0 || h <= 0 {
+		return 0, 0, false
+	}
+	return w, h, true
 }

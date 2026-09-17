@@ -64,6 +64,17 @@ func (s *Server) handleIndex(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// coverURL 把封面变成绝对地址给 og:image 用。没有封面就返回空串。
+//
+// 必须是绝对地址：抓取分享卡片的那些爬虫不在这个域名下，相对路径它们
+// 解不开，表现是分享出去一片空白。
+func (s *Server) coverURL(p *store.Post) string {
+	if p.CoverPath == "" {
+		return ""
+	}
+	return s.cfg.BaseURL + "/media/" + p.CoverPath
+}
+
 // handlePost 是文章详情页，站里唯一真正想被收录的页面类型。
 func (s *Server) handlePost(w http.ResponseWriter, r *http.Request) {
 	p, err := s.db.PostBySlug(r.Context(), r.PathValue("slug"))
@@ -113,6 +124,8 @@ func (s *Server) handlePost(w http.ResponseWriter, r *http.Request) {
 		// 大纲至少要有两条才值得占一栏：只有一条的目录不提供任何导航价值，
 		// 却要吃掉整个右侧空间。
 		Reading:    len(p.Headings) >= 2,
+		Image:      s.coverURL(p),
+		ImageAlt:   p.CoverAlt,
 		Alternates: s.alternatesFor(p, others),
 		Flash:      r.URL.Query().Get("flash"),
 		Data: map[string]any{

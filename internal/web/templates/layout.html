@@ -23,7 +23,11 @@
 <meta property="og:title" content="{{.Title}}">
 {{if .Desc}}<meta property="og:description" content="{{.Desc}}">{{end}}
 <meta property="og:url" content="{{.Canonical}}">
-<meta name="twitter:card" content="summary">
+{{if .Image}}<meta property="og:image" content="{{.Image}}">
+<meta property="og:image:alt" content="{{.ImageAlt}}">{{end}}
+{{/* 有封面才用大图卡片。没有封面却声明 summary_large_image，社交平台
+     会去正文里自己找一张图凑数，找到什么全看运气。 */}}
+<meta name="twitter:card" content="{{if .Image}}summary_large_image{{else}}summary{{end}}">
 <meta name="theme-color" content="#fcfbf9" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#14151a" media="(prefers-color-scheme: dark)">
 <link rel="icon" type="image/svg+xml" href="{{asset "favicon.svg"}}">

@@ -138,6 +138,10 @@ func cmdServe(args []string) error {
 	title := fs.String("title", env("CLIGC_TITLE", "cligc"), "站点标题")
 	desc := fs.String("desc", env("CLIGC_DESC", ""), "站点描述")
 	mediaDir := fs.String("media", env("CLIGC_MEDIA", "data/media"), "上传文件目录")
+	// 上传的图片一律转 WebP：实测照片省一半、截图省九成，而图片通常是
+	// 一个内容站里最重的东西。转完比原图大就不换（纯色图会这样）。
+	imgMax := fs.Int("img-max", envInt("CLIGC_IMG_MAX", 2560),
+		"上传图片的长边上限，超过就等比缩小；0 表示原样保存")
 	dailyCap := fs.Int("daily-cap", envInt("CLIGC_DAILY_CAP", 5),
 		"每用户每日发布上限，0 表示不限")
 	trustProxy := fs.Bool("trust-proxy", os.Getenv("CLIGC_TRUST_PROXY") != "",
@@ -201,7 +205,8 @@ func cmdServe(args []string) error {
 
 	webSrv, err := web.New(db, web.Config{
 		BaseURL: *baseURL, Title: *title, Description: *desc,
-		MediaRoot: *mediaDir, DailyPublishCap: *dailyCap, TrustProxy: *trustProxy,
+		MediaRoot: *mediaDir, ImageMaxDim: *imgMax,
+		DailyPublishCap: *dailyCap, TrustProxy: *trustProxy,
 		CommentsEnabled: *comments, PerPage: *perPage, CommentQueueCap: *queueCap,
 		IndexNow: pinger,
 	})
@@ -209,7 +214,8 @@ func cmdServe(args []string) error {
 		return err
 	}
 	apiSrv := api.New(db, api.Config{
-		BaseURL: *baseURL, MediaRoot: *mediaDir, DailyPublishCap: *dailyCap,
+		BaseURL: *baseURL, MediaRoot: *mediaDir, ImageMaxDim: *imgMax,
+		DailyPublishCap: *dailyCap,
 		// 通过 API 改了设置之后要把新 key 同步给提交器。只写库不同步的话，
 		// 下一次发布还在用旧 key，而且不报错——表现是"提交了但一直 403"。
 		OnSettingsSaved: func(st store.SiteSettings) { pinger.SetKey(st.IndexNowKey) },

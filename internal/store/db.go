@@ -103,7 +103,11 @@ func Open(path, siteHost string) (*DB, error) {
 	r.SetMaxIdleConns(8)
 	r.SetConnMaxLifetime(0)
 
-	return &DB{W: w, R: r, rend: render.New(siteHost)}, nil
+	d := &DB{W: w, R: r}
+	// 渲染器要能回答"站内这张图多大"，而那个答案在媒体表里——所以先有 DB
+	// 再有渲染器。给它的是一个函数而不是这个 DB：render 不该知道库的存在。
+	d.rend = render.New(siteHost, d.mediaSize)
+	return d, nil
 }
 
 // migrate 补上 schema.sql 里的 create table 覆盖不到的变更。
@@ -126,6 +130,10 @@ func migrate(db *sql.DB) error {
 		{"posts", "publish_at", "integer"},
 		{"posts", "category_id", "integer references categories(id) on delete set null"},
 		{"categories", "description", "text not null default ''"},
+		{"media", "width", "integer not null default 0"},
+		{"media", "height", "integer not null default 0"},
+		{"posts", "cover_media_id", "integer references media(id) on delete set null"},
+		{"posts", "cover_alt", "text not null default ''"},
 	} {
 		has, err := hasColumn(db, c.table, c.name)
 		if err != nil {

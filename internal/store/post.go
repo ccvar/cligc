@@ -39,6 +39,12 @@ type CreatePostInput struct {
 	// 写 "essays" 比写 "3" 可读得多，也不会因为换库就失效。
 	CategorySlug string
 
+	// CoverMediaID 是封面图在媒体库里的 ID，nil 表示没有封面。
+	// CoverAlt 是替代文字：封面会进 og:image，也会出现在列表卡片上，
+	// 读屏软件和图片加载失败时靠它。
+	CoverMediaID *int64
+	CoverAlt     string
+
 	// IdempotencyKey 非空时，同一用户 24 小时内重复提交相同 key 会直接
 	// 返回首次创建的那篇文章，而不是再建一篇。AI 客户端会重试，没有这个
 	// 机制迟早在站上堆出一串一模一样的草稿。
@@ -58,6 +64,11 @@ type UpdatePostInput struct {
 	Indexable    *bool
 	// CategorySlug 指向空串表示取消分类，nil 表示不改。
 	CategorySlug *string
+	// CoverMediaID 指向 0 表示取掉封面，nil 表示不改。
+	// 用 0 而不是另加一个 ClearCover 布尔：媒体 ID 从 1 开始，0 不是
+	// 任何一张图，语义没有歧义。
+	CoverMediaID *int64
+	CoverAlt     *string
 }
 
 // CreatePost 新建一篇文章。永远创建为草稿——发布是独立的一步。
@@ -117,10 +128,12 @@ func (d *DB) CreatePost(ctx context.Context, a Actor, in CreatePostInput) (*Post
 		}
 		res, err := t.ExecContext(ctx,
 			`insert into posts(user_id,slug,title,summary,body_md,body_html,body_text,toc_json,
-			                   status,source,indexable,canonical_url,lang,category_id,word_count,created_at,updated_at)
-			 values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+			                   status,source,indexable,canonical_url,lang,category_id,
+			                   cover_media_id,cover_alt,word_count,created_at,updated_at)
+			 values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
 			a.UserID, slug, in.Title, summary, in.BodyMD, r.HTML, r.Plain, encodeTOC(r.Headings),
-			StatusDraft, src, boolInt(idx), in.CanonicalURL, lang, catID, r.Words, n, n)
+			StatusDraft, src, boolInt(idx), in.CanonicalURL, lang, catID,
+			coverRef(in.CoverMediaID), strings.TrimSpace(in.CoverAlt), r.Words, n, n)
 		if err != nil {
 			return err
 		}
@@ -203,6 +216,12 @@ func (d *DB) UpdatePost(ctx context.Context, a Actor, id int64, in UpdatePostInp
 		}
 		if in.Indexable != nil {
 			add("indexable", boolInt(*in.Indexable))
+		}
+		if in.CoverMediaID != nil {
+			add("cover_media_id", coverRef(in.CoverMediaID))
+		}
+		if in.CoverAlt != nil {
+			add("cover_alt", strings.TrimSpace(*in.CoverAlt))
 		}
 		if in.Lang != nil {
 			add("lang", normalizeLang(*in.Lang))
@@ -410,12 +429,24 @@ func (d *DB) PublishedToday(ctx context.Context, userID int64) (int, error) {
 const postCols = `p.id,p.user_id,p.slug,p.title,p.summary,p.body_md,p.body_html,p.status,p.source,
 	p.indexable,p.canonical_url,p.word_count,p.created_at,p.updated_at,p.published_at,p.featured_at,
 	p.toc_json,p.lang,p.translation_key,p.publish_at,u.name,u.slug,
-	p.category_id,coalesce(c.slug,''),coalesce(c.name,'')`
+	p.category_id,coalesce(c.slug,''),coalesce(c.name,''),` + coverCols
 
 const postColsList = `p.id,p.user_id,p.slug,p.title,p.summary,'' as body_md,'' as body_html,p.status,p.source,
 	p.indexable,p.canonical_url,p.word_count,p.created_at,p.updated_at,p.published_at,p.featured_at,
 	'' as toc_json,p.lang,p.translation_key,p.publish_at,u.name,u.slug,
-	p.category_id,coalesce(c.slug,''),coalesce(c.name,'')`
+	p.category_id,coalesce(c.slug,''),coalesce(c.name,''),` + coverCols
+
+// coverCols 是封面那几列。列表页也要它——卡片上就是靠它出图。
+const coverCols = `p.cover_media_id,p.cover_alt,
+	coalesce(m.path,''),coalesce(m.width,0),coalesce(m.height,0)`
+
+// postFrom 是取文章时固定的那串 join。写成一个常量而不是逐处重复：
+// 加一张关联表要改七个地方时，漏掉一个的表现是某一个列表页少一列，
+// 而那个页面未必有测试。
+const postFrom = ` from posts p
+	join users u on u.id=p.user_id
+	left join categories c on c.id=p.category_id
+	left join media m on m.id=p.cover_media_id`
 
 func scanPost(sc interface{ Scan(...any) error }) (*Post, error) {
 	return scanPostWith(sc)
@@ -431,13 +462,14 @@ func scanPostWith(sc interface{ Scan(...any) error }, extra ...any) (*Post, erro
 	var p Post
 	var idx int
 	var created, updated int64
-	var pub, feat, sched, catID sql.NullInt64
+	var pub, feat, sched, catID, coverID sql.NullInt64
 	var toc string
 
 	dest := []any{&p.ID, &p.UserID, &p.Slug, &p.Title, &p.Summary, &p.BodyMD, &p.BodyHTML,
 		&p.Status, &p.Source, &idx, &p.CanonicalURL, &p.WordCount, &created, &updated, &pub, &feat,
 		&toc, &p.Lang, &p.TransKey, &sched, &p.AuthorName, &p.AuthorSlug,
-		&catID, &p.CategorySlug, &p.CategoryName}
+		&catID, &p.CategorySlug, &p.CategoryName,
+		&coverID, &p.CoverAlt, &p.CoverPath, &p.CoverW, &p.CoverH}
 	dest = append(dest, extra...)
 
 	err := sc.Scan(dest...)
@@ -453,6 +485,10 @@ func scanPostWith(sc interface{ Scan(...any) error }, extra ...any) (*Post, erro
 	p.PublishedAt = nullTime(pub)
 	p.FeaturedAt = nullTime(feat)
 	p.PublishAt = nullTime(sched)
+	if coverID.Valid {
+		id := coverID.Int64
+		p.CoverMediaID = &id
+	}
 	if catID.Valid {
 		p.CategoryID = &catID.Int64
 	}
@@ -479,7 +515,7 @@ func encodeTOC(hs []render.Heading) string {
 // PostByID 按 id 取文章（含标签）。
 func (d *DB) PostByID(ctx context.Context, id int64) (*Post, error) {
 	p, err := scanPost(d.R.QueryRowContext(ctx,
-		`select `+postCols+` from posts p join users u on u.id=p.user_id left join categories c on c.id=p.category_id where p.id=?`, id))
+		`select `+postCols+postFrom+` where p.id=?`, id))
 	if err != nil {
 		return nil, err
 	}
@@ -489,7 +525,7 @@ func (d *DB) PostByID(ctx context.Context, id int64) (*Post, error) {
 // PostBySlug 按 slug 取文章（含标签）。
 func (d *DB) PostBySlug(ctx context.Context, slug string) (*Post, error) {
 	p, err := scanPost(d.R.QueryRowContext(ctx,
-		`select `+postCols+` from posts p join users u on u.id=p.user_id left join categories c on c.id=p.category_id where p.slug=?`, slug))
+		`select `+postCols+postFrom+` where p.slug=?`, slug))
 	if err != nil {
 		return nil, err
 	}
@@ -585,7 +621,7 @@ func (d *DB) ListPosts(ctx context.Context, f ListFilter) ([]Post, int, error) {
 	}
 
 	rows, err := d.R.QueryContext(ctx,
-		`select `+postColsList+` from posts p join users u on u.id=p.user_id left join categories c on c.id=p.category_id`+join+
+		`select `+postColsList+postFrom+join+
 			` where `+cond+` order by `+order+` limit ? offset ?`,
 		append(args, limit, f.Offset)...)
 	if err != nil {
@@ -679,6 +715,17 @@ func boolInt(b bool) int {
 		return 1
 	}
 	return 0
+}
+
+// coverRef 把封面 ID 变成可以直接写进库的值：nil 和 0 都是"没有封面"。
+//
+// 必须回 nil 而不是 0：cover_media_id 是外键，写 0 会撞上"media 里没有
+// id=0 这一行"而整条插入失败。
+func coverRef(id *int64) any {
+	if id == nil || *id <= 0 {
+		return nil
+	}
+	return *id
 }
 
 // normalizeLang 把语言代码收敛到注册表里的合法标签，未知值退回默认语言。
@@ -894,7 +941,7 @@ func (d *DB) FeaturedPosts(ctx context.Context, lang string, limit int) ([]Post,
 		limit = MaxFeatured
 	}
 	rows, err := d.R.QueryContext(ctx,
-		`select `+postColsList+` from posts p join users u on u.id=p.user_id left join categories c on c.id=p.category_id
+		`select `+postColsList+postFrom+`
 		  where p.featured_at is not null and p.status=? and p.lang=?
 		  order by p.featured_at desc limit ?`, StatusPublished, lang, limit)
 	if err != nil {
@@ -981,7 +1028,7 @@ func (d *DB) Translations(ctx context.Context, key string, exclude int64) ([]Pos
 		return nil, nil
 	}
 	rows, err := d.R.QueryContext(ctx,
-		`select `+postColsList+` from posts p join users u on u.id=p.user_id left join categories c on c.id=p.category_id
+		`select `+postColsList+postFrom+`
 		  where p.translation_key=? and p.id<>? and p.status=?
 		  order by p.lang`, key, exclude, StatusPublished)
 	if err != nil {
@@ -1044,7 +1091,7 @@ func (db *DB) SetSchedule(ctx context.Context, a Actor, id int64, at *time.Time)
 // DuePosts 返回到点该发布的草稿。
 func (db *DB) DuePosts(ctx context.Context, now time.Time) ([]Post, error) {
 	rows, err := db.R.QueryContext(ctx,
-		`select `+postColsList+` from posts p join users u on u.id=p.user_id left join categories c on c.id=p.category_id
+		`select `+postColsList+postFrom+`
 		 where p.status='draft' and p.publish_at is not null and p.publish_at<=?
 		 order by p.publish_at`, now.Unix())
 	if err != nil {
