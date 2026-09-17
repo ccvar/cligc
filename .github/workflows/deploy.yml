@@ -1,0 +1,83 @@
+name: Deploy
+
+on:
+  # 只在 CI 全绿之后才可能跑到这里——下面 needs 依赖了 test job。
+  push:
+    branches: [main]
+  # 也可以手动触发，用来重新部署某个已经合过的提交
+  workflow_dispatch:
+
+concurrency:
+  # 部署不允许并发：两个任务同时替换二进制会互相覆盖，而且后完成的那个
+  # 未必是后提交的那个。cancel-in-progress 设成 false —— 排队等，
+  # 不要把一个已经替换了二进制、正在做健康检查的任务砍掉。
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+      - run: |
+          out=$(gofmt -l .)
+          [ -z "$out" ] || { echo "未 gofmt: $out" >&2; exit 1; }
+      - run: go vet ./...
+      - run: go test -race ./...
+      - run: go run ./cmd/cligc lang check
+
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    # 绑定到 production 环境。在仓库的 Settings → Environments 里给它
+    # 配上 required reviewers，每次部署就都要人点一下同意——
+    # 发错一篇文章撤下就行，发错一个二进制站点就下线了。
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: 交叉编译 linux/amd64
+        # 纯 Go（modernc.org/sqlite 没有 cgo），所以交叉编译出来的是
+        # 静态二进制，目标机器上不需要装任何运行时。
+        # -trimpath 去掉构建机的绝对路径，产物可复现也不泄露目录结构。
+        run: |
+          CGO_ENABLED=0 GOOS=linux GOARCH=${{ vars.DEPLOY_ARCH || 'amd64' }} \
+            go build -trimpath -ldflags="-s -w" -o cligc-deploy ./cmd/cligc
+          ls -la cligc-deploy
+
+      - name: 配置 SSH
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/id_deploy
+          chmod 600 ~/.ssh/id_deploy
+          # 用 known_hosts 固定主机指纹，而不是 StrictHostKeyChecking=no。
+          # 关掉主机校验等于把这条部署通道对中间人敞开——而它手里有的是
+          # 一把能替换服务器上二进制的密钥。
+          printf '%s\n' "${{ secrets.DEPLOY_KNOWN_HOSTS }}" > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
+
+      - name: 上传并部署
+        env:
+          HOST: ${{ secrets.DEPLOY_HOST }}
+          USER: ${{ secrets.DEPLOY_USER }}
+          PORT: ${{ vars.DEPLOY_PORT || '22' }}
+        run: |
+          SSH="ssh -i ~/.ssh/id_deploy -p $PORT -o BatchMode=yes"
+          scp -i ~/.ssh/id_deploy -P "$PORT" -o BatchMode=yes \
+              cligc-deploy deploy/deploy.sh "$USER@$HOST:/tmp/"
+          # deploy.sh 做原子替换、重启、健康检查，失败自动回滚并返回非 0。
+          $SSH "$USER@$HOST" \
+            "chmod +x /tmp/deploy.sh && sudo -n /tmp/deploy.sh /tmp/cligc-deploy"
+
+      - name: 清理
+        if: always()
+        run: rm -f ~/.ssh/id_deploy

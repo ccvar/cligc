@@ -781,6 +781,69 @@ GOOS=linux GOARCH=amd64 go build -ldflags "-s -w -X main.version=$(git describe 
 纯 Go（无 cgo），交叉编译一条命令出静态二进制。scp 上去，配好
 `deploy/` 里的 systemd + Caddy + Litestream 即可。
 
+## 持续集成与部署
+
+两个工作流，在 `.github/workflows/` 下。
+
+**`ci.yml`** —— 每次 push 和 PR：gofmt、vet、`go test -race`、构建、
+JS 语法检查、词表完整性。
+
+`-race` 不是摆设：这个站有三处共享状态（后台定时任务、限速器、设置缓存），
+竞态最容易藏在那里。JS 语法检查也不是——前端没有构建步骤，没有任何东西
+会在发布前解析那些文件，一个语法错会静默地让整页失去交互，而 Go 的测试
+看不到它。
+
+**`deploy.yml`** —— 合进 main 之后：交叉编译 linux 静态二进制 → scp 到
+服务器 → `deploy/deploy.sh` 原子替换、重启、健康检查，**失败自动回滚**。
+
+### 先配这些
+
+仓库 Settings → Secrets and variables → Actions：
+
+| Secret | 内容 |
+|---|---|
+| `DEPLOY_HOST` | 服务器地址 |
+| `DEPLOY_USER` | 登录用户 |
+| `DEPLOY_SSH_KEY` | 私钥（该用户的部署专用密钥，不要复用你自己的） |
+| `DEPLOY_KNOWN_HOSTS` | `ssh-keyscan -p 22 你的服务器` 的输出 |
+
+可选的 Variables：`DEPLOY_PORT`（默认 22）、`DEPLOY_ARCH`（默认 amd64）。
+
+**`DEPLOY_KNOWN_HOSTS` 不是可选的。** 省掉它就得用
+`StrictHostKeyChecking=no`，那等于把这条通道对中间人敞开——而它手里
+有一把能替换服务器上二进制的密钥。
+
+服务器上给部署用户一条免密 sudo：
+
+```
+# /etc/sudoers.d/cligc-deploy
+deployuser ALL=(root) NOPASSWD: /tmp/deploy.sh
+```
+
+### 人在中间那一关
+
+`deploy` job 绑定在 `production` 环境上。到 Settings → Environments →
+production 给它配 **required reviewers**，每次部署就都要人点一下同意。
+
+这一关值得留着：发错一篇文章，点一下撤下就行；发错一个二进制，站点就
+下线了。两者的撤销成本差了两个数量级。
+
+### 回滚只回滚二进制，不回滚数据库
+
+`deploy.sh` 在健康检查失败时把上一个版本换回去。它**不动数据库**。
+
+这一条目前成立，是因为所有迁移都是加列和加索引，而查询用的是显式列清单
+（`postCols`），多出来的列会被忽略——旧二进制能在新库上正常跑。
+
+哪天有了破坏性迁移（改列、删列、改语义），这个假设就不成立了。写那条
+迁移之前必须先想清楚回滚路径，而不是等回滚失败时才发现。
+
+### 不用 systemd 也能用
+
+`deploy.sh` 的重启命令是 `CLIGC_RESTART` 环境变量，默认
+`systemctl restart cligc`。用 OpenRC、supervisord 或 docker 的换掉即可，
+脚本本身不假设你用 systemd。
+
 ## 测试
 
 ```bash

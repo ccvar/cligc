@@ -1,0 +1,57 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# 同一分支上新的推送取消还在跑的旧任务：没人关心一个已经被覆盖的提交
+# 测试结果如何，而排队等它跑完会拖慢真正要看的那次。
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          # 跟着 go.mod 走，不写死版本号——升级 go.mod 时这里不会忘了改
+          go-version-file: go.mod
+          cache: true
+
+      - name: gofmt
+        run: |
+          # gofmt -l 对格式不对的文件只是列出来，退出码仍然是 0。
+          # 不看输出的话这一步永远是绿的。
+          out=$(gofmt -l .)
+          if [ -n "$out" ]; then
+            echo "以下文件没有 gofmt：" >&2
+            echo "$out" >&2
+            exit 1
+          fi
+
+      - name: go vet
+        run: go vet ./...
+
+      - name: 测试
+        # -race 能抓到并发 bug。这个站有后台定时任务、限速器、设置缓存
+        # 三处共享状态，正是竞态最容易藏身的地方。
+        run: go test -race ./...
+
+      - name: 构建
+        run: CGO_ENABLED=0 go build -trimpath ./cmd/cligc
+
+      - name: 检查 JS 语法
+        # 前端没有构建步骤，也就没有任何东西会在发布前解析这些文件。
+        # 一个语法错会静默地让整个页面失去交互，而 Go 的测试看不到它。
+        run: |
+          for f in internal/web/static/*.js; do
+            node --check "$f"
+          done
+
+      - name: 词表完整性
+        run: go run ./cmd/cligc lang check
