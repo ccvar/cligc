@@ -51,24 +51,10 @@ func (s *Server) handleCategory(w http.ResponseWriter, r *http.Request) {
 
 // --- 后台 ---
 
+// handleCategories 把老的分类页并进了设置。保留这个路由是因为它
+// 可能存在于书签里——直接 404 会让人以为功能被删了。
 func (s *Server) handleCategories(w http.ResponseWriter, r *http.Request) {
-	def := i18n.Default().Code
-	cats, err := s.db.ListCategoriesAdmin(r.Context(), def)
-	if err != nil {
-		s.renderError(w, r, http.StatusInternalServerError, s.tr(r, "err.internal"))
-		return
-	}
-	s.render(w, r, "admin_categories.html", page{
-		Title: s.tr(r, "admin.cats.title"), NoIndex: true, Wide: true, AdminTab: "categories",
-		Flash: r.URL.Query().Get("flash"),
-		Data: map[string]any{
-			"Cats": cats,
-			// 译名只给**对外提供**的语言留格子：站上不开日文，却要人填
-			// 一份日文板块名，那份名字没有任何页面会用到。
-			"Langs":   s.enabledLangs(r.Context()),
-			"Default": def,
-		},
-	})
+	http.Redirect(w, r, langPath(LangFrom(r.Context()), "/admin/site"), http.StatusFound)
 }
 
 func (s *Server) handleCategorySave(w http.ResponseWriter, r *http.Request) {
@@ -109,10 +95,10 @@ func (s *Server) handleCategorySave(w http.ResponseWriter, r *http.Request) {
 		_, err = s.db.CreateCategory(r.Context(), in)
 	}
 	if err != nil {
-		redirectFlash(w, r, "/admin/categories", s.tr(r, "flash.saveFailed", err.Error()))
+		redirectFlash(w, r, "/admin/site", s.tr(r, "flash.saveFailed", err.Error()))
 		return
 	}
-	redirectFlash(w, r, "/admin/categories", s.tr(r, "admin.cats.saved"))
+	redirectFlash(w, r, "/admin/site", s.tr(r, "admin.cats.saved"))
 }
 
 func (s *Server) handleCategoryDelete(w http.ResponseWriter, r *http.Request) {
@@ -122,10 +108,10 @@ func (s *Server) handleCategoryDelete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err := s.db.DeleteCategory(r.Context(), id); err != nil {
-		redirectFlash(w, r, "/admin/categories", s.tr(r, "flash.opFailed", err.Error()))
+		redirectFlash(w, r, "/admin/site", s.tr(r, "flash.opFailed", err.Error()))
 		return
 	}
-	redirectFlash(w, r, "/admin/categories", s.tr(r, "admin.cats.deleted"))
+	redirectFlash(w, r, "/admin/site", s.tr(r, "admin.cats.deleted"))
 }
 
 func firstNonEmpty(vs ...string) string {
@@ -157,12 +143,12 @@ func (s *Server) handleCategoryReorder(w http.ResponseWriter, r *http.Request) {
 		ids = append(ids, n)
 	}
 	if len(ids) == 0 {
-		redirectFlash(w, r, "/admin/categories", "")
+		redirectFlash(w, r, "/admin/site", "")
 		return
 	}
 	if err := s.db.ReorderCategories(r.Context(), ids); err != nil {
-		redirectFlash(w, r, "/admin/categories", s.tr(r, "flash.opFailed", err.Error()))
+		redirectFlash(w, r, "/admin/site", s.tr(r, "flash.opFailed", err.Error()))
 		return
 	}
-	redirectFlash(w, r, "/admin/categories", s.tr(r, "admin.cats.saved"))
+	redirectFlash(w, r, "/admin/site", s.tr(r, "admin.cats.saved"))
 }

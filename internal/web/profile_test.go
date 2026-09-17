@@ -47,15 +47,19 @@ func TestProfileSaveKeepsHiddenFields(t *testing.T) {
 		t.Errorf("/admin/profile = %d，想要 302 跳到 /admin/site", code)
 	}
 
-	// 单人站上这两个框根本不该渲染出来
+	// 单人站上这两个框根本不该渲染出来。
+	//
+	// 断言限定在资料那张表单里：设置页上还有分类表格，那里每行也有一个
+	// name="slug"，整页搜会一直命中。
 	_, body := e.authGet("/admin/site")
-	if strings.Contains(body, `name="slug"`) {
-		t.Error("单人站的资料页上出现了「主页地址」——那一页是 noindex 且没人链过去")
+	pf := profileForm(t, body)
+	if strings.Contains(pf, `name="slug"`) {
+		t.Error("单人站的资料里出现了「主页地址」——那一页是 noindex 且没人链过去")
 	}
-	if strings.Contains(body, `name="bio"`) {
-		t.Error("单人站的资料页上出现了「简介」——它唯一露面的地方是 /u/{slug}")
+	if strings.Contains(pf, `name="bio"`) {
+		t.Error("单人站的资料里出现了「简介」——它唯一露面的地方是 /u/{slug}")
 	}
-	if !strings.Contains(body, `name="name"`) {
+	if !strings.Contains(pf, `name="name"`) {
 		t.Error("显示名不见了——它出现在每篇文章的署名行上")
 	}
 
@@ -64,7 +68,8 @@ func TestProfileSaveKeepsHiddenFields(t *testing.T) {
 		t.Fatal(err)
 	}
 	_, body = e.authGet("/admin/site")
-	if !strings.Contains(body, `name="slug"`) || !strings.Contains(body, `name="bio"`) {
+	pf = profileForm(t, body)
+	if !strings.Contains(pf, `name="slug"`) || !strings.Contains(pf, `name="bio"`) {
 		t.Error("多作者站上这两个框该出现")
 	}
 	if w := e.post("/admin/profile", url.Values{
@@ -171,6 +176,20 @@ func TestSearchIsLanguageScoped(t *testing.T) {
 
 var tagRE = regexp.MustCompile(`<[^>]*>`)
 
+// profileForm 从设置页里切出资料那张表单。
+func profileForm(t *testing.T, body string) string {
+	t.Helper()
+	i := strings.Index(body, `id="profile-form"`)
+	if i < 0 {
+		t.Fatal("设置页上找不到资料表单")
+	}
+	j := strings.Index(body[i:], "</form>")
+	if j < 0 {
+		t.Fatal("资料表单没有收尾")
+	}
+	return body[i : i+j]
+}
+
 // TestCategoryNamesFollowLanguage 板块名要跟着语言走，侧栏不许列出
 // 当前语言下一篇都没有的板块。
 //
@@ -275,11 +294,15 @@ func TestNoFormInsideTableRow(t *testing.T) {
 	// 照常收下——所以先把单元格的内容整个抠掉，剩下的才是行这一层。
 	row := regexp.MustCompile(`(?s)<tr\b.*?</tr>`)
 	cell := regexp.MustCompile(`(?s)<(td|th)\b.*?</(td|th)>`)
+	// 模板注释先剥掉：讲这条规则的那段注释里就写着 <tr> 和 <form> 的例子，
+	// 不剥的话这个检查会把解释自己的文字判成违规。
+	comment := regexp.MustCompile(`(?s)\{\{/\*.*?\*/\}\}`)
 	for _, n := range names {
-		body, err := fs.ReadFile(tmplFS, n)
+		raw, err := fs.ReadFile(tmplFS, n)
 		if err != nil {
 			t.Fatal(err)
 		}
+		body := comment.ReplaceAll(raw, nil)
 		for _, m := range row.FindAllString(string(body), -1) {
 			if bare := cell.ReplaceAllString(m, ""); strings.Contains(bare, "<form") {
 				t.Errorf("%s 的 <tr> 里直接放了 <form>，解析时会被丢掉——"+

@@ -291,7 +291,6 @@
   "comment.queueFull": "留言暫時關閉：待審佇列已滿，站長處理完就會恢復。",
   "nav.categories": "板塊",
   "admin.tab.categories": "分類",
-  "admin.cats.title": "分類管理",
   "admin.cats.new": "新增分類",
   "admin.cats.name": "名稱",
   "admin.cats.slug": "網址",

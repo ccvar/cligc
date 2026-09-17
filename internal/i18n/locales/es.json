@@ -297,7 +297,6 @@
   "comment.queueFull": "Comentarios en pausa: la cola de revisión está llena. Se reabren en cuanto se vacíe.",
   "nav.categories": "Secciones",
   "admin.tab.categories": "Categorías",
-  "admin.cats.title": "Categorías",
   "admin.cats.new": "Nueva categoría",
   "admin.cats.name": "Nombre",
   "admin.cats.slug": "Dirección",

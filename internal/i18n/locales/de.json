@@ -297,7 +297,6 @@
   "comment.queueFull": "Kommentare pausiert: Die Warteschlange ist voll. Sie öffnen wieder, sobald sie geleert ist.",
   "nav.categories": "Bereiche",
   "admin.tab.categories": "Kategorien",
-  "admin.cats.title": "Kategorien",
   "admin.cats.new": "Neue Kategorie",
   "admin.cats.name": "Name",
   "admin.cats.slug": "Adresse",

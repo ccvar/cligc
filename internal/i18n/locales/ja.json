@@ -291,7 +291,6 @@
   "comment.queueFull": "コメントを一時停止しています：確認待ちが上限に達しました。処理が済み次第再開します。",
   "nav.categories": "セクション",
   "admin.tab.categories": "カテゴリ",
-  "admin.cats.title": "カテゴリ管理",
   "admin.cats.new": "カテゴリを追加",
   "admin.cats.name": "名称",
   "admin.cats.slug": "スラッグ",

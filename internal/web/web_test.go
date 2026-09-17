@@ -982,7 +982,7 @@ func TestNonDefaultUILanguageHasNoChineseChrome(t *testing.T) {
 		t.Fatal(err)
 	}
 	for _, path := range []string{"/en/admin", "/en/admin/comments", "/en/admin/media",
-		"/en/admin/site", "/en/admin/categories", "/en/search?q=latin"} {
+		"/en/admin/site", "/en/search?q=latin"} {
 		r := httptest.NewRequest("GET", path, nil)
 		r.AddCookie(&http.Cookie{Name: sessionCookie, Value: sid})
 		w := httptest.NewRecorder()

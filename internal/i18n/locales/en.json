@@ -293,7 +293,6 @@
   "comment.queueFull": "Comments are paused: the moderation queue is full. They reopen once it is cleared.",
   "nav.categories": "Sections",
   "admin.tab.categories": "Categories",
-  "admin.cats.title": "Categories",
   "admin.cats.new": "New category",
   "admin.cats.name": "Name",
   "admin.cats.slug": "Slug",

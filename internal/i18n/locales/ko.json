@@ -291,7 +291,6 @@
   "comment.queueFull": "댓글을 잠시 닫았습니다: 검토 대기열이 가득 찼습니다. 정리되면 다시 열립니다.",
   "nav.categories": "섹션",
   "admin.tab.categories": "분류",
-  "admin.cats.title": "분류 관리",
   "admin.cats.new": "분류 추가",
   "admin.cats.name": "이름",
   "admin.cats.slug": "주소",

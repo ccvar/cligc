@@ -325,7 +325,6 @@
   "comment.queueFull": "التعليقات متوقفة مؤقتًا: طابور المراجعة ممتلئ، وتُفتح مجددًا بعد تفريغه.",
   "nav.categories": "الأقسام",
   "admin.tab.categories": "الأقسام",
-  "admin.cats.title": "إدارة الأقسام",
   "admin.cats.new": "قسم جديد",
   "admin.cats.name": "الاسم",
   "admin.cats.slug": "العنوان",

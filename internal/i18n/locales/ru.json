@@ -311,7 +311,6 @@
   "comment.queueFull": "Комментарии приостановлены: очередь на проверку заполнена. Откроются, когда её разберут.",
   "nav.categories": "Разделы",
   "admin.tab.categories": "Разделы",
-  "admin.cats.title": "Разделы",
   "admin.cats.new": "Новый раздел",
   "admin.cats.name": "Название",
   "admin.cats.slug": "Адрес",

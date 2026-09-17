@@ -297,7 +297,6 @@
   "comment.queueFull": "Comentários pausados: a fila de revisão está cheia. Voltam assim que for esvaziada.",
   "nav.categories": "Seções",
   "admin.tab.categories": "Categorias",
-  "admin.cats.title": "Categorias",
   "admin.cats.new": "Nova categoria",
   "admin.cats.name": "Nome",
   "admin.cats.slug": "Endereço",

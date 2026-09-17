@@ -536,6 +536,8 @@ func (s *Server) handleSite(w http.ResponseWriter, r *http.Request) {
 
 	// 占位符显示"留空会变成什么"：其他语言回退到默认语言那份，
 	// 默认语言自己回退到命令行的 -title / -desc。
+	// 取不到就当没有：这一页由好几块拼成，其中一块挂了不该让整页打不开。
+	cats, _ := s.db.ListCategoriesAdmin(ctx, def)
 	// 取不到就当没有 token：这一页主要是站点设置，token 那一块挂了
 	// 不该让整页打不开。
 	tokens, _ := s.db.ListTokens(ctx, userFrom(ctx).ID)
@@ -572,6 +574,18 @@ func (s *Server) handleSite(w http.ResponseWriter, r *http.Request) {
 			"Me":            userFrom(ctx),
 			// API Token 原先是一个独占的标签页。它和站点设置的区别只是
 			// "给程序用的钥匙"和"给人看的设置"，而两者都是"这个站怎么配"。
+			// 分类原先也是一个独占的标签页。它和语言、站名一样是"这个站
+			// 怎么配"，没有理由自成一页。
+			"Cats":    cats,
+			"Default": def,
+			// 板块译名只给**对外提供**的语言留格子：站上不开日文，却要人
+			// 填一份日文板块名，那份名字没有任何页面会用到。
+			//
+			// 和上面文案那一块的 Langs 不是一回事：那边要列出全部语言
+			// （没开的用 data-langoff 藏着，勾上就当场出现），这边是
+			// 一张已经存在的表格，没开的语言不该多出一列。
+			"CatLangs": s.enabledLangs(ctx),
+
 			"Tokens":      tokens,
 			"ScopeGroups": store.ScopeGroups,
 			// 新建成功后把明文带回来显示一次。放在查询串里是刻意的取舍：

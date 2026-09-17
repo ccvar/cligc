@@ -247,8 +247,15 @@ func TestCategoryRowSaveKeepsOrder(t *testing.T) {
 // 老地址保留为跳转——它们可能在书签里。
 func TestSettingsPageAbsorbedTabs(t *testing.T) {
 	e := setup(t)
+	// 分类那一块要有内容才渲染表格
+	if _, err := e.db.CreateCategory(t.Context(), store.CategoryInput{
+		Slug: "essays", DefaultLang: "zh-Hans",
+		Names: map[string]string{"zh-Hans": "随笔"},
+	}); err != nil {
+		t.Fatal(err)
+	}
 
-	for _, old := range []string{"/admin/profile", "/admin/tokens"} {
+	for _, old := range []string{"/admin/profile", "/admin/tokens", "/admin/categories"} {
 		if code, _ := e.authGet(old); code != http.StatusFound {
 			t.Errorf("%s = %d，想要 302 跳到 /admin/site", old, code)
 		}
@@ -260,13 +267,15 @@ func TestSettingsPageAbsorbedTabs(t *testing.T) {
 		`name="ga4_id"`,                // 统计
 		`action="/admin/profile"`,      // 资料
 		`action="/admin/tokens"`,       // 新建 token 的表单
+		`id="reorder"`,                 // 分类的拖动排序表单
 	} {
 		if !strings.Contains(body, want) {
 			t.Errorf("设置页上少了 %s", want)
 		}
 	}
 	// 顶部导航里不该再有这两个标签
-	for _, gone := range []string{`href="/admin/profile"`, `href="/admin/tokens"`} {
+	for _, gone := range []string{`href="/admin/profile"`, `href="/admin/tokens"`,
+		`href="/admin/categories"`} {
 		if strings.Contains(body, gone) {
 			t.Errorf("导航里还留着 %s", gone)
 		}

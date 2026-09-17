@@ -247,8 +247,129 @@
 
 </div>
 
-{{/* API Token 放在 .settings 外面：那个容器按"一栏表单"封在 34rem，
-     而下面是一张六列的表。 */}}
+{{/* 分类和 API Token 都放在 .settings 外面：那个容器按"一栏表单"封在
+     34rem，而这两块都是宽表格。表单类的设置在上、表格类的在下，
+     不为了排序把容器拆开又拼回去。 */}}
+<h2 class="section-title">{{t "admin.tab.categories"}}</h2>
+{{/* 语言标签条和"新建"排在同一行：这一行是这一页唯一的操作区，
+     标签条不占满整行，右边那块空着不如给按钮。 */}}
+<div class="cats-head">
+  <div class="lang-tabs" data-langcells role="tablist" hidden></div>
+  <span class="spacer"></span>
+  <details class="create-panel" data-dialog data-title="{{t "admin.cats.new"}}">
+  <summary class="btn primary">{{t "admin.cats.new"}}</summary>
+  <form method="post" action="{{lurl "/admin/categories"}}" data-newcat>
+    {{/* 名字和描述按语种分页；地址只有一个，放在标签页外面——它在各语言
+         之间是共用的，放进某一页会让人以为每种语言各有一个地址。 */}}
+    <div class="lang-tabs" data-newtabs role="tablist" hidden></div>
+    {{range $d.CatLangs}}
+    <div class="newcat-lang" data-newlang data-lang="{{.Code}}">
+      <small class="lang-tag" lang="{{.Code}}">{{.Name}}</small>
+      <label class="field">
+        <span class="label">{{t "admin.cats.name"}}</span>
+        <input type="text" name="name:{{.Code}}" lang="{{.Code}}" dir="{{.Dir}}"
+               {{if eq .Code $d.Default}}required{{end}}>
+      </label>
+      <label class="field">
+        <span class="label">{{t "admin.cats.desc"}}</span>
+        <textarea name="description:{{.Code}}" rows="2" lang="{{.Code}}" dir="{{.Dir}}"></textarea>
+        {{if eq .Code $d.Default}}<span class="hint">{{t "admin.cats.descHint"}}</span>{{end}}
+      </label>
+    </div>
+    {{end}}
+    <label class="field">
+      <span class="label">{{t "admin.cats.slug"}}</span>
+      <input type="text" name="slug" placeholder="{{t "admin.cats.slugPlace"}}">
+      <span class="hint">{{t "admin.cats.slugShared"}}</span>
+    </label>
+    <button type="submit" class="btn primary">{{t "common.save"}}</button>
+  </form>
+  </details>
+</div>
+
+{{if $d.Cats}}
+{{/* 排序表单套在整张表外面：拖动只改 DOM 顺序，真正落库要点保存。
+
+     原先每行还有一个"排序"数字框，是给没有 JS 的情况留的退路。拿掉了：
+     两个入口做同一件事，而那个数字框天天占着一列，只为一个几乎不会
+     发生的情况。没有 JS 时顺序保持不变，不会乱。 */}}
+<form method="post" action="{{lurl "/admin/categories/reorder"}}" id="reorder" data-reorder>
+<div class="table-wrap">
+  <table class="data cats">
+    <thead>
+      <tr><th class="drag-col"></th>
+          <th>{{t "admin.cats.name"}}</th><th>{{t "admin.cats.slug"}}</th>
+          <th>{{t "admin.cats.desc"}}</th>
+          <th class="num">{{t "admin.cats.colPosts"}}</th><th></th></tr>
+    </thead>
+    <tbody data-reorder-rows>
+    {{range $d.Cats}}
+      {{/* 每一行本身就是一张编辑表单：分类总共就几个，为了改个名字
+           再跳一个页面不划算。 */}}
+      <tr data-id="{{.ID}}">
+        <td class="drag-col">
+          <span class="drag-handle" data-drag title="{{t "admin.cats.drag"}}" aria-hidden="true">⠿</span>
+          <input form="reorder" type="hidden" name="id" value="{{.ID}}">
+        </td>
+        {{$c := .}}
+        <td><input form="cat-{{.ID}}" type="hidden" name="id" value="{{.ID}}">
+            {{range $d.CatLangs}}
+            <span class="lang-cell" data-langcell data-lang="{{.Code}}">
+              <small class="lang-tag" lang="{{.Code}}">{{.Name}}</small>
+              <input form="cat-{{$c.ID}}" type="text" name="name:{{.Code}}"
+                     lang="{{.Code}}" dir="{{.Dir}}"
+                     value="{{index $c.Names .Code}}"
+                     {{if eq .Code $d.Default}}required{{end}}>
+            </span>
+            {{end}}</td>
+        <td><input form="cat-{{.ID}}" type="text" name="slug" value="{{.Slug}}"></td>
+        <td>{{range $d.CatLangs}}
+            <span class="lang-cell" data-langcell data-lang="{{.Code}}">
+              <small class="lang-tag" lang="{{.Code}}">{{.Name}}</small>
+              <input form="cat-{{$c.ID}}" type="text" name="description:{{.Code}}"
+                     lang="{{.Code}}" dir="{{.Dir}}" value="{{index $c.Descs .Code}}">
+            </span>
+            {{end}}</td>
+        <td class="num">
+          {{if gt .Count 0}}<a href="{{lurl (printf "/c/%s" (urlp .Slug))}}">{{.Count}}</a>{{else}}—{{end}}
+        </td>
+        <td class="row-actions">
+          <button form="cat-{{.ID}}" type="submit" class="icon-btn"
+                  aria-label="{{t "common.save"}}" data-tip="{{t "common.save"}}">{{template "icon-check"}}</button>
+          <button form="del-{{.ID}}" type="submit" class="icon-btn danger"
+                  aria-label="{{t "admin.cats.deleteFull"}}" data-tip="{{t "common.delete"}}">{{template "icon-trash"}}</button>
+        </td>
+      </tr>
+    {{end}}
+    </tbody>
+  </table>
+</div>
+{{/* 只有真的拖动过才显示保存按钮：一个常驻的"保存顺序"会让人以为
+     不点它顺序就丢了，而多数时候根本没动过顺序。 */}}
+<div class="reorder-bar" data-reorder-bar hidden>
+  <span class="hint">{{t "admin.cats.orderHint"}}</span>
+  <button type="submit" class="btn primary">{{t "admin.cats.saveOrder"}}</button>
+</div>
+</form>
+
+{{/* 每一行的编辑表单和删除表单都放在表格外面，行里的控件靠 form=
+     指过来。
+
+     它们本来写在 <tr> 里。HTML 的表格解析规则不允许那个位置出现
+     <form>：外面已经有一张排序表单把"表单指针"占住了，于是这些
+     <form> 开始标签被整个忽略——DOM 里根本没有 id="cat-N" 这个元素，
+     行里的 input.form 全是 null，点保存什么都不会发生。而且页面
+     照常渲染，控制台一声不吭。加拖动排序那次把表格包进 #reorder，
+     就是从那一刻起分类行再也存不下来的。 */}}
+{{range $d.Cats}}
+<form method="post" action="{{lurl "/admin/categories"}}" id="cat-{{.ID}}"></form>
+<form method="post" action="{{lurl (printf "/admin/categories/%d/delete" .ID)}}" id="del-{{.ID}}"
+      data-confirm="{{t "admin.cats.deleteConfirm"}}"></form>
+{{end}}
+{{else}}
+  {{template "empty" dict "Big" (t "admin.cats.empty") "Hint" (t "admin.cats.emptyHint")}}
+{{end}}
+
 <div class="sec-head token-head">
   <h2 class="section-title">{{t "admin.tokens.title"}}</h2>
   <a class="btn small" href="{{lurl "/admin/skill-pack"}}" download>{{t "admin.tokens.pack"}}</a>

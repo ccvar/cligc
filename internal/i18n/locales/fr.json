@@ -297,7 +297,6 @@
   "comment.queueFull": "Commentaires suspendus : la file de modération est pleine. Ils rouvriront une fois vidée.",
   "nav.categories": "Rubriques",
   "admin.tab.categories": "Catégories",
-  "admin.cats.title": "Catégories",
   "admin.cats.new": "Nouvelle catégorie",
   "admin.cats.name": "Nom",
   "admin.cats.slug": "Adresse",

@@ -279,7 +279,6 @@
   "comment.queueFull": "评论暂时关闭：待审队列已满，站长处理完就会恢复。",
   "nav.categories": "板块",
   "admin.tab.categories": "分类",
-  "admin.cats.title": "分类管理",
   "admin.cats.new": "新建分类",
   "admin.cats.name": "名称",
   "admin.cats.slug": "地址",
