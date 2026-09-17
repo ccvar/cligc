@@ -76,7 +76,14 @@ func (s *Server) handleCategorySave(w http.ResponseWriter, r *http.Request) {
 		s.renderError(w, r, http.StatusBadRequest, s.tr(r, "err.badForm"))
 		return
 	}
-	sort, _ := strconv.Atoi(r.FormValue("sort"))
+	// 排序那一列从表格里拿掉了（顺序靠拖），所以行表单不带 sort——
+	// 这时传 nil，让 store 别动这一列。
+	id, _ := strconv.ParseInt(r.FormValue("id"), 10, 64)
+	var sort *int
+	if r.Form.Has("sort") {
+		n, _ := strconv.Atoi(r.FormValue("sort"))
+		sort = &n
+	}
 	in := store.CategoryInput{
 		Slug: r.FormValue("slug"), Sort: sort, DefaultLang: i18n.Default().Code,
 		Names: map[string]string{}, Descs: map[string]string{},
@@ -96,7 +103,7 @@ func (s *Server) handleCategorySave(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var err error
-	if id, _ := strconv.ParseInt(r.FormValue("id"), 10, 64); id > 0 {
+	if id > 0 {
 		err = s.db.UpdateCategory(r.Context(), id, in)
 	} else {
 		_, err = s.db.CreateCategory(r.Context(), in)

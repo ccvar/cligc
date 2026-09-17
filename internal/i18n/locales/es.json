@@ -92,7 +92,6 @@
   "admin.tab.comments": "Comentarios",
   "admin.tab.media": "Medios",
   "admin.tab.tokens": "Tokens de API",
-  "admin.tab.profile": "Cuenta",
   "admin.posts.title": "Contenido",
   "admin.posts.new": "Nuevo artículo",
   "admin.posts.searchPlace": "Buscar en título o texto",
@@ -222,7 +221,6 @@
   "admin.tokens.revokeConfirm": "Los clientes que lo estén usando dejarán de funcionar al instante. ¿Seguro?",
   "admin.tokens.revokeDone": "Revocado",
   "admin.tokens.createFailed": "No se ha podido crear: {0}",
-  "admin.profile.title": "Cuenta",
   "admin.profile.section": "Perfil",
   "admin.profile.name": "Nombre visible",
   "admin.profile.slug": "Dirección del perfil",
@@ -271,7 +269,7 @@
   "common.copied": "Copiado",
   "admin.media.copyMd": "Copiar la referencia Markdown",
   "admin.tab.site": "Sitio",
-  "admin.site.title": "Integraciones",
+  "admin.site.title": "Ajustes del sitio",
   "admin.site.seoSection": "Buscadores",
   "admin.site.analyticsSection": "Analítica",
   "admin.site.gsc": "Código de Google Search Console",
@@ -301,12 +299,10 @@
   "nav.categories": "Secciones",
   "admin.tab.categories": "Categorías",
   "admin.cats.title": "Categorías",
-  "admin.cats.intro": "Las categorías son las secciones del sitio: pocas, estables, una por artículo, y deciden qué aparece en la navegación. Las etiquetas son la otra dimensión: muchas, planas, varias por artículo, para encontrar contenido relacionado. No mezcles las dos.",
   "admin.cats.new": "Nueva categoría",
   "admin.cats.name": "Nombre",
   "admin.cats.slug": "Dirección",
   "admin.cats.slugPlace": "Se genera del nombre si lo dejas vacío",
-  "admin.cats.sort": "Orden",
   "admin.cats.sortHint": "Los números menores van primero; en caso de empate manda el nombre. El orden de la navegación lo decides tú, no el alfabeto.",
   "admin.cats.colPosts": "Publicados",
   "admin.cats.empty": "Todavía no hay categorías",
@@ -366,6 +362,6 @@
   "admin.posts.langLabel": "Idioma",
   "admin.posts.allLangs": "Todos los idiomas",
   "admin.cats.slugShared": "El slug se comparte entre idiomas: /c/essays y /en/c/essays son la misma sección. Cambiarlo rompe los enlaces existentes.",
-  "admin.cats.langHint": "Una sección es una sola estructura con un nombre por idioma, no una sección por idioma. Las pestañas de abajo solo cambian a qué idioma le pones nombre; el slug y el orden son comunes."
+  "admin.site.langOff": "No ofrecidos"
  }
 }

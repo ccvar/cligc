@@ -38,31 +38,40 @@
   }
 
 
-  // 4d. 改过才让保存
+  // 4d. 改过才让保存。
   //
-  // 服务端渲染出来的按钮是可用的——没有 JS 时一切照旧。这里只是在没有
-  // 任何改动时把它置灰：一个永远亮着的"保存"没法回答"我刚才那下存了吗"。
-  {
-    const f = document.querySelector('form[data-autosave]');
-    const btn = document.querySelector('[data-dirty-save]');
-    if (f && btn) {
-      const snap = () => [...f.elements]
-        .filter((e) => e.name)
-        .map((e) => (e.type === 'checkbox' || e.type === 'radio'
-          ? e.name + '\u0001' + e.checked
-          : e.name + '\u0001' + e.value))
-        .join('\u0000');
-      let saved = snap();
-      const sync = () => { btn.disabled = snap() === saved; };
-      sync();
-      f.addEventListener('input', sync);
-      f.addEventListener('change', sync);
-      // 提交时先放开：禁用状态的按钮不会把自己的 name/value 带进请求，
-      // 而且提交失败退回来时按钮不该是死的。
-      f.addEventListener('submit', () => { btn.disabled = false; });
-    }
+  // 服务端渲染出来的按钮是可用（且可见）的——没有 JS 时一切照旧。
+  //
+  // 两种表现分别对应两种位置：编辑器的保存按钮在顶部工具条里，藏起来
+  // 会让整条按钮往左跳，所以只置灰；站点设置里每块自己一个按钮，没改动
+  // 时它就是噪音，直接不出现更干净。
+  wireDirty(document.querySelector('form[data-autosave]'),
+    document.querySelector('[data-dirty-save]:not([form])'), false);
+  for (const form of document.querySelectorAll('[data-dirty-form]')) {
+    wireDirty(form, form.querySelector('[data-dirty-save]')
+      || document.querySelector(`[data-dirty-save][form="${form.id}"]`), true);
   }
 
+  function wireDirty(f, btn, hide) {
+    if (!f || !btn) return;
+    const snap = () => [...f.elements]
+      .filter((e) => e.name)
+      .map((e) => (e.type === 'checkbox' || e.type === 'radio'
+        ? e.name + '\u0001' + e.checked
+        : e.name + '\u0001' + e.value))
+      .join('\u0000');
+    let saved = snap();
+    const sync = () => {
+      const clean = snap() === saved;
+      if (hide) { btn.hidden = clean; } else { btn.disabled = clean; }
+    };
+    sync();
+    f.addEventListener('input', sync);
+    f.addEventListener('change', sync);
+    // 提交时先放开：藏起来或禁用的按钮不会把自己的 name/value 带进请求，
+    // 而且提交失败退回来时按钮不该是死的。
+    f.addEventListener('submit', () => { btn.hidden = false; btn.disabled = false; });
+  }
 
   // 4e. 生成 IndexNow 密钥
   //
@@ -156,7 +165,7 @@
   //    重画出来才能填——而人是在勾的那一刻想填的。
   for (const cb of document.querySelectorAll('[data-langpick]')) {
     cb.addEventListener('change', () => {
-      const box = document.querySelector(`[data-langblock="${cb.value}"]`);
+      const box = document.querySelector(`.sitecopy[data-lang="${cb.value}"]`);
       if (box && !cb.checked) box.setAttribute('data-langoff', '');
       if (box && cb.checked) {
         box.removeAttribute('data-langoff');
@@ -369,23 +378,22 @@
     }
   }
 
-  // 7. 站点设置：按语言分的标签页。
+  // 7. 按语言分页：站点文案、分类表格、新建分类弹窗，三处共用。
   //
-  // 开三种语言就是六个输入框竖着排，中间还夹着语言小标题——要改英文
-  // 那两格得先滚过中文那两格。标签条让每次只出现一种语言的那一份。
+  // 都是同一件事——一组按语言标记的块/格子，一次只显示一种。长相共用
+  // 也是有意的：站长在一个后台里看到两种不同的标签条，会以为它们是
+  // 两种不同的东西。
   //
   // 注意不能写进上面那段选图的 if (picker) {} 里：站点设置页没有选图
   // 弹窗，picker 是 null，整块就一次都不会跑。
-  const tabs = document.querySelector('[data-langtabs]');
-  if (tabs) {
-    const blocks = () => [...document.querySelectorAll('.sitecopy:not([data-langoff])')];
+  function langPager(tabs, items, label) {
+    if (!tabs) return null;
+    const visible = () => items().filter((el) => !el.hasAttribute('data-langoff'));
     let active = null;
 
     const show = (code) => {
       active = code;
-      for (const b of blocks()) {
-        b.classList.toggle('is-hidden', b.dataset.langblock !== code);
-      }
+      for (const el of items()) el.classList.toggle('is-hidden', el.dataset.lang !== code);
       for (const t of tabs.children) {
         const on = t.dataset.tab === code;
         t.classList.toggle('on', on);
@@ -394,78 +402,71 @@
     };
 
     const build = () => {
-      const list = blocks();
+      const list = visible();
+      const codes = [...new Set(list.map((el) => el.dataset.lang))];
       // 只有一种语言时不需要标签条，也不该把那一块藏起来。
-      if (list.length < 2) {
+      if (codes.length < 2) {
         tabs.hidden = true;
         tabs.replaceChildren();
-        for (const b of list) b.classList.remove('is-hidden');
+        for (const el of items()) el.classList.remove('is-hidden');
         active = null;
         return;
       }
       tabs.hidden = false;
-      tabs.replaceChildren(...list.map((b) => {
-        const t = document.createElement('button');
-        t.type = 'button';
-        t.dataset.tab = b.dataset.langblock;
-        t.setAttribute('role', 'tab');
-        t.lang = b.dataset.langblock;
-        t.textContent = b.dataset.langname || b.dataset.langblock;
-        t.addEventListener('click', () => show(t.dataset.tab));
-        return t;
-      }));
-      // 原来停在哪一页就还停在哪一页；那一页没了才回到第一页。
-      show(list.some((b) => b.dataset.langblock === active)
-        ? active : list[0].dataset.langblock);
-    };
-
-    build();
-    // 勾选语言会增减块，标签条要跟着重建——在选图那段的 change 之后跑。
-    for (const cb of document.querySelectorAll('[data-langpick]')) {
-      cb.addEventListener('change', () => {
-        build();
-        if (cb.checked) show(cb.value);
-      });
-    }
-  }
-
-  // 8. 分类表格：同一条标签条，切的是"现在填哪种语言的名字"。
-  //
-  // 和上面那段共用 .lang-tabs 的长相，但驱动的东西不一样：那边是整块
-  // 显示/隐藏，这边是表格里每行的一对格子。关掉 JS 时所有语言的格子
-  // 竖着排，每个上面标着语言名——窄了点，但能用。
-  const cellTabs = document.querySelector('[data-langcells]');
-  if (cellTabs) {
-    const codes = [...new Set([...document.querySelectorAll('[data-langcell]')]
-      .map((c) => c.dataset.langcell))];
-    if (codes.length > 1) {
-      const nameOf = (code) => {
-        const tag = document.querySelector(`[data-langcell="${code}"] .lang-tag`);
-        return tag ? tag.textContent : code;
-      };
-      const show = (code) => {
-        for (const c of document.querySelectorAll('[data-langcell]')) {
-          c.classList.toggle('is-hidden', c.dataset.langcell !== code);
-        }
-        for (const t of cellTabs.children) {
-          const on = t.dataset.tab === code;
-          t.classList.toggle('on', on);
-          t.setAttribute('aria-selected', on ? 'true' : 'false');
-        }
-      };
-      cellTabs.hidden = false;
-      cellTabs.replaceChildren(...codes.map((code) => {
+      tabs.replaceChildren(...codes.map((code) => {
         const t = document.createElement('button');
         t.type = 'button';
         t.dataset.tab = code;
         t.setAttribute('role', 'tab');
         t.lang = code;
-        t.textContent = nameOf(code);
+        t.textContent = label(list.find((el) => el.dataset.lang === code)) || code;
         t.addEventListener('click', () => show(code));
         return t;
       }));
-      show(codes[0]);
+      // 原来停在哪一页就还停在哪一页；那一页没了才回到第一页。
+      show(codes.includes(active) ? active : codes[0]);
+    };
+
+    build();
+    return { build, show };
+  }
+
+  // 每个参与分页的元素统一用 data-lang 标语言，langPager 只认这一个属性。
+  const taggedBlocks = (sel) => () => [...document.querySelectorAll(sel)];
+
+  // 7a. 站点设置的文案分页
+  const copyPager = langPager(
+    document.querySelector('[data-langtabs]'),
+    taggedBlocks('.sitecopy'),
+    (el) => el.querySelector('.sitecopy-head [lang]')?.textContent.trim());
+  if (copyPager) {
+    // 勾选语言会增减块，标签条要跟着重建。
+    for (const cb of document.querySelectorAll('[data-langpick]')) {
+      cb.addEventListener('change', () => {
+        copyPager.build();
+        if (cb.checked) copyPager.show(cb.value);
+      });
     }
+  }
+
+  // 7b. 分类表格里每行的那一对格子
+  langPager(document.querySelector('[data-langcells]'),
+    taggedBlocks('[data-langcell]'),
+    (el) => el.querySelector('.lang-tag')?.textContent.trim());
+
+  // 7c. 新建分类弹窗
+  const newPager = langPager(document.querySelector('[data-newtabs]'),
+    taggedBlocks('[data-newlang]'),
+    (el) => el.querySelector('.lang-tag')?.textContent.trim());
+  const newForm = document.querySelector('[data-newcat]');
+  if (newPager && newForm) {
+    // 必填项在没显示的那一页上时，浏览器会拒绝提交并报
+    // "invalid form control is not focusable"——什么都不显示。
+    // 先切到出问题的那一页，再让浏览器提示。
+    newForm.addEventListener('invalid', (e) => {
+      const block = e.target.closest('[data-newlang]');
+      if (block) newPager.show(block.dataset.lang);
+    }, true);
   }
 
 })();

@@ -511,7 +511,7 @@ func TestCommentsDisabledRemovesTheRoute(t *testing.T) {
 // TestAdminPagesRequireLoginAndRender 覆盖新增的三个后台页面。
 func TestAdminPagesRequireLoginAndRender(t *testing.T) {
 	e := setup(t)
-	for _, p := range []string{"/admin/media", "/admin/profile", "/admin/comments"} {
+	for _, p := range []string{"/admin/media", "/admin/site", "/admin/comments"} {
 		w := httptest.NewRecorder()
 		e.h.ServeHTTP(w, httptest.NewRequest("GET", p, nil))
 		if w.Code != http.StatusSeeOther {
@@ -519,7 +519,7 @@ func TestAdminPagesRequireLoginAndRender(t *testing.T) {
 		}
 	}
 	sid, _, _ := e.db.CreateSession(t.Context(), e.uid)
-	for _, p := range []string{"/admin/media", "/admin/profile", "/admin/comments"} {
+	for _, p := range []string{"/admin/media", "/admin/site", "/admin/comments"} {
 		r := httptest.NewRequest("GET", p, nil)
 		r.AddCookie(&http.Cookie{Name: sessionCookie, Value: sid})
 		w := httptest.NewRecorder()
@@ -982,7 +982,7 @@ func TestNonDefaultUILanguageHasNoChineseChrome(t *testing.T) {
 		t.Fatal(err)
 	}
 	for _, path := range []string{"/en/admin", "/en/admin/comments", "/en/admin/media",
-		"/en/admin/tokens", "/en/admin/profile", "/en/search?q=latin"} {
+		"/en/admin/tokens", "/en/admin/site", "/en/admin/categories", "/en/search?q=latin"} {
 		r := httptest.NewRequest("GET", path, nil)
 		r.AddCookie(&http.Cookie{Name: sessionCookie, Value: sid})
 		w := httptest.NewRecorder()
@@ -1014,7 +1014,10 @@ func TestNonDefaultUILanguageHasNoChineseChrome(t *testing.T) {
 // 判据就用 HTML 自己的那个：带 lang 属性的元素，里面本来就该是那个
 // 语言的文字。标签名限定在这几个行内元素上——不能放开到任意标签，
 // 否则会匹配到 <html lang="en"> 而把整页抹掉，测试从此永远是绿的。
-var langOptionRE = regexp.MustCompile(`(?s)<(a|option|span|button)[^>]*\blang="[^"]*"[^>]*>.*?</(?:a|option|span|button)>`)
+// 需要新标签时往这个清单里加：漏了的表现是一条明确的失败，不是静悄悄
+// 地放过去，这个方向的错是安全的。
+var langOptionRE = regexp.MustCompile(
+	`(?s)<(a|option|span|button|small|code)[^>]*\blang="[^"]*"[^>]*>.*?</(?:a|option|span|button|small|code)>`)
 
 // chineseRunContext 把漏网的那串中文连同前后文摘出来，方便一眼看出是哪处。
 func chineseRunContext(body string, first rune) string {

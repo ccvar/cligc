@@ -104,7 +104,6 @@
   "admin.tab.comments": "التعليقات",
   "admin.tab.media": "الوسائط",
   "admin.tab.tokens": "رموز API",
-  "admin.tab.profile": "الحساب",
   "admin.posts.title": "المحتوى",
   "admin.posts.new": "مقال جديد",
   "admin.posts.searchPlace": "ابحث في العنوان أو المتن",
@@ -250,7 +249,6 @@
   "admin.tokens.revokeConfirm": "العملاء الذين يستخدمونه سيتوقفون فورًا. أتريد المتابعة؟",
   "admin.tokens.revokeDone": "أُبطل",
   "admin.tokens.createFailed": "تعذّر الإنشاء: {0}",
-  "admin.profile.title": "الحساب",
   "admin.profile.section": "الملف الشخصي",
   "admin.profile.name": "الاسم المعروض",
   "admin.profile.slug": "عنوان صفحتك",
@@ -299,7 +297,7 @@
   "common.copied": "تم النسخ",
   "admin.media.copyMd": "نسخ مرجع Markdown",
   "admin.tab.site": "الموقع",
-  "admin.site.title": "عمليات الربط",
+  "admin.site.title": "إعدادات الموقع",
   "admin.site.seoSection": "محركات البحث",
   "admin.site.analyticsSection": "التحليلات",
   "admin.site.gsc": "رمز تحقّق Google Search Console",
@@ -329,12 +327,10 @@
   "nav.categories": "الأقسام",
   "admin.tab.categories": "الأقسام",
   "admin.cats.title": "إدارة الأقسام",
-  "admin.cats.intro": "الأقسام هي بنية الموقع: قليلة وثابتة، وللمقال قسم واحد، وهي التي تحدّد ما يظهر في شريط التنقّل. أما الوسوم فهي المحور الآخر — كثيرة ومسطّحة، وللمقال منها عدّة، وتُستخدم للعثور على المحتوى المشابه. لا تخلط بينهما.",
   "admin.cats.new": "قسم جديد",
   "admin.cats.name": "الاسم",
   "admin.cats.slug": "العنوان",
   "admin.cats.slugPlace": "يُشتق من الاسم إن تُرك فارغًا",
-  "admin.cats.sort": "الترتيب",
   "admin.cats.sortHint": "الأرقام الأصغر أولًا، وعند التساوي يُرتَّب بالاسم. ترتيب التنقّل قرارك أنت، لا قرار الأبجدية.",
   "admin.cats.colPosts": "المنشورة",
   "admin.cats.empty": "لا أقسام بعد",
@@ -394,6 +390,6 @@
   "admin.posts.langLabel": "اللغة",
   "admin.posts.allLangs": "كل اللغات",
   "admin.cats.slugShared": "‏العنوان مشترك بين اللغات: فـ /c/essays و /en/c/essays قسم واحد. وتغييره يقطع الروابط القائمة.",
-  "admin.cats.langHint": "القسم بنية واحدة لها اسم في كل لغة، لا قسم مستقل لكل لغة. وألسنة التبويب أدناه تبدّل اللغة التي تسمّي بها فحسب؛ أما العنوان والترتيب فمشتركان."
+  "admin.site.langOff": "غير مُتاحة"
  }
 }

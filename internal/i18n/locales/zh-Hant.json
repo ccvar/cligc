@@ -89,7 +89,6 @@
   "admin.tab.comments": "留言",
   "admin.tab.media": "媒體庫",
   "admin.tab.tokens": "API Token",
-  "admin.tab.profile": "帳號",
   "admin.posts.title": "內容管理",
   "admin.posts.new": "新增文章",
   "admin.posts.searchPlace": "搜尋標題或內文",
@@ -215,7 +214,6 @@
   "admin.tokens.revokeConfirm": "撤銷後，正在用它的客戶端會立刻失效，確定嗎？",
   "admin.tokens.revokeDone": "已撤銷",
   "admin.tokens.createFailed": "建立失敗：{0}",
-  "admin.profile.title": "帳號設定",
   "admin.profile.section": "個人資料",
   "admin.profile.name": "顯示名稱",
   "admin.profile.slug": "個人頁網址",
@@ -265,7 +263,7 @@
   "common.copied": "已複製",
   "admin.media.copyMd": "複製 Markdown 引用",
   "admin.tab.site": "站點",
-  "admin.site.title": "站點介接",
+  "admin.site.title": "網站設定",
   "admin.site.seoSection": "搜尋平台",
   "admin.site.analyticsSection": "統計",
   "admin.site.gsc": "Google Search Console 驗證碼",
@@ -295,12 +293,10 @@
   "nav.categories": "板塊",
   "admin.tab.categories": "分類",
   "admin.cats.title": "分類管理",
-  "admin.cats.intro": "分類是站點的板塊：少、穩定、一篇一個，決定導覽上有哪幾項。標籤是另一個維度——多、扁平、一篇多個，用來發現相關內容。兩者不要混用。",
   "admin.cats.new": "新增分類",
   "admin.cats.name": "名稱",
   "admin.cats.slug": "網址",
   "admin.cats.slugPlace": "留空按名稱產生",
-  "admin.cats.sort": "排序",
   "admin.cats.sortHint": "數字小的排前面。相同時按名稱排。導覽順序該由你定，不是按字母。",
   "admin.cats.colPosts": "已發佈",
   "admin.cats.empty": "還沒有分類",
@@ -360,6 +356,6 @@
   "admin.posts.langLabel": "語言",
   "admin.posts.allLangs": "全部語言",
   "admin.cats.slugShared": "網址在各語言之間是共用的：/c/essays 和 /en/c/essays 指的是同一塊。改了之後舊網址會失效。",
-  "admin.cats.langHint": "版塊是一套結構配多份名字，不是每種語言各建一套。下面切的只是「現在填哪種語言的名字」，網址和順序是共用的。"
+  "admin.site.langOff": "未啟用"
  }
 }

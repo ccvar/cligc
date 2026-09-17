@@ -42,8 +42,13 @@ func TestProfileSaveKeepsHiddenFields(t *testing.T) {
 		t.Errorf("slug = %q，想要 my-page——改一次显示名不该让旧地址 404", u.Slug)
 	}
 
+	// 资料并进了站点设置页，老地址跳过去
+	if code, _ := e.authGet("/admin/profile"); code != http.StatusFound {
+		t.Errorf("/admin/profile = %d，想要 302 跳到 /admin/site", code)
+	}
+
 	// 单人站上这两个框根本不该渲染出来
-	_, body := e.authGet("/admin/profile")
+	_, body := e.authGet("/admin/site")
 	if strings.Contains(body, `name="slug"`) {
 		t.Error("单人站的资料页上出现了「主页地址」——那一页是 noindex 且没人链过去")
 	}
@@ -58,7 +63,7 @@ func TestProfileSaveKeepsHiddenFields(t *testing.T) {
 	if _, err := e.db.CreateUser(t.Context(), "b@c.com", "另一位", "password123", "author"); err != nil {
 		t.Fatal(err)
 	}
-	_, body = e.authGet("/admin/profile")
+	_, body = e.authGet("/admin/site")
 	if !strings.Contains(body, `name="slug"`) || !strings.Contains(body, `name="bio"`) {
 		t.Error("多作者站上这两个框该出现")
 	}

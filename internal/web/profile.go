@@ -6,12 +6,13 @@ import (
 )
 
 // handleProfile 显示账号设置：资料与改密。
+// handleProfile 把老的资料页并进了站点设置。
+//
+// 单人站上这一页只剩一个"显示名"加一个改密码按钮，独占一个标签页
+// 不值当。保留这个路由是因为它可能存在于书签和旧的跳转里——直接 404
+// 会让人以为功能被删了。
 func (s *Server) handleProfile(w http.ResponseWriter, r *http.Request) {
-	s.render(w, r, "admin_profile.html", page{
-		Title: s.tr(r, "admin.profile.title"), NoIndex: true, Wide: true, AdminTab: "profile",
-		Flash: r.URL.Query().Get("flash"),
-		Data:  map[string]any{"Me": userFrom(r.Context())},
-	})
+	http.Redirect(w, r, langPath(LangFrom(r.Context()), "/admin/site"), http.StatusFound)
 }
 
 // handleProfileSave 保存资料。
@@ -33,10 +34,10 @@ func (s *Server) handleProfileSave(w http.ResponseWriter, r *http.Request) {
 	}
 	if _, err := s.db.UpdateUser(r.Context(), u.ID,
 		r.FormValue("name"), keep("bio", u.Bio), keep("slug", u.Slug)); err != nil {
-		redirectFlash(w, r, "/admin/profile", s.tr(r, "flash.saveFailed", err.Error()))
+		redirectFlash(w, r, "/admin/site", s.tr(r, "flash.saveFailed", err.Error()))
 		return
 	}
-	redirectFlash(w, r, "/admin/profile", s.tr(r, "admin.profile.saved"))
+	redirectFlash(w, r, "/admin/site", s.tr(r, "admin.profile.saved"))
 }
 
 // handleChangePassword 修改密码。
@@ -51,11 +52,11 @@ func (s *Server) handleChangePassword(w http.ResponseWriter, r *http.Request) {
 	u := userFrom(r.Context())
 	next, confirm := r.FormValue("new_password"), r.FormValue("confirm_password")
 	if next != confirm {
-		redirectFlash(w, r, "/admin/profile", s.tr(r, "admin.profile.pwMismatch"))
+		redirectFlash(w, r, "/admin/site", s.tr(r, "admin.profile.pwMismatch"))
 		return
 	}
 	if err := s.db.ChangePassword(r.Context(), u.ID, r.FormValue("current_password"), next); err != nil {
-		redirectFlash(w, r, "/admin/profile", s.tr(r, "flash.opFailed", err.Error()))
+		redirectFlash(w, r, "/admin/site", s.tr(r, "flash.opFailed", err.Error()))
 		return
 	}
 
@@ -70,5 +71,5 @@ func (s *Server) handleChangePassword(w http.ResponseWriter, r *http.Request) {
 		Expires: exp, HttpOnly: true, SameSite: http.SameSiteLaxMode,
 		Secure: strings.HasPrefix(s.cfg.BaseURL, "https://"),
 	})
-	redirectFlash(w, r, "/admin/profile", s.tr(r, "admin.profile.pwDone"))
+	redirectFlash(w, r, "/admin/site", s.tr(r, "admin.profile.pwDone"))
 }

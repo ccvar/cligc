@@ -3,55 +3,48 @@
 <div class="toolbar"><h1>{{t "admin.cats.title"}}</h1></div>
 {{template "admintabs" $}}
 
-<p class="count">{{t "admin.cats.intro"}}</p>
-
-<div class="list-head">
+{{/* 语言标签条和"新建"排在同一行：这一行是这一页唯一的操作区，
+     标签条不占满整行，右边那块空着不如给按钮。 */}}
+<div class="cats-head">
+  <div class="lang-tabs" data-langcells role="tablist" hidden></div>
   <span class="spacer"></span>
   <details class="create-panel" data-dialog data-title="{{t "admin.cats.new"}}">
   <summary class="btn primary">{{t "admin.cats.new"}}</summary>
-  <form method="post" action="{{lurl "/admin/categories"}}">
+  <form method="post" action="{{lurl "/admin/categories"}}" data-newcat>
+    {{/* 名字和描述按语种分页；地址只有一个，放在标签页外面——它在各语言
+         之间是共用的，放进某一页会让人以为每种语言各有一个地址。 */}}
+    <div class="lang-tabs" data-newtabs role="tablist" hidden></div>
     {{range $d.Langs}}
-    <label class="field">
-      <span class="label">
-        {{t "admin.cats.name"}}
-        {{if gt (len $d.Langs) 1}}<span class="label-lang" lang="{{.Code}}">{{.Name}}</span>{{end}}
-      </span>
-      <input type="text" name="name:{{.Code}}" lang="{{.Code}}" dir="{{.Dir}}"
-             {{if eq .Code $d.Default}}required{{end}}>
-    </label>
+    <div class="newcat-lang" data-newlang data-lang="{{.Code}}">
+      <small class="lang-tag" lang="{{.Code}}">{{.Name}}</small>
+      <label class="field">
+        <span class="label">{{t "admin.cats.name"}}</span>
+        <input type="text" name="name:{{.Code}}" lang="{{.Code}}" dir="{{.Dir}}"
+               {{if eq .Code $d.Default}}required{{end}}>
+      </label>
+      <label class="field">
+        <span class="label">{{t "admin.cats.desc"}}</span>
+        <textarea name="description:{{.Code}}" rows="2" lang="{{.Code}}" dir="{{.Dir}}"></textarea>
+        {{if eq .Code $d.Default}}<span class="hint">{{t "admin.cats.descHint"}}</span>{{end}}
+      </label>
+    </div>
     {{end}}
     <label class="field">
       <span class="label">{{t "admin.cats.slug"}}</span>
       <input type="text" name="slug" placeholder="{{t "admin.cats.slugPlace"}}">
       <span class="hint">{{t "admin.cats.slugShared"}}</span>
     </label>
-    {{range $d.Langs}}
-    <label class="field">
-      <span class="label">
-        {{t "admin.cats.desc"}}
-        {{if gt (len $d.Langs) 1}}<span class="label-lang" lang="{{.Code}}">{{.Name}}</span>{{end}}
-      </span>
-      <textarea name="description:{{.Code}}" rows="2" lang="{{.Code}}" dir="{{.Dir}}"></textarea>
-      {{if eq .Code $d.Default}}<span class="hint">{{t "admin.cats.descHint"}}</span>{{end}}
-    </label>
-    {{end}}
     <button type="submit" class="btn primary">{{t "common.save"}}</button>
   </form>
   </details>
 </div>
 
-{{if and $d.Cats (gt (len $d.Langs) 1)}}
-{{/* 板块是一套结构配多份名字，不是每种语言各一套板块：slug 是共用的，
-     /c/essays 和 /en/c/essays 指的是同一块。所以这里切的只是"现在填
-     哪种语言的名字"，不是切到另一批板块。 */}}
-<p class="hint">{{t "admin.cats.langHint"}}</p>
-<div class="lang-tabs" data-langcells role="tablist" hidden></div>
-{{end}}
-
 {{if $d.Cats}}
 {{/* 排序表单套在整张表外面：拖动只改 DOM 顺序，真正落库要点保存。
-     没有 JS 时拖不动，但每行的排序数字框照常可用——两种方式都通向
-     同一个结果，不需要任何降级分支。 */}}
+
+     原先每行还有一个"排序"数字框，是给没有 JS 的情况留的退路。拿掉了：
+     两个入口做同一件事，而那个数字框天天占着一列，只为一个几乎不会
+     发生的情况。没有 JS 时顺序保持不变，不会乱。 */}}
 <form method="post" action="{{lurl "/admin/categories/reorder"}}" id="reorder" data-reorder>
 <div class="table-wrap">
   <table class="data cats">
@@ -59,7 +52,6 @@
       <tr><th class="drag-col"></th>
           <th>{{t "admin.cats.name"}}</th><th>{{t "admin.cats.slug"}}</th>
           <th>{{t "admin.cats.desc"}}</th>
-          <th class="num">{{t "admin.cats.sort"}}</th>
           <th class="num">{{t "admin.cats.colPosts"}}</th><th></th></tr>
     </thead>
     <tbody data-reorder-rows>
@@ -74,7 +66,7 @@
         {{$c := .}}
         <td><input form="cat-{{.ID}}" type="hidden" name="id" value="{{.ID}}">
             {{range $d.Langs}}
-            <span class="lang-cell" data-langcell="{{.Code}}">
+            <span class="lang-cell" data-langcell data-lang="{{.Code}}">
               <small class="lang-tag" lang="{{.Code}}">{{.Name}}</small>
               <input form="cat-{{$c.ID}}" type="text" name="name:{{.Code}}"
                      lang="{{.Code}}" dir="{{.Dir}}"
@@ -84,13 +76,12 @@
             {{end}}</td>
         <td><input form="cat-{{.ID}}" type="text" name="slug" value="{{.Slug}}"></td>
         <td>{{range $d.Langs}}
-            <span class="lang-cell" data-langcell="{{.Code}}">
+            <span class="lang-cell" data-langcell data-lang="{{.Code}}">
               <small class="lang-tag" lang="{{.Code}}">{{.Name}}</small>
               <input form="cat-{{$c.ID}}" type="text" name="description:{{.Code}}"
                      lang="{{.Code}}" dir="{{.Dir}}" value="{{index $c.Descs .Code}}">
             </span>
             {{end}}</td>
-        <td class="num"><input form="cat-{{.ID}}" type="number" name="sort" value="{{.Sort}}" class="w-xs"></td>
         <td class="num">
           {{if gt .Count 0}}<a href="{{lurl (printf "/c/%s" (urlp .Slug))}}">{{.Count}}</a>{{else}}—{{end}}
         </td>

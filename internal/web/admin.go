@@ -539,6 +539,15 @@ func (s *Server) handleSite(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	var onLangs, offLangs []i18n.Lang
+	for _, l := range i18n.Languages() {
+		if st.LangEnabled(l.Code, def) {
+			onLangs = append(onLangs, l)
+		} else {
+			offLangs = append(offLangs, l)
+		}
+	}
+
 	// 占位符显示"留空会变成什么"：其他语言回退到默认语言那份，
 	// 默认语言自己回退到命令行的 -title / -desc。
 	fbTitle, fbDesc := s.cfg.Title, s.cfg.Description
@@ -558,56 +567,80 @@ func (s *Server) handleSite(w http.ResponseWriter, r *http.Request) {
 			// 命令行关死时把勾选框置灰：让人点一个点了不生效的开关，
 			// 比不给这个开关更糟。
 			"CommentsHardOff": !s.cfg.CommentsEnabled,
-			"Langs":           i18n.Languages(),
-			"DefaultLang":     def,
-			"MultiLang":       multi > 1,
-			"Counts":          counts,
-			"TitleFixed":      titleFixed,
-			"DescFixed":       descFixed,
-			"FallbackTitle":   fbTitle,
-			"FallbackDesc":    fbDesc,
+			// 开着的排前面、没开的在后面。一屏十一行勾选框里，"我开了哪几种"
+			// 本来要一个一个找过去。
+			"Langs":         i18n.Languages(),
+			"LangsOn":       onLangs,
+			"LangsOff":      offLangs,
+			"DefaultLang":   def,
+			"MultiLang":     multi > 1,
+			"Counts":        counts,
+			"TitleFixed":    titleFixed,
+			"DescFixed":     descFixed,
+			"FallbackTitle": fbTitle,
+			"FallbackDesc":  fbDesc,
+			"Me":            userFrom(ctx),
 		},
 	})
 }
 
+// handleSiteSave 保存站点设置的**某一块**。
+//
+// 这一页拆成了几张独立的表单（语言 / 站点信息 / 搜索平台 / 评论 /
+// 统计），各自有自己的保存按钮。所以这里必须"改哪块动哪块"：从当前
+// 设置出发，只覆盖这次提交的那一块。
+//
+// 不这么做的后果很具体：统计那张表单里没有 comments 字段，
+// r.FormValue("comments") 得到空串，于是改一次 GA4 ID 就把评论关了。
+// 和"单人站保存显示名会把简介抹掉"是同一类错，都不报错。
 func (s *Server) handleSiteSave(w http.ResponseWriter, r *http.Request) {
 	if err := r.ParseForm(); err != nil {
 		s.renderError(w, r, http.StatusBadRequest, s.tr(r, "err.badForm"))
 		return
 	}
-	cur := s.db.Settings(r.Context())
+	in := s.db.Settings(r.Context())
 
-	titles, descs := map[string]string{}, map[string]string{}
-	for _, l := range i18n.Languages() {
-		titles[l.Code] = r.FormValue(fieldSiteTitle + l.Code)
-		descs[l.Code] = r.FormValue(fieldSiteDesc + l.Code)
-	}
-
-	// 表单只能表达"翻译达标的语言"——没达标的根本没渲染成勾选框。
-	// 直接按表单覆盖的话，一个因为词表改动暂时掉到 80% 以下的语言，
-	// 会在下一次随便保存点别的设置时被无声关掉。
-	enabled := r.Form["langs"]
-	inForm := map[string]bool{}
-	for _, l := range i18n.ReadyLanguages() {
-		inForm[l.Code] = true
-	}
-	for _, code := range cur.EnabledLangs {
-		if !inForm[code] {
-			enabled = append(enabled, code)
+	switch r.FormValue("section") {
+	case "langs":
+		// 表单只能表达"翻译达标的语言"——没达标的根本没渲染成勾选框。
+		// 直接按表单覆盖的话，一个因为词表改动暂时掉到门槛以下的语言，
+		// 会在下一次随便保存点别的时被无声关掉。
+		enabled := r.Form["langs"]
+		inForm := map[string]bool{}
+		for _, l := range i18n.ReadyLanguages() {
+			inForm[l.Code] = true
 		}
+		for _, code := range in.EnabledLangs {
+			if !inForm[code] {
+				enabled = append(enabled, code)
+			}
+		}
+		in.EnabledLangs = enabled
+
+	case "copy":
+		titles, descs := map[string]string{}, map[string]string{}
+		for _, l := range i18n.Languages() {
+			titles[l.Code] = r.FormValue(fieldSiteTitle + l.Code)
+			descs[l.Code] = r.FormValue(fieldSiteDesc + l.Code)
+		}
+		in.SiteTitles, in.SiteDescs = titles, descs
+
+	case "seo":
+		in.GoogleVerify = r.FormValue("google_verify")
+		in.BingVerify = r.FormValue("bing_verify")
+		in.IndexNowKey = r.FormValue("indexnow_key")
+
+	case "comments":
+		in.CommentsEnabled = r.FormValue("comments") != ""
+
+	case "analytics":
+		in.GA4ID = r.FormValue("ga4_id")
+
+	default:
+		s.renderError(w, r, http.StatusBadRequest, s.tr(r, "err.badForm"))
+		return
 	}
 
-	in := store.SiteSettings{
-		SiteTitles:      titles,
-		SiteDescs:       descs,
-		EnabledLangs:    enabled,
-		CommentsEnabled: r.FormValue("comments") != "",
-
-		GoogleVerify: r.FormValue("google_verify"),
-		BingVerify:   r.FormValue("bing_verify"),
-		GA4ID:        r.FormValue("ga4_id"),
-		IndexNowKey:  r.FormValue("indexnow_key"),
-	}
 	if err := s.db.SaveSettings(r.Context(), in); err != nil {
 		redirectFlash(w, r, "/admin/site", s.tr(r, "flash.saveFailed", err.Error()))
 		return

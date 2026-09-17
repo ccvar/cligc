@@ -98,7 +98,6 @@
   "admin.tab.comments": "Комментарии",
   "admin.tab.media": "Медиа",
   "admin.tab.tokens": "API-токены",
-  "admin.tab.profile": "Аккаунт",
   "admin.posts.title": "Содержимое",
   "admin.posts.new": "Новая статья",
   "admin.posts.searchPlace": "Искать в заголовке или тексте",
@@ -236,7 +235,6 @@
   "admin.tokens.revokeConfirm": "Клиенты, которые им пользуются, перестанут работать сразу же. Продолжить?",
   "admin.tokens.revokeDone": "Отозван",
   "admin.tokens.createFailed": "Не удалось создать: {0}",
-  "admin.profile.title": "Аккаунт",
   "admin.profile.section": "Профиль",
   "admin.profile.name": "Отображаемое имя",
   "admin.profile.slug": "Адрес профиля",
@@ -285,7 +283,7 @@
   "common.copied": "Скопировано",
   "admin.media.copyMd": "Копировать ссылку для Markdown",
   "admin.tab.site": "Сайт",
-  "admin.site.title": "Интеграции",
+  "admin.site.title": "Настройки сайта",
   "admin.site.seoSection": "Поисковики",
   "admin.site.analyticsSection": "Аналитика",
   "admin.site.gsc": "Код подтверждения Search Console",
@@ -315,12 +313,10 @@
   "nav.categories": "Разделы",
   "admin.tab.categories": "Разделы",
   "admin.cats.title": "Разделы",
-  "admin.cats.intro": "Разделы — это структура сайта: их мало, они не меняются, у статьи ровно один, и именно они определяют пункты навигации. Теги — другая ось: их много, они плоские, у статьи их несколько, и нужны они для поиска похожего. Не смешивайте.",
   "admin.cats.new": "Новый раздел",
   "admin.cats.name": "Название",
   "admin.cats.slug": "Адрес",
   "admin.cats.slugPlace": "Пусто — создадим из названия",
-  "admin.cats.sort": "Порядок",
   "admin.cats.sortHint": "Меньшие числа идут первыми, при совпадении — по названию. Порядок в навигации задаёте вы, а не алфавит.",
   "admin.cats.colPosts": "Опубликовано",
   "admin.cats.empty": "Разделов пока нет",
@@ -380,6 +376,6 @@
   "admin.posts.langLabel": "Язык",
   "admin.posts.allLangs": "Все языки",
   "admin.cats.slugShared": "Адрес общий для всех языков: /c/essays и /en/c/essays — один и тот же раздел. Если его сменить, старые ссылки перестанут работать.",
-  "admin.cats.langHint": "Раздел — это одна структура с названием на каждом языке, а не отдельный раздел под каждый язык. Вкладки ниже меняют только то, на каком языке вы сейчас вводите название; адрес и порядок общие."
+  "admin.site.langOff": "Не предлагаются"
  }
 }

@@ -111,7 +111,6 @@
   "admin.profile.slug": "主页地址",
   "admin.profile.slugHint": "当前：{0}。改了之后旧地址会失效。",
   "admin.profile.slugPlace": "留空按显示名生成",
-  "admin.profile.title": "账号设置",
   "admin.profile.uiLang": "界面语言",
   "admin.profile.uiLangHint": "只影响后台界面。文章用哪种语言在编辑页单独设置。",
   "admin.quota.aria": "今日已发布 {0} 篇，上限 {1} 篇",
@@ -121,7 +120,6 @@
   "admin.tab.comments": "评论",
   "admin.tab.media": "媒体库",
   "admin.tab.posts": "文章",
-  "admin.tab.profile": "账号",
   "admin.tab.tokens": "API Token",
   "admin.tokens.colPrefix": "前缀",
   "admin.tokens.colScopes": "权限",
@@ -253,7 +251,7 @@
   "common.copied": "已复制",
   "admin.media.copyMd": "复制 Markdown 引用",
   "admin.tab.site": "站点",
-  "admin.site.title": "站点接入",
+  "admin.site.title": "站点设置",
   "admin.site.seoSection": "搜索平台",
   "admin.site.analyticsSection": "统计",
   "admin.site.gsc": "Google Search Console 验证码",
@@ -283,12 +281,10 @@
   "nav.categories": "板块",
   "admin.tab.categories": "分类",
   "admin.cats.title": "分类管理",
-  "admin.cats.intro": "分类是站点的板块：少、稳定、一篇一个，决定导航上有哪几项。标签是另一个维度——多、扁平、一篇多个，用来发现相关内容。两者不要混用。",
   "admin.cats.new": "新建分类",
   "admin.cats.name": "名称",
   "admin.cats.slug": "地址",
   "admin.cats.slugPlace": "留空按名称生成",
-  "admin.cats.sort": "排序",
   "admin.cats.sortHint": "数字小的排前面。相同时按名称排。导航顺序该由你定，不是按字母。",
   "admin.cats.colPosts": "已发布",
   "admin.cats.empty": "还没有分类",
@@ -348,7 +344,7 @@
   "admin.posts.langLabel": "语言",
   "admin.posts.allLangs": "全部语言",
   "admin.cats.slugShared": "地址在各语言之间是共用的：/c/essays 和 /en/c/essays 指的是同一块。改了之后旧地址会失效。",
-  "admin.cats.langHint": "板块是一套结构配多份名字，不是每种语言各建一套。下面切的只是「现在填哪种语言的名字」，地址和顺序是共用的。"
+  "admin.site.langOff": "未启用"
  },
  "name": "中文"
 }

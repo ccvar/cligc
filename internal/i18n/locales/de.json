@@ -92,7 +92,6 @@
   "admin.tab.comments": "Kommentare",
   "admin.tab.media": "Medien",
   "admin.tab.tokens": "API-Tokens",
-  "admin.tab.profile": "Konto",
   "admin.posts.title": "Inhalte",
   "admin.posts.new": "Neuer Beitrag",
   "admin.posts.searchPlace": "Titel oder Text durchsuchen",
@@ -222,7 +221,6 @@
   "admin.tokens.revokeConfirm": "Clients, die es benutzen, hören sofort auf zu funktionieren. Fortfahren?",
   "admin.tokens.revokeDone": "Widerrufen",
   "admin.tokens.createFailed": "Erstellen fehlgeschlagen: {0}",
-  "admin.profile.title": "Konto",
   "admin.profile.section": "Profil",
   "admin.profile.name": "Anzeigename",
   "admin.profile.slug": "Profiladresse",
@@ -271,7 +269,7 @@
   "common.copied": "Kopiert",
   "admin.media.copyMd": "Markdown-Verweis kopieren",
   "admin.tab.site": "Website",
-  "admin.site.title": "Anbindungen",
+  "admin.site.title": "Website-Einstellungen",
   "admin.site.seoSection": "Suchmaschinen",
   "admin.site.analyticsSection": "Statistik",
   "admin.site.gsc": "Search-Console-Bestätigungscode",
@@ -301,12 +299,10 @@
   "nav.categories": "Bereiche",
   "admin.tab.categories": "Kategorien",
   "admin.cats.title": "Kategorien",
-  "admin.cats.intro": "Kategorien sind die Bereiche der Website: wenige, stabile, eine je Beitrag – sie bestimmen, was in der Navigation steht. Schlagwörter sind die andere Achse: viele, flach, mehrere je Beitrag, zum Finden verwandter Texte. Nicht vermischen.",
   "admin.cats.new": "Neue Kategorie",
   "admin.cats.name": "Name",
   "admin.cats.slug": "Adresse",
   "admin.cats.slugPlace": "Leer lassen, um sie aus dem Namen zu bilden",
-  "admin.cats.sort": "Reihenfolge",
   "admin.cats.sortHint": "Kleinere Zahlen zuerst, bei Gleichstand der Name. Die Reihenfolge der Navigation bestimmst du, nicht das Alphabet.",
   "admin.cats.colPosts": "Veröffentlicht",
   "admin.cats.empty": "Noch keine Kategorien",
@@ -366,6 +362,6 @@
   "admin.posts.langLabel": "Sprache",
   "admin.posts.allLangs": "Alle Sprachen",
   "admin.cats.slugShared": "Der Slug ist für alle Sprachen derselbe: /c/essays und /en/c/essays meinen denselben Bereich. Ihn zu ändern bricht bestehende Links.",
-  "admin.cats.langHint": "Ein Bereich ist eine Struktur mit je einem Namen pro Sprache, nicht ein Bereich je Sprache. Die Reiter unten wechseln nur, welche Sprache du gerade benennst – Slug und Reihenfolge sind gemeinsam."
+  "admin.site.langOff": "Nicht angeboten"
  }
 }

@@ -123,7 +123,6 @@
   "admin.profile.slug": "Profile URL",
   "admin.profile.slugHint": "Currently {0}. Changing it breaks the old address.",
   "admin.profile.slugPlace": "Leave empty to derive from the name",
-  "admin.profile.title": "Account",
   "admin.profile.uiLang": "Interface language",
   "admin.profile.uiLangHint": "Affects the admin interface only. A post's own language is set in the editor.",
   "admin.quota.aria": "Published {0} today, daily cap {1}",
@@ -133,7 +132,6 @@
   "admin.tab.comments": "Comments",
   "admin.tab.media": "Media",
   "admin.tab.posts": "Posts",
-  "admin.tab.profile": "Account",
   "admin.tab.tokens": "API tokens",
   "admin.tokens.colPrefix": "Prefix",
   "admin.tokens.colScopes": "Scopes",
@@ -267,7 +265,7 @@
   "common.copied": "Copied",
   "admin.media.copyMd": "Copy Markdown reference",
   "admin.tab.site": "Site",
-  "admin.site.title": "Integrations",
+  "admin.site.title": "Site settings",
   "admin.site.seoSection": "Search engines",
   "admin.site.analyticsSection": "Analytics",
   "admin.site.gsc": "Google Search Console token",
@@ -297,12 +295,10 @@
   "nav.categories": "Sections",
   "admin.tab.categories": "Categories",
   "admin.cats.title": "Categories",
-  "admin.cats.intro": "Categories are the site's sections: few, stable, one per post, and they decide what appears in the navigation. Tags are the other dimension — many, flat, several per post, for finding related pieces. Don't mix the two.",
   "admin.cats.new": "New category",
   "admin.cats.name": "Name",
   "admin.cats.slug": "Slug",
   "admin.cats.slugPlace": "Derived from the name if empty",
-  "admin.cats.sort": "Order",
   "admin.cats.sortHint": "Lower numbers come first; ties fall back to the name. Navigation order is yours to decide, not the alphabet's.",
   "admin.cats.colPosts": "Published",
   "admin.cats.empty": "No categories yet",
@@ -362,7 +358,7 @@
   "admin.posts.langLabel": "Language",
   "admin.posts.allLangs": "All languages",
   "admin.cats.slugShared": "The slug is shared across languages: /c/essays and /en/c/essays are the same section. Changing it breaks existing links.",
-  "admin.cats.langHint": "A section is one structure with a name per language, not one section per language. The tabs below only switch which language you are naming — the slug and the order are shared."
+  "admin.site.langOff": "Not offered"
  },
  "name": "English"
 }

@@ -576,13 +576,17 @@ table.data.cats td { white-space: normal; }
 
 /* 只开一种语言时把这层外壳收起来：只有一份文案，"这一份是哪个语言的"
    不是问题，竖线和小标题就只是噪音。开第二种语言的那一刻它们才出现，
-   也正是那一刻才需要它们。 */
-.settings:not([data-multilang]) .multilang-only { display: none; }
-.settings:not([data-multilang]) .sitecopy {
+   也正是那一刻才需要它们。
+
+   选择器挂在 form 上而不是 .settings 上：这一页拆成了好几张表单，
+   data-multilang 跟着相关的那张走。挂在外层容器上的话，属性不在那里，
+   这几条就变成无条件生效——标签条永远不出现。 */
+form:not([data-multilang]) .multilang-only { display: none; }
+form:not([data-multilang]) .sitecopy {
   border-inline-start: none;
   padding-inline-start: 0;
 }
-.settings:not([data-multilang]) .sitecopy-head { display: none; }
+form:not([data-multilang]) .sitecopy-head { display: none; }
 
 /* --- 封面与选图 --- */
 
@@ -680,18 +684,21 @@ table.data.cats td { white-space: normal; }
 .lang-tabs button.on { color: var(--fg); border-bottom-color: var(--accent); }
 
 /* 分页之后语言小标题就多余了——标签条上已经写着现在是哪一种。 */
-.sitecopy.is-hidden { display: none; }
-.settings:has(.lang-tabs:not([hidden])) .sitecopy {
+.is-hidden { display: none !important; }
+form:has(.lang-tabs:not([hidden])) .sitecopy {
   border-inline-start: none;
   padding-inline-start: 0;
 }
-.settings:has(.lang-tabs:not([hidden])) .sitecopy-head { display: none; }
+form:has(.lang-tabs:not([hidden])) .sitecopy-head { display: none; }
+
+/* 新建分类弹窗里的每一页 */
+.newcat-lang + .newcat-lang { margin-top: var(--s3); }
+form:has(.lang-tabs[data-newtabs]:not([hidden])) .newcat-lang > .lang-tag { display: none; }
 
 /* 分类表格里按语言的那一对格子。JS 在时只留当前标签那一种；
    关掉 JS 就竖着排，每格上面标着是哪种语言。 */
 .lang-cell { display: block; }
 .lang-cell + .lang-cell { margin-top: var(--s2); }
-.lang-cell.is-hidden { display: none; }
 .lang-tag {
   display: block;
   font-size: var(--t-xs);
@@ -699,12 +706,30 @@ table.data.cats td { white-space: normal; }
   margin-bottom: 1px;
 }
 /* 标签条接管之后就不用再逐格标语言了——上面写着呢。 */
-body:has(.lang-tabs[data-langcells]:not([hidden])) .lang-tag { display: none; }
+body:has(.lang-tabs[data-langcells]:not([hidden])) .lang-cell > .lang-tag { display: none; }
 
-/* 新建面板里按语言的字段，标签后面缀一个语种名 */
-.label-lang {
-  margin-inline-start: 0.4rem;
-  font-weight: 400;
-  color: var(--muted);
-  font-size: var(--t-xs);
+
+/* 分类页顶上那一行：语言标签条在左，"新建分类"在右。 */
+.cats-head {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--s4);
+  margin-bottom: var(--s4);
+  border-bottom: 1px solid var(--line);
 }
+.cats-head .lang-tabs { margin-bottom: -1px; border-bottom: none; }
+.cats-head .spacer { margin-inline-start: auto; }
+.cats-head .create-panel,
+.cats-head > .btn { margin-bottom: var(--s2); }
+
+/* 站点设置：每一块的标题和它自己的保存按钮排一行。 */
+.sec-head {
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+  margin-top: var(--s6);
+}
+.settings > form:first-of-type .sec-head,
+.settings > .sec-head:first-child { margin-top: 0; }
+.sec-head .section-title { margin: 0; margin-inline-end: auto; }
+.settings > form { margin-bottom: var(--s6); }

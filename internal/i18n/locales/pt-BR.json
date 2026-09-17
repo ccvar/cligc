@@ -92,7 +92,6 @@
   "admin.tab.comments": "Comentários",
   "admin.tab.media": "Mídia",
   "admin.tab.tokens": "Tokens de API",
-  "admin.tab.profile": "Conta",
   "admin.posts.title": "Conteúdo",
   "admin.posts.new": "Novo artigo",
   "admin.posts.searchPlace": "Buscar no título ou no texto",
@@ -222,7 +221,6 @@
   "admin.tokens.revokeConfirm": "Os clientes que o usam param de funcionar na hora. Confirmar?",
   "admin.tokens.revokeDone": "Revogado",
   "admin.tokens.createFailed": "Não foi possível criar: {0}",
-  "admin.profile.title": "Conta",
   "admin.profile.section": "Perfil",
   "admin.profile.name": "Nome de exibição",
   "admin.profile.slug": "Endereço do perfil",
@@ -271,7 +269,7 @@
   "common.copied": "Copiado",
   "admin.media.copyMd": "Copiar a referência Markdown",
   "admin.tab.site": "Site",
-  "admin.site.title": "Integrações",
+  "admin.site.title": "Configurações do site",
   "admin.site.seoSection": "Buscadores",
   "admin.site.analyticsSection": "Analytics",
   "admin.site.gsc": "Código do Google Search Console",
@@ -301,12 +299,10 @@
   "nav.categories": "Seções",
   "admin.tab.categories": "Categorias",
   "admin.cats.title": "Categorias",
-  "admin.cats.intro": "Categorias são as seções do site: poucas, estáveis, uma por artigo, e definem o que aparece na navegação. Tags são a outra dimensão — muitas, planas, várias por artigo, para achar conteúdo relacionado. Não misture as duas.",
   "admin.cats.new": "Nova categoria",
   "admin.cats.name": "Nome",
   "admin.cats.slug": "Endereço",
   "admin.cats.slugPlace": "Gerado do nome se ficar vazio",
-  "admin.cats.sort": "Ordem",
   "admin.cats.sortHint": "Números menores vêm antes; empate vai pelo nome. A ordem da navegação é sua decisão, não do alfabeto.",
   "admin.cats.colPosts": "Publicados",
   "admin.cats.empty": "Nenhuma categoria ainda",
@@ -366,6 +362,6 @@
   "admin.posts.langLabel": "Idioma",
   "admin.posts.allLangs": "Todos os idiomas",
   "admin.cats.slugShared": "O slug é comum a todos os idiomas: /c/essays e /en/c/essays são a mesma seção. Mudá-lo quebra os links existentes.",
-  "admin.cats.langHint": "Uma seção é uma estrutura só, com um nome por idioma — não uma seção por idioma. As abas abaixo mudam apenas qual idioma você está nomeando; o slug e a ordem são compartilhados."
+  "admin.site.langOff": "Não oferecidos"
  }
 }

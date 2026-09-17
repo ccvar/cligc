@@ -2,31 +2,60 @@
 {{$d := .Data}}
 {{$s := .Settings}}
 {{$def := $d.DefaultLang}}
+{{$me := $d.Me}}
 <div class="toolbar"><h1>{{t "admin.site.title"}}</h1></div>
 {{template "admintabs" $}}
 
-<form class="settings" method="post" action="{{lurl "/admin/site"}}"
-      {{if $d.MultiLang}}data-multilang{{end}}>
+<div class="settings">
 
-  {{/* 语言放在最前面：它决定下面有几份站名和描述要填，也决定 hreflang
-       和 sitemap 里出现哪些语言。先选语言再写文案，顺序是对的。 */}}
-  <h2 class="section-title">{{t "admin.site.langSection"}}</h2>
+{{/* 每一块自己一张表单、自己一个保存按钮。保存按钮是**可见**地渲染出来的，
+     由 JS 在没有改动时收起来——反过来写（默认 hidden、有改动才显示）的话，
+     关掉 JS 就永远看不到保存按钮，这一页整个变成只读的。
+
+     每一块自己一张表单，原先是整页一个总保存：
+     改一个 GA4 ID 要连着把语言、站名、验证码一起提交一遍，而那些
+     字段的当前值全都挂在这一次请求上——任何一个渲染错了就一起写错。
+     现在一次请求只动一块，服务端也照这个口径合并。 */}}
+
+<form method="post" action="{{lurl "/admin/site"}}" data-dirty-form
+      {{if $d.MultiLang}}data-multilang{{end}}>
+  <input type="hidden" name="section" value="langs">
+  <div class="sec-head">
+    <h2 class="section-title">{{t "admin.site.langSection"}}</h2>
+    <button type="submit" class="btn primary small" data-dirty-save>{{t "common.save"}}</button>
+  </div>
   <p class="hint">{{t "admin.site.langHint"}}</p>
 
   <div class="langpick">
-    {{range $d.Langs}}
-    {{$on := $s.LangEnabled .Code $def}}
+    {{range $d.LangsOn}}
     {{$fixed := eq .Code $def}}
-    <label class="check langrow{{if not .Ready}} muted{{end}}">
-      <input type="checkbox" name="langs" value="{{.Code}}"
-             {{if $on}}checked{{end}}
-             {{if or $fixed (not .Ready)}}disabled{{end}}
-             data-langpick="{{.Code}}">
+    <label class="check langrow">
+      <input type="checkbox" name="langs" value="{{.Code}}" checked
+             {{if or $fixed (not .Ready)}}disabled{{end}} data-langpick="{{.Code}}">
       <span class="langrow-text">
         <span class="langrow-name" lang="{{.Code}}" dir="{{.Dir}}">{{.Name}}</span>
         <code class="langrow-code">{{.Code}}</code>
         <span class="hint">
           {{- if $fixed}}{{t "admin.site.langDefault"}} · {{end -}}
+          {{$n := index $d.Counts .Code}}
+          {{- if $n}}{{tn "common.count" $n}}{{else}}{{t "admin.site.langEmpty"}}{{end}}
+        </span>
+      </span>
+    </label>
+    {{end}}
+  </div>
+
+  {{if $d.LangsOff}}
+  <p class="rail-label">{{t "admin.site.langOff"}}</p>
+  <div class="langpick langpick-off">
+    {{range $d.LangsOff}}
+    <label class="check langrow{{if not .Ready}} muted{{end}}">
+      <input type="checkbox" name="langs" value="{{.Code}}"
+             {{if not .Ready}}disabled{{end}} data-langpick="{{.Code}}">
+      <span class="langrow-text">
+        <span class="langrow-name" lang="{{.Code}}" dir="{{.Dir}}">{{.Name}}</span>
+        <code class="langrow-code">{{.Code}}</code>
+        <span class="hint">
           {{- if not .Ready}}{{t "admin.site.langNotReady"}}
           {{- else}}{{$n := index $d.Counts .Code}}
             {{- if $n}}{{tn "common.count" $n}}{{else}}{{t "admin.site.langEmpty"}}{{end}}
@@ -36,11 +65,16 @@
     </label>
     {{end}}
   </div>
+  {{end}}
+</form>
 
-  {{/* 站名和描述决定 <title> 和 meta description，是这一页里最影响
-       搜索结果长相的两项。按语言各存一份——英文页挂中文标题，等于
-       把那一版的搜索结果作废。 */}}
-  <h2 class="section-title">{{t "admin.site.basicSection"}}</h2>
+<form method="post" action="{{lurl "/admin/site"}}" data-dirty-form
+      {{if $d.MultiLang}}data-multilang{{end}}>
+  <input type="hidden" name="section" value="copy">
+  <div class="sec-head">
+    <h2 class="section-title">{{t "admin.site.basicSection"}}</h2>
+    <button type="submit" class="btn primary small" data-dirty-save>{{t "common.save"}}</button>
+  </div>
   <p class="hint multilang-only">{{t "admin.site.copyHint"}}</p>
 
   {{/* 标签条由 JS 按"当前开着哪几种语言"生成。关掉 JS 时它不出现，
@@ -49,7 +83,7 @@
 
   {{range $d.Langs}}
   {{if .Ready}}
-  <section class="sitecopy" data-langblock="{{.Code}}" data-langname="{{.Name}}"
+  <section class="sitecopy" data-lang="{{.Code}}"
            {{if not ($s.LangEnabled .Code $def)}}data-langoff{{end}}>
     <h3 class="sitecopy-head">
       <span lang="{{.Code}}" dir="{{.Dir}}">{{.Name}}</span>
@@ -81,8 +115,14 @@
   </section>
   {{end}}
   {{end}}
+</form>
 
-  <h2 class="section-title">{{t "admin.site.seoSection"}}</h2>
+<form method="post" action="{{lurl "/admin/site"}}" data-dirty-form>
+  <input type="hidden" name="section" value="seo">
+  <div class="sec-head">
+    <h2 class="section-title">{{t "admin.site.seoSection"}}</h2>
+    <button type="submit" class="btn primary small" data-dirty-save>{{t "common.save"}}</button>
+  </div>
 
   <label class="field">
     <span class="label">{{t "admin.site.gsc"}}</span>
@@ -118,18 +158,28 @@
       {{end}}
     </span>
   </label>
+</form>
 
-  <h2 class="section-title">{{t "admin.site.commentsSection"}}</h2>
-
+<form method="post" action="{{lurl "/admin/site"}}" data-dirty-form>
+  <input type="hidden" name="section" value="comments">
+  <div class="sec-head">
+    <h2 class="section-title">{{t "admin.site.commentsSection"}}</h2>
+    <button type="submit" class="btn primary small" data-dirty-save>{{t "common.save"}}</button>
+  </div>
   <label class="check">
     <input type="checkbox" name="comments" value="1" {{if $s.CommentsEnabled}}checked{{end}}
-           {{if not $d.CommentsHardOff}}{{else}}disabled{{end}}>
+           {{if $d.CommentsHardOff}}disabled{{end}}>
     <span>{{t "admin.site.comments"}}</span>
   </label>
   <p class="hint">{{t "admin.site.commentsHint"}}</p>
+</form>
 
-  <h2 class="section-title">{{t "admin.site.analyticsSection"}}</h2>
-
+<form method="post" action="{{lurl "/admin/site"}}" data-dirty-form>
+  <input type="hidden" name="section" value="analytics">
+  <div class="sec-head">
+    <h2 class="section-title">{{t "admin.site.analyticsSection"}}</h2>
+    <button type="submit" class="btn primary small" data-dirty-save>{{t "common.save"}}</button>
+  </div>
   <label class="field">
     <span class="label">
       {{t "admin.site.ga4"}}
@@ -138,7 +188,62 @@
     <input type="text" name="ga4_id" value="{{$s.GA4ID}}" autocomplete="off" placeholder="G-XXXXXXXXXX">
     <span class="hint">{{t "admin.site.ga4Hint"}}</span>
   </label>
-
-  <button type="submit" class="btn primary">{{t "admin.site.save"}}</button>
 </form>
+
+{{/* 账号原先是一个独占的标签页，而单人站上它只剩一个"显示名"加一个
+     改密码按钮。并到这里来：这一页本来就是"这个站的各项设置"。
+
+     改密码那张表单嵌在 details 里，而 details 放在**资料表单外面**——
+     表单不能嵌套。保存按钮靠 form= 指回去。 */}}
+<div class="sec-head">
+  <h2 class="section-title">{{t "admin.profile.section"}}</h2>
+  <button type="submit" form="profile-form" class="btn primary small"
+          data-dirty-save>{{t "common.save"}}</button>
+  {{/* 改密码收在弹窗里：它会把其它设备全部踢下线，是特意要做才去做的事，
+       不该和改显示名抢同一屏。 */}}
+  <details class="create-panel" data-dialog data-title="{{t "admin.profile.pwSection"}}">
+  <summary class="btn small">{{t "admin.profile.pwSection"}}</summary>
+  <form method="post" action="{{lurl "/admin/profile/password"}}">
+    <label class="field">
+      <span class="label">{{t "admin.profile.pwCurrent"}}</span>
+      <input type="password" name="current_password" required autocomplete="current-password">
+    </label>
+    <label class="field">
+      <span class="label">{{t "admin.profile.pwNew"}}</span>
+      <input type="password" name="new_password" required minlength="8" autocomplete="new-password">
+      <span class="hint">{{t "admin.profile.pwNewHint"}}</span>
+    </label>
+    <label class="field">
+      <span class="label">{{t "admin.profile.pwConfirm"}}</span>
+      <input type="password" name="confirm_password" required minlength="8" autocomplete="new-password">
+    </label>
+    <p class="hint">{{t "admin.profile.pwNote"}}</p>
+    <button type="submit" class="btn primary">{{t "admin.profile.pwSubmit"}}</button>
+  </form>
+  </details>
+</div>
+
+<form id="profile-form" method="post" action="{{lurl "/admin/profile"}}" data-dirty-form>
+  <label class="field">
+    <span class="label">{{t "admin.profile.name"}}</span>
+    <input type="text" name="name" value="{{$me.Name}}" required>
+  </label>
+  {{if $.MultiAuthor}}
+  <label class="field">
+    <span class="label">{{t "admin.profile.slug"}}</span>
+    <input type="text" name="slug" value="{{$me.Slug}}" placeholder="{{t "admin.profile.slugPlace"}}">
+    <span class="hint">{{tf "admin.profile.slugHint" (printf "<code>/u/%s</code>" $me.Slug) | safeHTML}}</span>
+  </label>
+  <label class="field">
+    <span class="label">{{t "admin.profile.bio"}}</span>
+    <textarea name="bio" rows="4" placeholder="{{t "admin.profile.bioPlace"}}">{{$me.Bio}}</textarea>
+    <span class="hint">{{t "admin.profile.bioHint"}}</span>
+  </label>
+  {{end}}
+  <p class="hint">
+    {{tf "admin.profile.emailNote" (printf "<code>%s</code>" $me.Email) | safeHTML}}
+  </p>
+</form>
+
+</div>
 {{end}}

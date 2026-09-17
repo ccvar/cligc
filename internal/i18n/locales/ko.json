@@ -89,7 +89,6 @@
   "admin.tab.comments": "댓글",
   "admin.tab.media": "미디어",
   "admin.tab.tokens": "API 토큰",
-  "admin.tab.profile": "계정",
   "admin.posts.title": "글 관리",
   "admin.posts.new": "새 글",
   "admin.posts.searchPlace": "제목·본문 검색",
@@ -215,7 +214,6 @@
   "admin.tokens.revokeConfirm": "사용 중인 클라이언트가 즉시 작동을 멈춥니다. 계속할까요?",
   "admin.tokens.revokeDone": "폐기했습니다",
   "admin.tokens.createFailed": "만들지 못했습니다: {0}",
-  "admin.profile.title": "계정",
   "admin.profile.section": "프로필",
   "admin.profile.name": "표시 이름",
   "admin.profile.slug": "프로필 주소",
@@ -265,7 +263,7 @@
   "common.copied": "복사했습니다",
   "admin.media.copyMd": "Markdown 참조 복사",
   "admin.tab.site": "사이트",
-  "admin.site.title": "외부 연동",
+  "admin.site.title": "사이트 설정",
   "admin.site.seoSection": "검색엔진",
   "admin.site.analyticsSection": "통계",
   "admin.site.gsc": "Google Search Console 인증 코드",
@@ -295,12 +293,10 @@
   "nav.categories": "섹션",
   "admin.tab.categories": "분류",
   "admin.cats.title": "분류 관리",
-  "admin.cats.intro": "분류는 사이트의 구획입니다. 적고, 안정적이고, 글마다 하나이며, 내비게이션에 무엇이 들어갈지를 정합니다. 태그는 다른 축입니다 — 많고, 평평하고, 글마다 여러 개이며, 관련 글을 찾는 데 씁니다. 둘을 섞지 마세요.",
   "admin.cats.new": "분류 추가",
   "admin.cats.name": "이름",
   "admin.cats.slug": "주소",
   "admin.cats.slugPlace": "비우면 이름에서 만듭니다",
-  "admin.cats.sort": "순서",
   "admin.cats.sortHint": "숫자가 작을수록 앞. 같으면 이름순. 내비게이션 순서는 가나다순이 아니라 당신이 정하는 것입니다.",
   "admin.cats.colPosts": "게시됨",
   "admin.cats.empty": "분류가 아직 없습니다",
@@ -360,6 +356,6 @@
   "admin.posts.langLabel": "언어",
   "admin.posts.allLangs": "모든 언어",
   "admin.cats.slugShared": "주소는 언어끼리 공유합니다. /c/essays와 /en/c/essays는 같은 섹션입니다. 바꾸면 예전 주소는 끊깁니다.",
-  "admin.cats.langHint": "섹션은 하나의 구조에 언어별 이름이 붙는 것이지, 언어마다 따로 만드는 것이 아닙니다. 아래 탭은 ‘어느 언어의 이름을 넣는가’만 바꿉니다. 주소와 순서는 공유합니다."
+  "admin.site.langOff": "제공 안 함"
  }
 }

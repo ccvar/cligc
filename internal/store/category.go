@@ -34,12 +34,25 @@ type Category struct {
 // 其中两个还是同类型的 map——调用方把它们写反了编译器不会说话。
 type CategoryInput struct {
 	Slug string
-	Sort int
+	// Sort 为 nil 表示不动顺序（新建时按 0 处理）。
+	//
+	// 后台表格里已经没有"排序"那一列了——顺序靠拖。行表单不带这个字段，
+	// 而"字段不在表单里"和"用户填了 0"必须分得开：分不开的话，改一次
+	// 板块名就把它挪到最前面，人根本没碰过顺序。
+	Sort *int
 	// Names / Descs 的 key 是语言代码。DefaultLang 那一份存进 categories
 	// 表本身，其余的进 category_i18n。
 	Names       map[string]string
 	Descs       map[string]string
 	DefaultLang string
+}
+
+// sort 取顺序，没给按 0（新建时用）。
+func (in CategoryInput) sort() int {
+	if in.Sort == nil {
+		return 0
+	}
+	return *in.Sort
 }
 
 // name 取默认语言那一份，它是必填的。
@@ -169,7 +182,7 @@ func (d *DB) CreateCategory(ctx context.Context, in CategoryInput) (*Category, e
 	err := d.tx(ctx, func(t *sql.Tx) error {
 		res, err := t.ExecContext(ctx,
 			`insert into categories(slug,name,description,sort) values(?,?,?,?)`,
-			slug, name, in.desc(), in.Sort)
+			slug, name, in.desc(), in.sort())
 		if err != nil {
 			return err
 		}
@@ -179,7 +192,7 @@ func (d *DB) CreateCategory(ctx context.Context, in CategoryInput) (*Category, e
 	if err != nil {
 		return nil, err
 	}
-	return &Category{ID: id, Slug: slug, Name: name, Desc: in.desc(), Sort: in.Sort}, nil
+	return &Category{ID: id, Slug: slug, Name: name, Desc: in.desc(), Sort: in.sort()}, nil
 }
 
 // UpdateCategory 改名（含各语言的译名）、改 slug、改顺序。
@@ -193,9 +206,13 @@ func (d *DB) UpdateCategory(ctx context.Context, id int64, in CategoryInput) err
 		slug = TagSlug(name)
 	}
 	return d.tx(ctx, func(t *sql.Tx) error {
-		if _, err := t.ExecContext(ctx,
-			`update categories set name=?, slug=?, description=?, sort=? where id=?`,
-			name, slug, in.desc(), in.Sort, id); err != nil {
+		set := `update categories set name=?, slug=?, description=? where id=?`
+		args := []any{name, slug, in.desc(), id}
+		if in.Sort != nil {
+			set = `update categories set name=?, slug=?, description=?, sort=? where id=?`
+			args = []any{name, slug, in.desc(), *in.Sort, id}
+		}
+		if _, err := t.ExecContext(ctx, set, args...); err != nil {
 			return err
 		}
 		return writeCategoryI18n(ctx, t, id, in)

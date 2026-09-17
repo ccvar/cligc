@@ -89,7 +89,6 @@
   "admin.tab.comments": "コメント",
   "admin.tab.media": "メディア",
   "admin.tab.tokens": "API トークン",
-  "admin.tab.profile": "アカウント",
   "admin.posts.title": "記事管理",
   "admin.posts.new": "新規作成",
   "admin.posts.searchPlace": "タイトル・本文を検索",
@@ -215,7 +214,6 @@
   "admin.tokens.revokeConfirm": "使用中のクライアントは即座に動かなくなります。よろしいですか？",
   "admin.tokens.revokeDone": "失効しました",
   "admin.tokens.createFailed": "作成できませんでした：{0}",
-  "admin.profile.title": "アカウント",
   "admin.profile.section": "プロフィール",
   "admin.profile.name": "表示名",
   "admin.profile.slug": "プロフィール URL",
@@ -265,7 +263,7 @@
   "common.copied": "コピーしました",
   "admin.media.copyMd": "Markdown 記法をコピー",
   "admin.tab.site": "サイト",
-  "admin.site.title": "外部サービス連携",
+  "admin.site.title": "サイト設定",
   "admin.site.seoSection": "検索エンジン",
   "admin.site.analyticsSection": "アクセス解析",
   "admin.site.gsc": "Google Search Console の確認コード",
@@ -295,12 +293,10 @@
   "nav.categories": "セクション",
   "admin.tab.categories": "カテゴリ",
   "admin.cats.title": "カテゴリ管理",
-  "admin.cats.intro": "カテゴリはサイトの区分です。数は少なく、安定していて、記事ごとに一つ。ナビゲーションに並ぶ項目を決めます。タグは別の軸——数が多く、フラットで、記事ごとに複数。関連記事をたどるためのものです。混ぜないでください。",
   "admin.cats.new": "カテゴリを追加",
   "admin.cats.name": "名称",
   "admin.cats.slug": "スラッグ",
   "admin.cats.slugPlace": "空欄なら名称から生成",
-  "admin.cats.sort": "並び順",
   "admin.cats.sortHint": "数字が小さいほど前。同じときは名称順。並び順は五十音ではなく、あなたが決めるものです。",
   "admin.cats.colPosts": "公開済み",
   "admin.cats.empty": "カテゴリはまだありません",
@@ -360,6 +356,6 @@
   "admin.posts.langLabel": "言語",
   "admin.posts.allLangs": "すべての言語",
   "admin.cats.slugShared": "アドレスは言語をまたいで共通です。/c/essays と /en/c/essays は同じ区分を指します。変えると古いアドレスは切れます。",
-  "admin.cats.langHint": "区分は一つの構成に言語ごとの名前が付くもので、言語ごとに別の区分を作るわけではありません。下の切り替えは「どの言語の名前を入れるか」だけで、アドレスと並び順は共通です。"
+  "admin.site.langOff": "未提供"
  }
 }

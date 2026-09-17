@@ -5,8 +5,11 @@ import (
 	"net/http/httptest"
 	"net/url"
 	"slices"
+	"strconv"
 	"strings"
 	"testing"
+
+	"cligc.com/internal/store"
 )
 
 // authGet 带登录会话取一个页面。
@@ -28,15 +31,17 @@ func (e *env) authGet(path string) (int, string) {
 func TestSiteSettingsFormControlsLanguagesAndCopy(t *testing.T) {
 	e := setup(t)
 
-	w := e.post("/admin/site", url.Values{
-		"langs":              {"en"},
-		"site_title:zh-Hans": {"我的博客"},
-		"site_title:en":      {"My Journal"},
-		"site_desc:en":       {"Notes on things."},
-		"comments":           {"1"},
-	}, true)
-	if w.Code != http.StatusSeeOther {
-		t.Fatalf("保存设置 = %d，想要 303", w.Code)
+	// 这一页拆成了好几张表单，一次请求只动一块。
+	for _, form := range []url.Values{
+		{"section": {"langs"}, "langs": {"en"}},
+		{"section": {"copy"},
+			"site_title:zh-Hans": {"我的博客"},
+			"site_title:en":      {"My Journal"},
+			"site_desc:en":       {"Notes on things."}},
+	} {
+		if w := e.post("/admin/site", form, true); w.Code != http.StatusSeeOther {
+			t.Fatalf("保存 %s = %d，想要 303", form.Get("section"), w.Code)
+		}
 	}
 
 	if _, body := e.get("/"); !strings.Contains(body, "我的博客") {
@@ -78,8 +83,7 @@ func TestSiteSettingsFormKeepsLanguagesItCannotExpress(t *testing.T) {
 	e.enableLangs("en", "xx-Custom")
 
 	if w := e.post("/admin/site", url.Values{
-		"langs":  {"en"},
-		"ga4_id": {"G-ABC"},
+		"section": {"langs"}, "langs": {"en"},
 	}, true); w.Code != http.StatusSeeOther {
 		t.Fatalf("保存设置 = %d，想要 303", w.Code)
 	}
@@ -151,5 +155,90 @@ func TestSiteSettingsPageShowsPerLanguageCounts(t *testing.T) {
 	}
 	if !strings.Contains(body, "还没有内容") {
 		t.Error("设置页没提示空语种还没有内容")
+	}
+}
+
+// TestSiteSectionsSaveIndependently 站点设置拆成了好几张表单，
+// 存一块不能把别的块清掉。
+//
+// 具体的坏结果：统计那张表单里没有 comments 字段，照旧
+// r.FormValue("comments") 得到空串——于是改一次 GA4 ID 就把评论关了，
+// 而且不报错。
+func TestSiteSectionsSaveIndependently(t *testing.T) {
+	e := setup(t)
+
+	// 先把每一块都填上
+	for _, f := range []url.Values{
+		{"section": {"langs"}, "langs": {"en"}},
+		{"section": {"copy"}, "site_title:zh-Hans": {"我的博客"}},
+		{"section": {"seo"}, "google_verify": {"gsc-token"}, "bing_verify": {"bing-token"}},
+		{"section": {"comments"}, "comments": {"1"}},
+		{"section": {"analytics"}, "ga4_id": {"G-FIRST"}},
+	} {
+		if w := e.post("/admin/site", f, true); w.Code != http.StatusSeeOther {
+			t.Fatalf("保存 %s = %d", f.Get("section"), w.Code)
+		}
+	}
+
+	// 只改统计
+	if w := e.post("/admin/site", url.Values{
+		"section": {"analytics"}, "ga4_id": {"G-SECOND"},
+	}, true); w.Code != http.StatusSeeOther {
+		t.Fatal("保存统计失败")
+	}
+
+	st := e.db.Settings(t.Context())
+	if st.GA4ID != "G-SECOND" {
+		t.Errorf("GA4 = %q，没改上", st.GA4ID)
+	}
+	if !st.CommentsEnabled {
+		t.Error("改一次 GA4 把评论关了")
+	}
+	if st.GoogleVerify != "gsc-token" || st.BingVerify != "bing-token" {
+		t.Errorf("改一次 GA4 把验证码清了：%q / %q", st.GoogleVerify, st.BingVerify)
+	}
+	if st.SiteTitles["zh-Hans"] != "我的博客" {
+		t.Errorf("改一次 GA4 把站名清了：%q", st.SiteTitles["zh-Hans"])
+	}
+	if !slices.Contains(st.EnabledLangs, "en") {
+		t.Errorf("改一次 GA4 把语言关了：%v", st.EnabledLangs)
+	}
+
+	// 没有 section 的请求要拒掉，而不是当成"全都清空"
+	if w := e.post("/admin/site", url.Values{"ga4_id": {"G-X"}}, true); w.Code != http.StatusBadRequest {
+		t.Errorf("没带 section 的提交 = %d，想要 400", w.Code)
+	}
+}
+
+// TestCategoryRowSaveKeepsOrder 表格里没有"排序"那一列了，
+// 存一行不能把它挪到最前面。
+func TestCategoryRowSaveKeepsOrder(t *testing.T) {
+	e := setup(t)
+	three := 3
+	c, err := e.db.CreateCategory(t.Context(), store.CategoryInput{
+		Slug: "essays", Sort: &three, DefaultLang: "zh-Hans",
+		Names: map[string]string{"zh-Hans": "随笔"},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// 行表单带的就是这几个字段——没有 sort
+	if w := e.post("/admin/categories", url.Values{
+		"id": {strconv.FormatInt(c.ID, 10)}, "slug": {"essays"},
+		"name:zh-Hans": {"随笔集"},
+	}, true); w.Code != http.StatusSeeOther {
+		t.Fatalf("保存分类行 = %d", w.Code)
+	}
+
+	got, err := e.db.CategoryBySlug(t.Context(), "essays", "zh-Hans")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got.Name != "随笔集" {
+		t.Errorf("名字没改上：%q", got.Name)
+	}
+	if got.Sort != 3 {
+		t.Errorf("排序被改成了 %d，表单里没有这个字段就不该动它", got.Sort)
 	}
 }

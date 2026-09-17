@@ -339,10 +339,11 @@ func pathID(w http.ResponseWriter, r *http.Request, what string) (int64, bool) {
 // 名字，不是每种语言各一套板块——slug 是共用的，/c/essays 和
 // /en/c/essays 指的是同一块。
 type categoryReq struct {
-	Name  string            `json:"name"` // 默认语言那一份的简写
-	Slug  string            `json:"slug"`
-	Desc  string            `json:"description"`
-	Sort  int               `json:"sort"`
+	Name string `json:"name"` // 默认语言那一份的简写
+	Slug string `json:"slug"`
+	Desc string `json:"description"`
+	// Sort 不给就不动顺序（新建时按 0）。
+	Sort  *int              `json:"sort"`
 	Names map[string]string `json:"names"`
 	Descs map[string]string `json:"descriptions"`
 }
@@ -377,7 +378,7 @@ func (s *Server) handleListCategories(w http.ResponseWriter, r *http.Request) {
 //
 // name/description 是默认语言那一份的简写——绝大多数站只有一种语言，
 // 让它们为了填一个板块名去构造一个 map 是没道理的。
-func catInput(name, slug, desc string, sort int,
+func catInput(name, slug, desc string, sort *int,
 	names, descs map[string]string) store.CategoryInput {
 	def := i18n.Default().Code
 	in := store.CategoryInput{

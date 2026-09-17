@@ -92,7 +92,6 @@
   "admin.tab.comments": "Commentaires",
   "admin.tab.media": "Médias",
   "admin.tab.tokens": "Jetons d’API",
-  "admin.tab.profile": "Compte",
   "admin.posts.title": "Contenu",
   "admin.posts.new": "Nouvel article",
   "admin.posts.searchPlace": "Chercher dans le titre ou le texte",
@@ -222,7 +221,6 @@
   "admin.tokens.revokeConfirm": "Les clients qui s’en servent cesseront de fonctionner immédiatement. Confirmer ?",
   "admin.tokens.revokeDone": "Révoqué",
   "admin.tokens.createFailed": "Échec de la création : {0}",
-  "admin.profile.title": "Compte",
   "admin.profile.section": "Profil",
   "admin.profile.name": "Nom affiché",
   "admin.profile.slug": "Adresse du profil",
@@ -271,7 +269,7 @@
   "common.copied": "Copié",
   "admin.media.copyMd": "Copier le lien Markdown",
   "admin.tab.site": "Site",
-  "admin.site.title": "Intégrations",
+  "admin.site.title": "Réglages du site",
   "admin.site.seoSection": "Moteurs de recherche",
   "admin.site.analyticsSection": "Mesure d’audience",
   "admin.site.gsc": "Code de vérification Search Console",
@@ -301,12 +299,10 @@
   "nav.categories": "Rubriques",
   "admin.tab.categories": "Catégories",
   "admin.cats.title": "Catégories",
-  "admin.cats.intro": "Les catégories sont les rubriques du site : peu nombreuses, stables, une par article, elles décident de ce qui figure dans la navigation. Les étiquettes sont l’autre dimension — nombreuses, à plat, plusieurs par article, pour retrouver des contenus proches. Ne mélange pas les deux.",
   "admin.cats.new": "Nouvelle catégorie",
   "admin.cats.name": "Nom",
   "admin.cats.slug": "Adresse",
   "admin.cats.slugPlace": "Déduite du nom si vide",
-  "admin.cats.sort": "Ordre",
   "admin.cats.sortHint": "Les petits nombres passent devant ; à égalité, c’est le nom qui tranche. L’ordre de la navigation t’appartient, pas à l’alphabet.",
   "admin.cats.colPosts": "Publiés",
   "admin.cats.empty": "Aucune catégorie",
@@ -366,6 +362,6 @@
   "admin.posts.langLabel": "Langue",
   "admin.posts.allLangs": "Toutes les langues",
   "admin.cats.slugShared": "Le slug est commun à toutes les langues : /c/essays et /en/c/essays désignent la même rubrique. Le changer casse les liens existants.",
-  "admin.cats.langHint": "Une rubrique, c’est une seule structure avec un nom par langue, pas une rubrique par langue. Les onglets ci-dessous changent seulement la langue que tu nommes ; le slug et l’ordre sont communs."
+  "admin.site.langOff": "Non proposées"
  }
 }

@@ -961,8 +961,9 @@ func TestCategoryIsNavigationNotOwnership(t *testing.T) {
 	}
 	a := Actor{UserID: u.ID}
 
+	one := 1
 	cat, err := d.CreateCategory(ctx, CategoryInput{
-		Sort: 1, DefaultLang: "zh-Hans",
+		Sort: &one, DefaultLang: "zh-Hans",
 		Names: map[string]string{"zh-Hans": "随笔"},
 		Descs: map[string]string{"zh-Hans": "随笔与杂记"},
 	})
