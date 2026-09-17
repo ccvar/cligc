@@ -1,0 +1,168 @@
+{{define "content"}}
+{{$d := .Data}}
+{{$p := $d.Post}}
+
+{{/* 回列表。编辑页是从列表点进来的，但之前没有任何出口——保存完只能靠
+     浏览器后退，而后退会落回一个已经过期的表单状态。 */}}
+<a class="back-link" href="{{lurl "/admin"}}">← {{t "admin.posts.title"}}</a>
+
+{{/* 操作全部收在这一条里，并且跟着滚动。原先是底部一条保存栏 + 再下面
+     一条危险区，两条之间空一大片，而"已发布"这件事被说了三遍：标题旁的
+     徽章、保存栏的徽章、危险区的那句话。现在只说一遍。
+
+     删除进下拉不是为了省地方——它不可逆，不该和"归档"并排放着差一个
+     按钮宽度就点错。 */}}
+<div class="toolbar editor-toolbar">
+  <h1>{{if $d.New}}{{t "admin.edit.newTitle"}}{{else}}{{t "admin.edit.editTitle"}}{{end}}</h1>
+  {{if not $d.New}}
+    {{if and $p.PublishAt (ne $p.Status "published")}}
+      <span class="badge b-scheduled">{{t "status.scheduled"}} · {{$p.PublishAt.Local.Format "2006-01-02 15:04"}}</span>
+    {{else}}
+      <span class="badge b-{{$p.Status}}">{{statusLabel $p.Status}}</span>
+    {{end}}
+  {{end}}
+  <span class="spacer"></span>
+
+  {{/* 已发布的文章保存后仍然是已发布（UpdatePost 不碰 status），
+       所以这时候不能叫"保存草稿"。data-dirty-save 让它在没有改动时
+       置灰——没有 JS 时它始终可用，不影响任何人保存。 */}}
+  <button type="submit" form="editor-form" class="btn primary" data-dirty-save>
+    {{if eq $p.Status "published"}}{{t "common.save"}}{{else}}{{t "admin.edit.saveDraft"}}{{end}}</button>
+
+  {{/* 发布不进下拉：草稿页面存在的意义就是它 */}}
+  {{if and (not $d.New) (ne $p.Status "published")}}
+    <form method="post" action="{{lurl (printf "/admin/posts/%d/publish" $p.ID)}}" class="inline">
+      <button type="submit" class="btn">{{t "admin.edit.publishThis"}}</button></form>
+  {{end}}
+
+  {{if not $d.New}}
+  <div class="act-menu" data-menu data-label="{{t "common.more"}}">
+    <span class="act-current" data-menu-current>{{template "icon-more"}}</span>
+    <a class="btn small menu-item" href="{{lurl (printf "/p/%s" $p.Slug)}}">{{template "icon-view"}}{{t "admin.posts.viewPage"}}</a>
+    {{if eq $p.Status "published"}}
+      <form method="post" action="{{lurl (printf "/admin/posts/%d/unpublish" $p.ID)}}" class="inline">
+        <button type="submit" class="btn small menu-item">{{template "icon-unpublish"}}{{t "admin.edit.unpublishBack"}}</button></form>
+      <form method="post" action="{{lurl (printf "/admin/posts/%d/archive" $p.ID)}}" class="inline"
+            data-confirm="{{t "admin.edit.archiveConfirm"}}">
+        <button type="submit" class="btn small menu-item">{{template "icon-archive"}}{{t "admin.edit.archive"}}</button></form>
+    {{end}}
+    <span class="menu-sep"></span>
+    <form method="post" action="{{lurl (printf "/admin/posts/%d/delete" $p.ID)}}" class="inline"
+          data-confirm="{{t "admin.edit.deleteConfirm"}}">
+      <button type="submit" class="btn small danger menu-item">{{template "icon-trash"}}{{t "common.delete"}}</button></form>
+  </div>
+  {{end}}
+</div>
+
+{{/* 左右分栏：左边是真正在写的东西，右边是写完才需要管的元数据。
+     单栏时正文和一串设置项挤在同一条视线上，写字的时候要一直跳过它们。 */}}
+<form id="editor-form" class="editor editor-layout" method="post"
+      action="{{if $d.New}}{{lurl "/admin/posts"}}{{else}}{{lurl (printf "/admin/posts/%d" $p.ID)}}{{end}}" data-autosave>
+
+  <div class="editor-main">
+    <label class="field field-title">
+      <span class="label">{{t "admin.edit.title"}}</span>
+      <input type="text" name="title" value="{{$p.Title}}" required autofocus placeholder="{{t "admin.edit.titlePlace"}}">
+    </label>
+
+    <label class="field field-body">
+      <span class="label">{{t "admin.edit.body"}}</span>
+      <textarea name="body_md" required
+                placeholder="{{t "admin.edit.bodyPlace"}}">{{$p.BodyMD}}</textarea>
+    </label>
+  </div>
+
+  <aside class="editor-side">
+    <label class="field">
+      <span class="label">{{t "admin.edit.slug"}}</span>
+      <input type="text" name="slug" value="{{$p.Slug}}" placeholder="{{t "admin.edit.slugPlace"}}">
+      <span class="hint">{{t "admin.edit.slugHint"}}</span>
+    </label>
+
+    {{/* 分类在标签前面：先定板块（结构），再打标签（描述）。
+         没有分类时整个字段不出现——站上只有一类内容时不需要它。 */}}
+    {{if $d.Cats}}
+    <label class="field">
+      <span class="label">{{t "admin.edit.category"}}</span>
+      <select name="category">
+        <option value="">{{t "admin.edit.categoryNone"}}</option>
+        {{range $d.Cats}}
+        <option value="{{.Slug}}" {{if eq .Slug $p.CategorySlug}}selected{{end}}>{{.Name}}</option>
+        {{end}}
+      </select>
+      <span class="hint">{{t "admin.edit.categoryHint"}}</span>
+    </label>
+    {{end}}
+
+    <label class="field">
+      <span class="label">{{t "admin.edit.tags"}}</span>
+      <input type="text" name="tags" value="{{$d.TagsCSV}}" placeholder="{{t "admin.edit.tagsPlace"}}">
+      <span class="hint">{{t "admin.edit.tagsHint"}}</span>
+    </label>
+
+    <label class="field">
+      <span class="label">{{t "admin.edit.summary"}}</span>
+      <textarea name="summary" rows="3" placeholder="{{t "admin.edit.summaryPlace"}}">{{$p.Summary}}</textarea>
+    </label>
+
+    <label class="field">
+      <span class="label">{{t "admin.edit.source"}}</span>
+      <select name="source">
+        <option value="human" {{if eq $p.Source "human"}}selected{{end}}>{{t "source.human"}}</option>
+        <option value="ai-assisted" {{if eq $p.Source "ai-assisted"}}selected{{end}}>{{t "source.aiAssist"}}</option>
+        <option value="ai-generated" {{if eq $p.Source "ai-generated"}}selected{{end}}>{{t "source.aiGen"}}</option>
+      </select>
+      <span class="hint">{{t "admin.edit.sourceHint"}}</span>
+    </label>
+
+    <label class="field">
+      <span class="label">{{t "admin.edit.lang"}}</span>
+      <select name="lang">
+        {{range langs}}<option value="{{.Code}}" {{if eq $p.Lang .Code}}selected{{end}}>{{.Name}}</option>{{end}}
+      </select>
+      <span class="hint">{{t "admin.edit.langHint"}}</span>
+    </label>
+
+    <label class="field">
+      <span class="label">{{t "admin.edit.transOf"}}</span>
+      {{/* 只列别的语言的文章——同语言的两篇不可能互为译文。
+           没有可选项时整个字段不出现：一个永远只有"不是译文"的下拉
+           只会让人以为功能坏了。 */}}
+      {{if $d.TransCandidates}}
+      <select name="translation_of">
+        <option value="">{{t "admin.edit.transNone"}}</option>
+        {{range $d.TransCandidates}}
+        <option value="{{.ID}}" {{if eq (itoa64 .ID) $d.TransOf}}selected{{end}}>{{.Label}}</option>
+        {{end}}
+      </select>
+      <span class="hint">{{t "admin.edit.transHint"}}</span>
+      {{else}}
+      <p class="hint">{{t "admin.edit.transEmpty"}}</p>
+      {{end}}
+    </label>
+
+    <label class="field">
+      <span class="label">{{t "admin.edit.canonical"}}</span>
+      <input type="text" name="canonical_url" value="{{$p.CanonicalURL}}" placeholder="https://...">
+      <span class="hint">{{t "admin.edit.canonicalHint"}}</span>
+    </label>
+
+    {{/* 定时发布只对未发布的文章有意义：已发布的再排期不会被发第二次，
+         归档的更不该被自动拉回来。所以已发布时这个字段整个不出现。 */}}
+    {{if ne $p.Status "published"}}
+    <label class="field">
+      <span class="label">{{t "admin.edit.publishAt"}}</span>
+      <input type="datetime-local" name="publish_at"
+             value="{{if $p.PublishAt}}{{$p.PublishAt.Local.Format "2006-01-02T15:04"}}{{end}}">
+      <span class="hint">{{t "admin.edit.publishAtHint"}}</span>
+    </label>
+    {{end}}
+
+    <label class="check">
+      <input type="checkbox" name="indexable" value="1" {{if $p.Indexable}}checked{{end}}>
+      <span>{{t "admin.edit.indexable"}}</span>
+    </label>
+  </aside>
+</form>
+
+{{end}}

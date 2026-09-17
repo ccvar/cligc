@@ -1,0 +1,598 @@
+/* site.css —— 只在公开页面加载。
+ *
+ * 首页、文章页、标签页、搜索、正文排版、代码高亮、公开评论区。
+ * 后台页面不会加载这个文件，所以这里怎么改都动不到后台——
+ * 前端视觉大改时，改动范围就限定在这个文件里。
+ */
+
+/* --- 首页抬头 ----------------------------------------------------------- */
+
+.hero {
+  padding-block: var(--s6) var(--s5);
+  border-bottom: 1px solid var(--line);
+  margin-bottom: var(--s2);
+}
+.hero h1 {
+  margin: 0;
+  font-size: var(--t-2xl);
+  letter-spacing: -0.02em;
+}
+.hero p {
+  margin: var(--s3) 0 0;
+  color: var(--muted);
+  font-size: var(--t-base);
+  max-width: 34rem;
+}
+
+.page-head { margin-bottom: var(--s5); }
+.page-head h1 {
+  margin: 0;
+  font-size: var(--t-xl);
+  letter-spacing: -0.015em;
+}
+.page-head .sub {
+  margin: var(--s2) 0 0;
+  color: var(--muted);
+  font-size: var(--t-sm);
+}
+
+/* --- 首页精选 ----------------------------------------------------------- */
+
+/*
+   首屏的"宣传"由内容本身完成，不写自我介绍的文案。
+   
+   一段"欢迎来到 XX"回答不了读者真正的问题——这站写什么、水平如何、
+   值不值得留下；三个真实标题五秒钟就回答了。而且精选区还把站内权重
+   集中到了最好的几个页面上，这是宣传文案做不到的。
+   
+   布局是一大两小而不是三等分：46rem 的栏宽里三列每列只有 245px，
+   放不下摘要，标题也会被挤成三四行。
+*/
+.featured {
+  margin-bottom: var(--s6);
+  padding-bottom: var(--s5);
+  border-bottom: 1px solid var(--line);
+}
+.featured-label {
+  margin: 0 0 var(--s3);
+  font-size: var(--t-xs);
+  letter-spacing: 0.08em;
+  color: var(--faint);
+}
+.featured-rest {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--s4);
+  margin-top: var(--s4);
+  padding-top: var(--s4);
+  border-top: 1px dashed var(--line);
+}
+@media (max-width: 34rem) {
+  .featured-rest { grid-template-columns: 1fr; }
+}
+
+.feat-card h3 {
+  margin: 0;
+  font-size: var(--t-base);
+  line-height: 1.45;
+  letter-spacing: -0.01em;
+}
+.feat-card h3 a { color: var(--fg); }
+.feat-card h3 a:hover { color: var(--accent); text-decoration: none; }
+.feat-card .feat-summary {
+  margin: var(--s2) 0 0;
+  font-size: var(--t-sm);
+  line-height: 1.7;
+  color: var(--muted);
+}
+.feat-card .meta { font-size: var(--t-xs); margin-top: var(--s2); }
+
+/* 头条比后两条重一档：更大的标题，摘要给足行数 */
+.featured-lead .feat-card h3 { font-size: var(--t-xl); line-height: 1.35; letter-spacing: -0.02em; }
+.featured-lead .feat-card .feat-summary { font-size: var(--t-base); color: var(--fg-soft); }
+
+/* --- 文章卡片 ----------------------------------------------------------- */
+
+.post-list { display: flex; flex-direction: column; }
+
+.card {
+  padding-block: var(--s5);
+  border-bottom: 1px solid var(--line);
+}
+.card:last-child { border-bottom: none; }
+
+.card h2 {
+  margin: 0;
+  font-size: var(--t-lg);
+  letter-spacing: -0.015em;
+}
+.card h2 a { color: var(--fg); }
+.card h2 a:hover { color: var(--accent); text-decoration: none; }
+
+.card .summary {
+  margin: var(--s2) 0 0;
+  color: var(--fg-soft);
+  font-size: var(--t-base);
+  line-height: 1.75;
+}
+
+/* 元信息行：小、灰、用间隔点分隔 */
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s2) var(--s3);
+  margin: var(--s2) 0 0;
+  color: var(--muted);
+  font-size: var(--t-sm);
+}
+.meta > * + *::before {
+  content: "·";
+  margin-inline-end: var(--s3);
+  color: var(--faint);
+}
+.meta a { color: var(--muted); }
+.meta a:hover { color: var(--fg); }
+
+/* --- 标签 --------------------------------------------------------------- */
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s2);
+  margin: var(--s3) 0 0;
+  padding: 0;
+  list-style: none;
+}
+.tag {
+  display: inline-block;
+  padding: 0.1rem var(--s3) 0.15rem;
+  font-size: var(--t-xs);
+  line-height: 1.6;
+  color: var(--muted);
+  background: var(--surface-2);
+  border-radius: 999px;
+  transition: all 0.15s var(--ease);
+}
+.tag:hover {
+  color: var(--accent);
+  background: var(--accent-soft);
+  text-decoration: none;
+}
+
+/* --- 文章页 ------------------------------------------------------------- */
+
+/* 全站通用的两栏骨架：内容 + 右侧栏。文章页右边是大纲，列表页是标签。
+   两者共用同一个网格，页面之间的左边缘和栏宽才不会跳。 */
+.article-layout, .page-layout {
+  display: grid;
+  grid-template-columns: minmax(0, var(--w-read)) 1fr;
+  gap: var(--s7);
+  align-items: start;
+}
+/* 单栏时正文要居中。少了大纲那一栏之后如果还靠左，右边会空出一大块，
+   看起来像布局塌了——而正文本身并不该因此被拉宽。 */
+.article-layout.no-toc {
+  grid-template-columns: minmax(0, var(--w-read));
+  justify-content: center;
+}
+.article-main, .page-main { min-width: 0; }
+.article-main { min-width: 0; }   /* 让代码块的横向滚动生效，而不是撑破网格 */
+.article { max-width: var(--w-read); }
+
+/* --- 文章大纲 ----------------------------------------------------------- */
+
+.toc {
+  position: sticky;
+  /* 顶部导航是 sticky 的，大纲要落在它下面 */
+  top: 4.75rem;
+  max-height: calc(100vh - 6.5rem);
+  overflow-y: auto;
+  font-size: var(--t-sm);
+  line-height: 1.6;
+}
+.toc-label {
+  margin: 0 0 var(--s2);
+  font-size: var(--t-xs);
+  letter-spacing: 0.08em;
+  color: var(--faint);
+}
+.toc ol {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-inline-start: 1px solid var(--line);
+}
+.toc li { margin: 0; }
+.toc a {
+  display: block;
+  padding-block: 0.2rem;
+  padding-inline: 0.75rem 0;
+  margin-inline-start: -1px;
+  color: var(--muted);
+  border-inline-start: 2px solid transparent;
+  transition: color 0.12s var(--ease), border-color 0.12s var(--ease);
+}
+.toc a:hover { color: var(--fg); text-decoration: none; }
+.toc .toc-l3 a { padding-inline-start: 1.5rem; font-size: var(--t-xs); }
+/* 当前读到的那一节。由 JS 打标记，纯增强——没有它目录照常可用。 */
+.toc a[data-current] { color: var(--accent); border-inline-start-color: var(--accent); }
+
+/* 放不下两栏时直接收起大纲。挤成一条窄栏的目录比没有目录更难用。 */
+@media (max-width: 62rem) {
+  .article-layout, .page-layout {
+    grid-template-columns: minmax(0, var(--w-read));
+    justify-content: center;
+  }
+  .toc, .rail { display: none; }
+}
+/* 视口比正文栏还窄时（手机），让它铺满可用宽度 */
+@media (max-width: 42rem) {
+  .article-layout, .article-layout.no-toc, .page-layout { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* --- 侧栏（列表页） ------------------------------------------------------- */
+
+/*
+   标签放侧栏而不是塞进列表：它既是给读者的导航，也是给爬虫的站内链路——
+   标签页本身 noindex，但它把权重继续传给文章页。空着的话这一栏就是纯浪费。
+*/
+.rail {
+  position: sticky;
+  top: 4.75rem;
+  font-size: var(--t-sm);
+}
+.rail-label {
+  margin: 0 0 var(--s3);
+  font-size: var(--t-xs);
+  letter-spacing: 0.08em;
+  color: var(--faint);
+}
+.rail .tags { margin: 0; }
+.rail .tag { font-size: var(--t-xs); }
+.rail .tag .n { color: var(--faint); margin-inline-start: 0.25rem; }
+.article-head {
+  padding-bottom: var(--s5);
+  border-bottom: 1px solid var(--line);
+  margin-bottom: var(--s6);
+}
+.article-head h1 {
+  margin: 0;
+  font-size: var(--t-3xl);
+  line-height: 1.3;
+  letter-spacing: -0.025em;
+}
+@media (max-width: 34rem) {
+  .article-head h1 { font-size: var(--t-2xl); }
+}
+.article-head .meta { margin-top: var(--s4); }
+
+.notice {
+  display: flex;
+  gap: var(--s3);
+  margin: var(--s5) 0 0;
+  padding: var(--s3) var(--s4);
+  background: var(--surface-2);
+  border-radius: var(--radius);
+  font-size: var(--t-sm);
+  color: var(--muted);
+}
+
+.article-foot {
+  margin-top: var(--s7);
+  padding-top: var(--s5);
+  border-top: 1px solid var(--line);
+}
+
+/* --- 正文排版 ----------------------------------------------------------- */
+
+.prose {
+  font-size: var(--t-md);
+  /* 中文长文的行距要比西文大，1.85 是反复试下来最耐读的值 */
+  line-height: 1.85;
+  color: var(--fg-soft);
+  overflow-wrap: break-word;
+}
+.prose > :first-child { margin-top: 0; }
+.prose > :last-child { margin-bottom: 0; }
+
+.prose p { margin: 0 0 var(--s5); }
+
+.prose h2 {
+  margin: var(--s7) 0 var(--s4);
+  font-size: var(--t-xl);
+  color: var(--fg);
+  letter-spacing: -0.02em;
+}
+.prose h3 {
+  margin: var(--s6) 0 var(--s3);
+  font-size: var(--t-lg);
+  color: var(--fg);
+}
+.prose h4 {
+  margin: var(--s5) 0 var(--s3);
+  font-size: var(--t-md);
+  color: var(--fg);
+}
+
+.prose ul, .prose ol { margin: 0 0 var(--s5); padding-inline-start: 1.4em; }
+.prose li { margin-bottom: var(--s2); }
+.prose li::marker { color: var(--faint); }
+
+.prose strong { color: var(--fg); font-weight: 650; }
+
+.prose blockquote {
+  margin: var(--s5) 0;
+  padding-block: var(--s1);
+  padding-inline: var(--s4) 0;
+  border-inline-start: 2px solid var(--line-strong);
+  color: var(--muted);
+}
+.prose blockquote p:last-child { margin-bottom: 0; }
+
+.prose hr {
+  margin: var(--s7) 0;
+  border: none;
+  border-top: 1px solid var(--line);
+}
+
+/* 行内代码：轻背景 + 细边，不要撑高行距 */
+.prose :not(pre) > code {
+  padding: 0.1em 0.35em;
+  font-size: 0.875em;
+  background: var(--surface-2);
+  border-radius: 4px;
+  color: var(--seal);
+}
+
+/* 代码块：外层 .codeblock 负责边框、圆角和语言标签，
+   内层 <pre class="chroma"> 负责滚动。分两层是因为语言标签要固定在
+   右上角，而 pre 自己是横向滚动容器——标签放在滚动容器里会跟着内容滑走。 */
+.prose .codeblock {
+  position: relative;
+  margin: var(--s5) 0;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+.prose .codeblock[data-lang]::before {
+  content: attr(data-lang);
+  position: absolute;
+  top: 0;
+  inset-inline-end: 0;
+  padding: 0.15rem var(--s3) 0.2rem;
+  font-family: var(--font-mono);
+  font-size: var(--t-xs);
+  line-height: 1.5;
+  color: var(--faint);
+  background: var(--surface-2);
+  border-inline-start: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  border-radius: 0 var(--radius-lg) 0 var(--radius);
+  pointer-events: none;
+  user-select: none;
+}
+.prose .codeblock pre {
+  margin: 0;
+  padding: var(--s4);
+  background: none;
+  border: none;
+  overflow-x: auto;
+  font-size: var(--t-sm);
+  line-height: 1.7;
+  color: var(--code-fg);
+  /* 代码块不参与中文的 pretty 换行 */
+  text-wrap: nowrap;
+}
+.prose .codeblock code {
+  padding: 0;
+  background: none;
+  color: inherit;
+  font-size: inherit;
+}
+
+/* --- chroma token 配色 -------------------------------------------------- */
+/* 类名是 Pygments 的标准短名，由 chroma 的 WithClasses(true) 输出。
+   只给真正需要区分的类上色——把每个 token 都染一遍反而会让代码更难读。 */
+
+.chroma .c, .chroma .ch, .chroma .cm, .chroma .c1, .chroma .cs,
+.chroma .cp, .chroma .cpf { color: var(--code-comment); font-style: italic; }
+
+.chroma .k, .chroma .kc, .chroma .kd, .chroma .kn, .chroma .kp,
+.chroma .kr { color: var(--code-keyword); }
+
+.chroma .kt, .chroma .nc, .chroma .nn, .chroma .nb, .chroma .bp,
+.chroma .ne, .chroma .nt { color: var(--code-type); }
+
+.chroma .s, .chroma .sa, .chroma .sb, .chroma .sc, .chroma .dl,
+.chroma .sd, .chroma .s2, .chroma .se, .chroma .sh, .chroma .si,
+.chroma .sx, .chroma .sr, .chroma .s1, .chroma .ss { color: var(--code-string); }
+
+.chroma .m, .chroma .mb, .chroma .mf, .chroma .mh, .chroma .mi,
+.chroma .il, .chroma .mo { color: var(--code-number); }
+
+.chroma .nf, .chroma .fm { color: var(--code-func); }
+.chroma .nd, .chroma .na { color: var(--code-type); }
+.chroma .o, .chroma .ow, .chroma .p { color: var(--code-punct); }
+.chroma .err, .chroma .gr { color: var(--seal); }
+
+/* diff */
+.chroma .gd { background: var(--code-del); }
+.chroma .gi { background: var(--code-add); }
+.chroma .ge { font-style: italic; }
+.chroma .gs { font-weight: 600; }
+.chroma .gh, .chroma .gu { color: var(--code-func); font-weight: 600; }
+.chroma .gp { color: var(--code-comment); }
+
+.prose img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: var(--s5) 0;
+  border-radius: var(--radius-lg);
+}
+
+/* 宽表格自己横向滚动，绝不让页面整体横滚 */
+.prose table {
+  display: block;
+  width: 100%;
+  margin: var(--s5) 0;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font-size: var(--t-base);
+}
+.prose th, .prose td {
+  padding: var(--s2) var(--s3);
+  border: 1px solid var(--line);
+  text-align: start;
+  vertical-align: top;
+}
+.prose th {
+  background: var(--surface-2);
+  color: var(--fg);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+mark {
+  padding: 0.05em 0.15em;
+  background: var(--mark);
+  color: inherit;
+  border-radius: 2px;
+}
+
+/* --- 搜索 --------------------------------------------------------------- */
+
+/* 搜索页的主输入框。
+   
+   和导航栏那个是同一套外观（胶囊、软底、图标内嵌），只是尺寸大一档。
+   之前它有 55px 高，在一个正文才 17px 的页面上显得很浮夸——搜索框再重要
+   也只是个入口，不该比它要找的内容还抢眼。 */
+.search-form {
+  display: flex;
+  gap: var(--s2);
+  margin: var(--s5) 0;
+}
+.search-field {
+  position: relative;
+  flex: 1;
+  display: flex;
+  align-items: center;
+}
+.search-field .icon {
+  position: absolute;
+  inset-inline-start: 0.85rem;
+  width: 0.9rem;
+  height: 0.9rem;
+  color: var(--faint);
+  pointer-events: none;
+  transition: color 0.15s var(--ease);
+}
+.search-form input {
+  width: 100%;
+  /* 16px 是下限：iOS Safari 对小于 16px 的输入框会在聚焦时自动放大页面。 */
+  font-size: var(--t-base);
+  line-height: 1.5;
+  padding-block: 0.45rem;
+  padding-inline: 2.4rem 1rem;
+  background: var(--surface-2);
+  border: 1px solid transparent;
+  border-radius: 999px;
+  transition: background 0.15s var(--ease), border-color 0.15s var(--ease),
+              box-shadow 0.15s var(--ease);
+}
+.search-form input:focus { outline: none; }
+.search-field:focus-within input {
+  background: var(--surface);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+.search-field:focus-within .icon { color: var(--accent); }
+/* padding-block 跟输入框对齐。.btn 默认的 var(--s2) 会比输入框高 2px，
+   两个并排的控件差 2px 是那种"说不出哪里不对但就是不齐"的别扭。 */
+.search-form .btn {
+  border-radius: 999px;
+  padding-block: 0.45rem;
+  padding-inline: var(--s5);
+}
+
+/* --- 评论（公开页） ----------------------------------------------------- */
+
+.comments {
+  max-width: var(--w-read);
+  margin-top: var(--s8);
+  padding-top: var(--s6);
+  border-top: 1px solid var(--line);
+}
+.comment-list {
+  list-style: none;
+  margin: 0 0 var(--s6);
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+.comment {
+  padding-block: var(--s4);
+  border-bottom: 1px solid var(--line);
+}
+.comment:last-child { border-bottom: none; }
+.comment-head {
+  display: flex;
+  gap: var(--s3);
+  align-items: baseline;
+  margin: 0 0 var(--s2);
+  font-size: var(--t-sm);
+}
+.comment-head time { color: var(--muted); }
+.comment-body {
+  margin: 0;
+  color: var(--fg-soft);
+  /* 评论是纯文本，换行必须保留，长串也要能断开 */
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+}
+
+.comment-form { margin-top: var(--s5); }
+.comment-form .actions { align-items: center; }
+
+/* 蜜罐：对人不可见，但不能用 display:none——部分机器人会跳过隐藏字段，
+   而读屏软件靠 aria-hidden 已经忽略它了。 */
+.hp {
+  position: absolute;
+  /* 同 .skip：往上藏，不往侧面藏。横向负偏移在 RTL 下会撑出滚动条。
+     这里不能用 display:none —— 蜜罐要留在表单里让脚本去填。 */
+  top: -9999px;
+  inset-inline-start: 0;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+/* --- 打印 --------------------------------------------------------------- */
+
+/* --- 板块 --------------------------------------------------------------- */
+
+/* 板块导航。贴在站点头部下面，自己一条细横带——它是站点结构，
+   和搜索、语言那些操作不是一类东西，挤进同一行会让两边都变钝。 */
+.sections {
+  border-bottom: 1px solid var(--line);
+  background: var(--bg);
+}
+.sections .wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s4);
+  padding-block: 0.55rem;
+  font-size: var(--t-sm);
+}
+.sections a { color: var(--muted); }
+.sections a:hover { color: var(--fg); text-decoration: none; }
+
+/* 文章署名行里的板块标。比标签重一档：它是"这篇属于哪儿"，
+   标签是"这篇讲了什么"，前者该先被看到。 */
+.sec-tag {
+  color: var(--accent);
+  font-weight: 550;
+}
+.sec-tag:hover { text-decoration: underline; }

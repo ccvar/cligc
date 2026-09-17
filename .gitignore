@@ -1,0 +1,8 @@
+/cligc
+/data/
+*.db
+*.db-wal
+*.db-shm
+
+# MCP 客户端配置里含明文 API token，不要提交
+/.mcp.json

@@ -1,0 +1,140 @@
+{{/* 文章卡片。列表、标签页、作者页共用。 */}}
+{{define "pager"}}
+{{if or .Prev .Next}}
+<nav class="pager" aria-label="{{t "common.pager"}}">
+  {{if .Prev}}<a rel="prev" href="{{.Prev}}">{{t "common.prev"}}</a>{{end}}
+  {{if .Next}}<a class="next" rel="next" href="{{.Next}}">{{t "common.next"}}</a>{{end}}
+</nav>
+{{end}}
+{{end}}
+
+{{/* 空状态。传 dict 风格的 map：{"Big": 主句, "Hint": 补充} */}}
+{{define "empty"}}
+<div class="empty">
+  <p class="big">{{.Big}}</p>
+  {{if .Hint}}<p class="hint">{{.Hint}}</p>{{end}}
+</div>
+{{end}}
+
+{{/* 后台导航。待审评论数直接挂在页签上——审核队列最大的失败模式
+     不是难用，是没人想起来去看。 */}}
+{{define "admintabs"}}
+<nav class="admin-tabs">
+  <a href="{{lurl "/admin"}}"{{if eq .AdminTab "posts"}} class="on"{{end}}>{{t "admin.tab.posts"}}</a>
+  {{if .Site.CommentsEnabled}}
+  <a href="{{lurl "/admin/comments"}}"{{if eq .AdminTab "comments"}} class="on"{{end}}>
+    {{t "admin.tab.comments"}}{{if gt .PendingComments 0}} <span class="pill">{{.PendingComments}}</span>{{end}}
+  </a>
+  {{end}}
+  <a href="{{lurl "/admin/media"}}"{{if eq .AdminTab "media"}} class="on"{{end}}>{{t "admin.tab.media"}}</a>
+  <a href="{{lurl "/admin/tokens"}}"{{if eq .AdminTab "tokens"}} class="on"{{end}}>{{t "admin.tab.tokens"}}</a>
+  <a href="{{lurl "/admin/profile"}}"{{if eq .AdminTab "profile"}} class="on"{{end}}>{{t "admin.tab.profile"}}</a>
+  <a href="{{lurl "/admin/categories"}}"{{if eq .AdminTab "categories"}} class="on"{{end}}>{{t "admin.tab.categories"}}</a>
+  <a href="{{lurl "/admin/site"}}"{{if eq .AdminTab "site"}} class="on"{{end}}>{{t "admin.tab.site"}}</a>
+</nav>
+{{end}}
+
+{{/* 图标集。统一 16 格、1.6 描边、圆头圆角，和站标是同一套线条语言。
+     内联而不是雪碧图/图标字体：总共就几个，多发一个请求不值得。 */}}
+{{define "icon-search"}}<svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor"
+  stroke-width="1.6" stroke-linecap="round" aria-hidden="true">
+  <circle cx="6.8" cy="6.8" r="4.4"/><path d="M10.1 10.1 14 14"/></svg>{{end}}
+
+{{define "icon-admin"}}<svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor"
+  stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+  <rect x="2.2" y="2.2" width="11.6" height="11.6" rx="2.6"/>
+  <path d="M2.2 6.4h11.6M6.4 13.8V6.4"/></svg>{{end}}
+
+{{define "icon-logout"}}<svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor"
+  stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+  <path d="M6.2 13.8H3.8a1.6 1.6 0 0 1-1.6-1.6V3.8a1.6 1.6 0 0 1 1.6-1.6h2.4"/>
+  <path d="M10.6 11 13.6 8l-3-3M13.6 8H6.4"/></svg>{{end}}
+
+
+{{/* 行内操作用的图标。和导航图标同一套参数：16 格、1.6 描边、圆头圆角。 */}}
+{{define "icon-view"}}<svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor"
+  stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+  <path d="M1.4 8S3.9 3.6 8 3.6 14.6 8 14.6 8 12.1 12.4 8 12.4 1.4 8 1.4 8Z"/>
+  <circle cx="8" cy="8" r="2"/></svg>{{end}}
+
+{{define "icon-publish"}}<svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor"
+  stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+  <path d="M8 10.5V2.6M5 5.6 8 2.6l3 3"/><path d="M2.8 13.4h10.4"/></svg>{{end}}
+
+{{/* 撤下 = 退回草稿。原先是"箭头落到一条横线上"，那正是下载图标的形状，
+     在一排操作里会被读成"下载这篇"。回转箭头对应的是"收回"，不会歧义。 */}}
+{{define "icon-unpublish"}}<svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor"
+  stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+  <path d="M2.8 8.2a5.2 5.2 0 1 0 1.8-3.9"/>
+  <path d="M2.4 2.6v3.4h3.4"/></svg>{{end}}
+
+{{define "icon-check"}}<svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor"
+  stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+  <path d="M3.2 8.4 6.5 11.7 12.8 4.6"/></svg>{{end}}
+
+{{define "icon-ban"}}<svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor"
+  stroke-width="1.5" stroke-linecap="round" aria-hidden="true">
+  <circle cx="8" cy="8" r="5.8"/><path d="M3.9 12.1 12.1 3.9"/></svg>{{end}}
+
+{{define "icon-undo"}}<svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor"
+  stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+  <path d="M3 7.2h7a3.4 3.4 0 1 1 0 6.8H7.2"/><path d="M5.6 4.6 3 7.2l2.6 2.6"/></svg>{{end}}
+
+{{define "icon-trash"}}<svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor"
+  stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+  <path d="M2.8 4.4h10.4M6.4 4.4V2.8h3.2v1.6"/>
+  <path d="M4.3 4.4 5 13.2h6l.7-8.8"/></svg>{{end}}
+
+{{define "icon-star"}}<svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor"
+  stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+  <path d="M8 1.9 10 6.1l4.6.6-3.3 3.2.8 4.5L8 12.3l-4.1 2.1.8-4.5L1.4 6.7 6 6.1z"/></svg>{{end}}
+
+{{define "icon-star-on"}}<svg class="icon" viewBox="0 0 16 16" fill="currentColor"
+  stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true">
+  <path d="M8 1.9 10 6.1l4.6.6-3.3 3.2.8 4.5L8 12.3l-4.1 2.1.8-4.5L1.4 6.7 6 6.1z"/></svg>{{end}}
+
+{{/* 精选卡片。lead 是头条（占满一行、标题更大），rest 是后面两条。
+     在 46rem 的栏宽里三个等宽列每列只有 245px，放不下摘要；
+     一大两小才是这个宽度下能用的布局。 */}}
+{{define "icon-globe"}}<svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor"
+  stroke-width="1.5" stroke-linecap="round" aria-hidden="true">
+  <circle cx="8" cy="8" r="6"/><path d="M2 8h12"/>
+  <path d="M8 2c1.8 1.9 2.8 4 2.8 6S9.8 12.1 8 14C6.2 12.1 5.2 10 5.2 8S6.2 3.9 8 2Z"/></svg>{{end}}
+
+{{/* 字标。
+     
+     画成 SVG 路径而不是用字体排版：字标一旦依赖系统字体，在 macOS、
+     Windows、Android 上就是三个样子——而字标恰恰是最不该变的东西。
+     路径在哪都一模一样，也不需要加载字体文件、不会有 FOUT。
+     
+     几何取自站标：x 高圆半径 5、描边比例一致，两者是同一套形制。
+     i 的点用零长度线段配圆头端点画，直径自动等于描边宽，改粗细时
+     不会出现"点和竖线不一样粗"。
+     
+     Fork 这个项目的人把这一个 define 换掉就行；站名不以 cligc 开头时
+     brand.go 会退回渲染纯文字，不需要动模板。 */}}
+{{define "wordmark"}}<svg class="wordmark" viewBox="0 0 53 32" fill="none" stroke="currentColor"
+  stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="cligc">
+  <path d="M10.83 13.79A5 5 0 1 0 10.83 20.21"/>
+  <path d="M16 7.4V22"/>
+  <path d="M21.5 12.5V22"/>
+  <path d="M21.5 8.1v.01"/>
+  <circle cx="30.5" cy="17" r="5"/>
+  <path d="M35.5 13V24.2Q35.5 27.8 31.7 27.8Q28.9 27.8 27.9 26.2"/>
+  <path d="M49.33 13.79A5 5 0 1 0 49.33 20.21"/>
+</svg>{{end}}
+{{define "icon-user"}}<svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor"
+  stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+  <circle cx="8" cy="5.5" r="2.6"/>
+  <path d="M2.8 13.6a5.2 5.2 0 0 1 10.4 0"/></svg>{{end}}
+{{define "icon-more"}}<svg class="icon" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+  <circle cx="3.2" cy="8" r="1.3"/><circle cx="8" cy="8" r="1.3"/><circle cx="12.8" cy="8" r="1.3"/></svg>{{end}}
+{{define "icon-archive"}}<svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor"
+  stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+  <rect x="2" y="2.8" width="12" height="3" rx="0.8"/>
+  <path d="M3.2 5.8v6.6a1 1 0 0 0 1 1h7.6a1 1 0 0 0 1-1V5.8"/>
+  <path d="M6.6 8.6h2.8"/></svg>{{end}}
+{{define "icon-copy"}}<svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor"
+  stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+  <rect x="5.4" y="5.4" width="8" height="8" rx="1.4"/>
+  <path d="M10.6 5.4V4a1.4 1.4 0 0 0-1.4-1.4H4a1.4 1.4 0 0 0-1.4 1.4v5.2A1.4 1.4 0 0 0 4 10.6h1.4"/></svg>{{end}}

@@ -1,0 +1,17 @@
+{{define "content"}}
+<div class="auth">
+  <h1>{{t "login.title"}}</h1>
+  <form method="post" action="{{lurl "/login"}}">
+    <input type="hidden" name="next" value="{{.Data.Next}}">
+    <label class="field">
+      <span class="label">{{t "login.email"}}</span>
+      <input type="email" name="email" value="{{.Data.Email}}" required autofocus autocomplete="username">
+    </label>
+    <label class="field">
+      <span class="label">{{t "login.password"}}</span>
+      <input type="password" name="password" required autocomplete="current-password">
+    </label>
+    <button type="submit" class="btn primary">{{t "login.title"}}</button>
+  </form>
+</div>
+{{end}}

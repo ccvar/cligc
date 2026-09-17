@@ -1,0 +1,70 @@
+{{define "content"}}
+{{$d := .Data}}
+<div class="toolbar"><h1>{{t "admin.cats.title"}}</h1></div>
+{{template "admintabs" $}}
+
+<p class="count">{{t "admin.cats.intro"}}</p>
+
+<div class="list-head">
+  <span class="spacer"></span>
+  <details class="create-panel" data-dialog data-title="{{t "admin.cats.new"}}">
+  <summary class="btn primary">{{t "admin.cats.new"}}</summary>
+  <form method="post" action="{{lurl "/admin/categories"}}">
+    <label class="field">
+      <span class="label">{{t "admin.cats.name"}}</span>
+      <input type="text" name="name" required>
+    </label>
+    <div class="grid2">
+      <label class="field">
+        <span class="label">{{t "admin.cats.slug"}}</span>
+        <input type="text" name="slug" placeholder="{{t "admin.cats.slugPlace"}}">
+      </label>
+      <label class="field">
+        <span class="label">{{t "admin.cats.sort"}}</span>
+        <input type="number" name="sort" value="0">
+        <span class="hint">{{t "admin.cats.sortHint"}}</span>
+      </label>
+    </div>
+    <button type="submit" class="btn primary">{{t "common.save"}}</button>
+  </form>
+  </details>
+</div>
+
+{{if $d.Cats}}
+<div class="table-wrap">
+  <table class="data">
+    <thead>
+      <tr><th>{{t "admin.cats.name"}}</th><th>{{t "admin.cats.slug"}}</th>
+          <th class="num">{{t "admin.cats.sort"}}</th><th class="num">{{t "admin.cats.colPosts"}}</th><th></th></tr>
+    </thead>
+    <tbody>
+    {{range $d.Cats}}
+      {{/* 每一行本身就是一张编辑表单：分类总共就几个，为了改个名字
+           再跳一个页面不划算。 */}}
+      <tr>
+        <form method="post" action="{{lurl "/admin/categories"}}" id="cat-{{.ID}}"></form>
+        <td><input form="cat-{{.ID}}" type="hidden" name="id" value="{{.ID}}">
+            <input form="cat-{{.ID}}" type="text" name="name" value="{{.Name}}" required></td>
+        <td><input form="cat-{{.ID}}" type="text" name="slug" value="{{.Slug}}"></td>
+        <td class="num"><input form="cat-{{.ID}}" type="number" name="sort" value="{{.Sort}}" class="w-xs"></td>
+        <td class="num">
+          {{if gt .Count 0}}<a href="{{lurl (printf "/c/%s" .Slug)}}">{{.Count}}</a>{{else}}—{{end}}
+        </td>
+        <td class="row-actions">
+          <button form="cat-{{.ID}}" type="submit" class="icon-btn"
+                  aria-label="{{t "common.save"}}" data-tip="{{t "common.save"}}">{{template "icon-check"}}</button>
+          <form method="post" action="{{lurl (printf "/admin/categories/%d/delete" .ID)}}" class="inline"
+                data-confirm="{{t "admin.cats.deleteConfirm"}}">
+            <button type="submit" class="icon-btn danger"
+                    aria-label="{{t "admin.cats.deleteFull"}}" data-tip="{{t "common.delete"}}">{{template "icon-trash"}}</button>
+          </form>
+        </td>
+      </tr>
+    {{end}}
+    </tbody>
+  </table>
+</div>
+{{else}}
+  {{template "empty" dict "Big" (t "admin.cats.empty") "Hint" (t "admin.cats.emptyHint")}}
+{{end}}
+{{end}}

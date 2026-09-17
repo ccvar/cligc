@@ -1,0 +1,20 @@
+{{define "content"}}
+<div class="page-layout{{if not .Data.RailTags}} no-toc{{end}}">
+<div class="page-main">
+{{with .Data}}
+<div class="page-head">
+  <h1>{{.Heading}}</h1>
+  {{if .Bio}}<p class="sub">{{.Bio}}</p>{{end}}
+  <p class="sub">{{tn "common.count" .Total}}</p>
+</div>
+{{if .Posts}}
+  <div class="post-list">{{range .Posts}}{{template "postcard" .}}{{end}}</div>
+{{else}}
+  {{template "empty" dict "Big" (t "list.empty")}}
+{{end}}
+{{end}}
+{{template "pager" .}}
+</div>
+{{template "rail" .}}
+</div>
+{{end}}

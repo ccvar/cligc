@@ -1,0 +1,35 @@
+{{define "content"}}
+<div class="page-layout{{if not .Data.RailTags}} no-toc{{end}}">
+<div class="page-main">
+<div class="hero">
+  <h1>{{.SiteTitle}}</h1>
+  {{if .SiteDesc}}<p>{{.SiteDesc}}</p>{{end}}
+</div>
+{{with .Data}}
+  {{/* 精选区：首屏的"宣传"由内容本身完成。
+       一段自我介绍的文案回答不了"这站水平如何、值不值得留下"，
+       三个真实标题五秒钟就回答了——而且还顺带把站内权重集中到了
+       最好的几个页面上，这是宣传文案做不到的。 */}}
+  {{if .Featured}}
+  <section class="featured" aria-label="{{t "home.featured"}}">
+    <p class="featured-label">{{t "home.featured"}}</p>
+    <div class="featured-lead">{{template "featured-card" index .Featured 0}}</div>
+    {{if gt (len .Featured) 1}}
+    <div class="featured-rest">
+      {{range $i, $p := .Featured}}{{if gt $i 0}}{{template "featured-card" $p}}{{end}}{{end}}
+    </div>
+    {{end}}
+  </section>
+  {{end}}
+
+  {{if .Posts}}
+    <div class="post-list">{{range .Posts}}{{template "postcard" .}}{{end}}</div>
+  {{else if not .Featured}}
+    {{template "empty" dict "Big" (t "home.emptyTitle") "Hint" (t "home.emptyHint")}}
+  {{end}}
+{{end}}
+{{template "pager" .}}
+</div>
+{{template "rail" .}}
+</div>
+{{end}}

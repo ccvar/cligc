@@ -1,0 +1,127 @@
+{{define "content"}}
+{{$p := .Data.Post}}
+{{$toc := $p.Headings}}
+{{$hasTOC := ge (len $toc) 2}}
+
+{{/* 两列：正文 + 右侧大纲。
+     加宽的是**容器**不是正文——38rem 一行约 36 个汉字，是中文长文最耐读的
+     区间，不该为了填满屏幕把它拉宽。右边多出来的空间给导航用。 */}}
+<div class="article-layout{{if not $hasTOC}} no-toc{{end}}">
+
+  <div class="article-main">
+    <article class="article">
+      <header class="article-head">
+        <h1>{{$p.Title}}</h1>
+        <p class="meta">
+          {{if $p.CategoryName}}<a class="sec-tag" href="{{lurl (printf "/c/%s" $p.CategorySlug)}}">{{$p.CategoryName}}</a>{{end}}
+          <a href="{{lurl (printf "/u/%s" $p.AuthorSlug)}}">{{$p.AuthorName}}</a>
+          {{if $p.PublishedAt}}<time datetime="{{rfc3339 $p.PublishedAt.UTC}}">{{datep $p.PublishedAt}}</time>{{end}}
+          <span>{{tn "common.words" $p.WordCount}} · {{readtime $p.WordCount}}</span>
+          {{if ne $p.Source "human"}}<span class="badge b-ai">{{sourceLabel $p.Source}}</span>{{end}}
+          {{/* 草稿只有作者看得见，归档对所有人可见——两者的提示语不能混用 */}}
+          {{if eq $p.Status "draft"}}<span class="badge b-draft">{{t "post.draftOnlyYou"}}</span>{{end}}
+          {{if eq $p.Status "archived"}}<span class="badge b-archived">{{t "status.archived"}}</span>{{end}}
+        </p>
+        {{if eq $p.Status "archived"}}
+        <p class="notice">
+          {{t "post.archivedNote"}}
+        </p>
+        {{end}}
+        {{if $p.CanonicalURL}}
+        <p class="notice">
+          {{tf "post.syndicated" (printf "<a href=\"%s\" rel=\"nofollow noopener\" target=\"_blank\">%s</a>" $p.CanonicalURL (t "post.original")) | safeHTML}}
+        </p>
+        {{end}}
+      </header>
+
+      {{/* BodyHTML 来自 goldmark，原始 HTML 已在渲染时转义，可安全输出 */}}
+      <div class="prose">{{safeHTML $p.BodyHTML}}</div>
+
+      {{if $p.Tags}}
+      <footer class="article-foot">
+        <ul class="tags">
+          {{range $p.Tags}}<li><a class="tag" href="{{lurl (printf "/t/%s" (urlp .Slug))}}">{{.Name}}</a></li>{{end}}
+        </ul>
+      </footer>
+      {{end}}
+    </article>
+
+    {{if .Data.CommentsEnabled}}
+    <section class="comments" id="comments">
+      <h2 class="section-title">
+        {{t "comment.title"}}{{if .Data.Comments}} <span class="count-inline">{{len .Data.Comments}}</span>{{end}}
+      </h2>
+
+      {{if .Data.Comments}}
+      <ol class="comment-list">
+        {{range .Data.Comments}}
+        <li class="comment">
+          <p class="comment-head">
+            <strong>{{.AuthorName}}</strong>
+            <time datetime="{{rfc3339 .CreatedAt}}">{{date .CreatedAt}}</time>
+          </p>
+          {{/* 评论正文按纯文本整体转义输出：不解析 Markdown、不自动识别 URL。
+               这个站的整个论点就是"别变成外链农场的宿主"，而评论区是最经典的
+               灌链入口，把这道口子焊死的收益远大于允许富文本。 */}}
+          <p class="comment-body">{{.Body}}</p>
+        </li>
+        {{end}}
+      </ol>
+      {{else}}
+      <p class="count">{{t "comment.none"}}</p>
+      {{end}}
+
+      <form class="comment-form" method="post" action="{{lurl (printf "/p/%s/comments" $p.Slug)}}">
+        {{if not .User}}
+        <label class="field">
+          <span class="label">{{t "comment.yourName"}}</span>
+          <input type="text" name="author_name" value="{{.Data.DraftName}}" maxlength="40" placeholder="{{t "comment.namePlace"}}">
+        </label>
+        {{end}}
+        <label class="field">
+          <span class="label">{{t "comment.body"}}</span>
+          <textarea name="body" rows="4" required maxlength="2000"
+                    placeholder="{{t "comment.bodyPlace"}}">{{.Data.DraftBody}}</textarea>
+        </label>
+        {{/* 蜜罐：CSS 把它藏起来，人看不见，机器人会照填。命中即静默丢弃。 */}}
+        <div class="hp" aria-hidden="true">
+          <label>Website<input type="text" name="website" tabindex="-1" autocomplete="off"></label>
+        </div>
+        <div class="actions">
+          <button type="submit" class="btn primary">{{t "comment.submit"}}</button>
+          {{if not .User}}
+            <span class="hint">{{t "comment.needsMod"}}</span>
+          {{end}}
+        </div>
+      </form>
+    </section>
+    {{end}}
+  </div>
+
+  {{if $hasTOC}}
+  {{/* 大纲服务端渲染，不靠 JS 生成：爬虫能看到章节链接（有机会产出
+       "跳转到章节"的站内链接），关掉 JS 的人也还有目录可用。
+       JS 只负责"当前读到哪一节"的高亮，那才是纯粹的增强。 */}}
+  <nav class="toc" aria-label="{{t "post.tocLabel"}}">
+    <p class="toc-label">{{t "post.toc"}}</p>
+    <ol>
+      {{range $toc}}<li class="toc-l{{.Level}}"><a href="#{{.ID}}">{{.Text}}</a></li>{{end}}
+    </ol>
+  </nav>
+  {{end}}
+</div>
+
+{{/* 结构化数据：让搜索引擎准确识别作者、发布时间和正文范围 */}}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "{{$p.Title}}",
+  "description": "{{$p.Summary}}",
+  "datePublished": "{{if $p.PublishedAt}}{{rfc3339 $p.PublishedAt.UTC}}{{end}}",
+  "dateModified": "{{rfc3339 $p.UpdatedAt}}",
+  "author": {"@type": "Person", "name": "{{$p.AuthorName}}"},
+  "wordCount": {{$p.WordCount}}
+}
+</script>
+{{end}}

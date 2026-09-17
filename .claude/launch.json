@@ -1,0 +1,29 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "cligc",
+      "runtimeExecutable": "go",
+      "runtimeArgs": [
+        "run",
+        "./cmd/cligc",
+        "serve",
+        "-addr",
+        ":8866",
+        "-base-url",
+        "http://localhost:8866",
+        "-title",
+        "cligc",
+        "-desc",
+        "轻量、服务端渲染、能被搜索引擎收录的内容站",
+        "-db",
+        "data/cligc.db",
+        "-media",
+        "data/media",
+        "-daily-cap",
+        "5"
+      ],
+      "port": 8866
+    }
+  ]
+}

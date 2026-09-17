@@ -1,0 +1,31 @@
+# Litestream：把 SQLite 持续增量复制到对象存储。
+#
+# 单机 + SQLite 的唯一真实风险是磁盘没了。Litestream 把这个风险压到
+# "丢最近几秒的写入"。它必须在上线第一天就配好，不要等出事再补。
+#
+# 恢复：
+#   litestream restore -config /etc/litestream.yml /var/lib/cligc/cligc.db
+#
+# 注意 WAL 模式下 .db-wal 和 .db-shm 是运行时文件，不要手动拷贝它们来做备份；
+# Litestream 会自己处理这一层。
+
+dbs:
+  - path: /var/lib/cligc/cligc.db
+    replicas:
+      - name: s3
+        type: s3
+        # Cloudflare R2 / Backblaze B2 / AWS S3 都可以，按需改 endpoint
+        bucket: ${LITESTREAM_BUCKET}
+        path: cligc
+        endpoint: ${LITESTREAM_ENDPOINT}
+        region: auto
+        access-key-id: ${LITESTREAM_ACCESS_KEY_ID}
+        secret-access-key: ${LITESTREAM_SECRET_ACCESS_KEY}
+
+        # 每 24 小时打一个快照，保留 30 天。快照越密，恢复越快、存储越贵。
+        snapshot-interval: 24h
+        retention: 720h
+        retention-check-interval: 12h
+
+        # 默认每秒同步一次 WAL。调小能缩短 RPO，但会增加请求数。
+        sync-interval: 1s

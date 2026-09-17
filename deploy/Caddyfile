@@ -1,0 +1,21 @@
+# Caddy 自动申请并续期 HTTPS 证书，不需要额外配置。
+example.com {
+	encode zstd gzip
+
+	# 上传的文件是内容寻址的（文件名即 sha256），可以长缓存。
+	# nosniff 由应用侧也打了一遍，这里是双保险。
+	@media path /media/*
+	header @media {
+		Cache-Control "public, max-age=31536000, immutable"
+		X-Content-Type-Options "nosniff"
+	}
+
+	# 应用自己会输出 CSP / Referrer-Policy，这里只补 HSTS。
+	# 注意：确认证书没问题之后再开 HSTS，否则回滚会很痛苦。
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		-Server
+	}
+
+	reverse_proxy 127.0.0.1:8866
+}

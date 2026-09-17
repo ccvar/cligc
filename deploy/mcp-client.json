@@ -1,0 +1,17 @@
+{
+  "//": "本地 stdio 方式：把 cligc 二进制放到客户端机器上，由客户端拉起。",
+  "//command": "必须指向编译好的二进制，不要写 go run —— MCP 走 stdio，go run 的编译输出会混进协议流。",
+  "//local": "本机调试就把 base-url 换成 http://localhost:8866。",
+  "//token": "token 走环境变量，不要写进 args——args 会出现在进程列表里。",
+  "//scopes": "日常用的 token 不要给 posts:publish。AI 写草稿，人在 /admin 发布。",
+
+  "mcpServers": {
+    "cligc": {
+      "command": "/usr/local/bin/cligc",
+      "args": ["mcp", "-base-url", "https://example.com"],
+      "env": {
+        "CLIGC_TOKEN": "cligc_你的token"
+      }
+    }
+  }
+}

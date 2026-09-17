@@ -1,0 +1,73 @@
+{{define "content"}}
+{{$d := .Data}}
+<div class="toolbar"><h1>{{t "admin.comments.title"}}</h1></div>
+{{template "admintabs" $}}
+
+<div class="quota">
+  <span class="quota-label">
+    {{tn "admin.comments.pending" $d.Pending}}
+  </span>
+  <p class="quota-note">
+    {{t "admin.comments.note"}}
+  </p>
+</div>
+
+<nav class="admin-tabs sub">
+  <a href="{{lurl "/admin/comments"}}?status=pending"{{if or (eq $d.Status "pending") (eq $d.Status "")}} class="on"{{end}}>{{t "admin.comments.tabPending"}}</a>
+  <a href="{{lurl "/admin/comments"}}?status=approved"{{if eq $d.Status "approved"}} class="on"{{end}}>{{t "admin.comments.tabApproved"}}</a>
+  <a href="{{lurl "/admin/comments"}}?status=spam"{{if eq $d.Status "spam"}} class="on"{{end}}>{{t "admin.comments.tabSpam"}}</a>
+  <a href="{{lurl "/admin/comments"}}?status=all"{{if eq $d.Status "all"}} class="on"{{end}}>{{t "admin.comments.tabAll"}}</a>
+</nav>
+
+<p class="count">{{tn "admin.comments.total" $d.Total}}</p>
+
+{{if $d.Comments}}
+<div class="comment-queue">
+  {{range $d.Comments}}
+  <article class="queue-item">
+    <header>
+      <strong>{{.AuthorName}}</strong>
+      {{if .IsAnonymous}}<span class="badge b-noindex plain">{{t "comment.anonymous"}}</span>{{else}}<span class="badge b-published">{{t "admin.comments.loggedIn"}}</span>{{end}}
+      <span class="badge b-{{if eq .Status "approved"}}published{{else if eq .Status "spam"}}archived{{else}}draft{{end}}">
+        {{commentStatus .Status}}
+      </span>
+      <time>{{date .CreatedAt}}</time>
+      <a class="queue-post" href="{{lurl (printf "/p/%s" .PostSlug)}}#comments">{{.PostTitle}}</a>
+    </header>
+    {{/* 评论正文是不可信的用户输入，按纯文本整体转义输出，
+         既不解析 Markdown 也不做自动链接 */}}
+    <p class="queue-body">{{.Body}}</p>
+    {{/* 审核页上真正要读的是评论正文。一排"通过/标为垃圾/退回待审/删除"
+         的文字按钮会把视线从内容上拽走，换成图标后它们退成一排安静的符号，
+         语义交给 tooltip 和 aria-label。 */}}
+    <div class="queue-actions">
+      <span class="icon-group">
+        {{if ne .Status "approved"}}
+        <form method="post" action="/admin/comments/{{.ID}}/approve?status={{$d.Status}}" class="inline">
+          <button type="submit" class="icon-btn go"
+                  aria-label="{{t "admin.comments.approveFull"}}" data-tip="{{t "admin.comments.approve"}}">{{template "icon-check"}}</button></form>
+        {{end}}
+        {{if ne .Status "spam"}}
+        <form method="post" action="/admin/comments/{{.ID}}/spam?status={{$d.Status}}" class="inline">
+          <button type="submit" class="icon-btn"
+                  aria-label="{{t "admin.comments.spam"}}" data-tip="{{t "admin.comments.spam"}}">{{template "icon-ban"}}</button></form>
+        {{end}}
+        {{if eq .Status "approved"}}
+        <form method="post" action="/admin/comments/{{.ID}}/pending?status={{$d.Status}}" class="inline">
+          <button type="submit" class="icon-btn"
+                  aria-label="{{t "admin.comments.repend"}}" data-tip="{{t "admin.comments.repend"}}">{{template "icon-undo"}}</button></form>
+        {{end}}
+        <form method="post" action="/admin/comments/{{.ID}}/delete?status={{$d.Status}}" class="inline"
+              data-confirm="{{t "admin.comments.deleteConfirm"}}">
+          <button type="submit" class="icon-btn danger"
+                  aria-label="{{t "admin.comments.deleteFull"}}" data-tip="{{t "common.delete"}}">{{template "icon-trash"}}</button></form>
+      </span>
+    </div>
+  </article>
+  {{end}}
+</div>
+{{else}}
+  {{template "empty" dict "Big" (t "admin.comments.empty") "Hint" (t "admin.comments.emptyHint")}}
+{{end}}
+{{template "pager" .}}
+{{end}}

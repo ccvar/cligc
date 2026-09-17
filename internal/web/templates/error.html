@@ -1,0 +1,7 @@
+{{define "content"}}
+<div class="error-page">
+  <p class="code">{{.Data.Code}}</p>
+  <p>{{.Data.Message}}</p>
+  <a class="btn" href="{{lurl "/"}}">{{t "common.back"}}</a>
+</div>
+{{end}}

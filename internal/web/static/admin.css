@@ -1,0 +1,475 @@
+/* admin.css —— 只在 /admin 和 /login 加载。
+ *
+ * 后台工具条、表格、编辑器、媒体库、Token、评论审核队列、登录页。
+ * 公开页面不会加载这个文件。
+ *
+ * 它依赖 base.css 的令牌和原子件，但不依赖 site.css 的任何东西——
+ * 公开页面整套换掉，这里不用动。
+ */
+
+/* --- 登录 --------------------------------------------------------------- */
+
+.auth {
+  max-width: 22rem;
+  margin: var(--s8) auto;
+}
+.auth h1 {
+  margin: 0 0 var(--s5);
+  font-size: var(--t-xl);
+  text-align: center;
+}
+.auth .btn { width: 100%; }
+
+/* --- 后台：工具条 ------------------------------------------------------- */
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--s4);
+  flex-wrap: wrap;
+  margin-bottom: var(--s5);
+}
+.toolbar h1 {
+  margin: 0;
+  margin-inline-end: auto;
+  font-size: var(--t-lg);
+  letter-spacing: -0.015em;
+}
+
+.admin-tabs {
+  display: flex;
+  gap: var(--s5);
+  margin-bottom: var(--s5);
+  border-bottom: 1px solid var(--line);
+  font-size: var(--t-ui);
+}
+.admin-tabs a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0 0.6rem;
+  color: var(--muted);
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  transition: color 0.15s var(--ease), border-color 0.15s var(--ease);
+}
+.admin-tabs a:hover { color: var(--fg); text-decoration: none; }
+.admin-tabs a.on { color: var(--fg); border-bottom-color: var(--accent); }
+
+/* --- 后台：发布配额 ----------------------------------------------------- */
+
+/* 用离散小格而不是连续进度条：格子数就是配额数，一眼看得出
+   "还剩几篇"，而且不需要 inline style 算百分比宽度——CSP 禁内联样式。 */
+.quota {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  flex-wrap: wrap;
+  padding: 0.625rem 0.875rem;
+  margin-bottom: var(--s5);
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  font-size: var(--t-ui);
+}
+.quota-pips { display: flex; gap: 3px; }
+.quota-pip {
+  width: 1.5rem;
+  height: 5px;
+  border-radius: 2px;
+  background: var(--line-strong);
+}
+.quota-pip.used { background: var(--accent); }
+.quota-label { color: var(--fg-soft); }
+.quota-label strong { color: var(--fg); }
+.quota-note {
+  flex-basis: 100%;
+  margin: 0;
+  padding-top: 0.5rem;
+  border-top: 1px dashed var(--line-strong);
+  color: var(--muted);
+  font-size: var(--t-xs);
+  line-height: 1.65;
+  /* 说明文字是"读一次就够"的东西，限宽避免它横贯整个容器变成一堵墙 */
+  max-width: 46rem;
+}
+.quota.full .quota-pip.used { background: var(--seal); }
+
+/* --- 后台：筛选 --------------------------------------------------------- */
+
+.filters {
+  display: flex;
+  gap: var(--s2);
+  flex-wrap: wrap;
+  align-items: center;
+  margin-bottom: var(--s4);
+}
+.filters input[type="search"] {
+  flex: 1;
+  min-width: 12rem;
+  font-size: var(--t-ui);
+  padding: 0.25rem 0.6rem;
+}
+.filters select { width: auto; min-width: 8rem; }
+.filters .select { min-width: 8rem; }
+
+/* 已置顶的星标要能一眼认出来。
+   这条原本躺在"首页精选"那一节里——注释自己都写着"后台里"，
+   但位置在公开样式中间，拆分之前没人看得出来。 */
+.icon-btn.on { color: var(--warn); }
+.icon-btn.on:hover { color: var(--warn); background: var(--surface-2); }
+
+/* --- 后台：表格 --------------------------------------------------------- */
+
+.table-wrap {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  overflow-x: auto;
+  background: var(--surface);
+}
+table.data {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--t-sm);
+}
+table.data th {
+  padding: 0.5rem var(--s4);
+  text-align: start;
+  font-weight: 550;
+  font-size: var(--t-xs);
+  /* 中文没有大小写，text-transform 对它无效却会把混在里面的英文拉成全大写，
+     两种字形混排反而更乱。这里只靠字号和颜色拉开层级。 */
+  letter-spacing: 0.02em;
+  color: var(--muted);
+  background: var(--surface-2);
+  border-bottom: 1px solid var(--line);
+  white-space: nowrap;
+}
+table.data td {
+  padding: 0.55rem var(--s4);
+  border-bottom: 1px solid var(--line);
+  vertical-align: middle;
+  white-space: nowrap;
+  color: var(--fg-soft);
+}
+table.data tr:last-child td { border-bottom: none; }
+table.data tbody tr { transition: background 0.12s var(--ease); }
+table.data tbody tr:hover { background: var(--surface-2); }
+table.data tr.dim { opacity: 0.5; }
+
+/* 标题列是唯一允许换行的列，其余保持单行以维持表格密度 */
+td.title-cell {
+  white-space: normal;
+  min-width: 16rem;
+  max-width: 28rem;
+}
+td.title-cell a { color: var(--fg); font-weight: 500; }
+td.title-cell a:hover { color: var(--accent); }
+td.title-cell .row-badges {
+  display: inline-flex;
+  gap: var(--s2);
+  margin-inline-start: var(--s2);
+  vertical-align: middle;
+}
+td.num { text-align: end; font-variant-numeric: tabular-nums; color: var(--muted); }
+td.when { color: var(--muted); font-variant-numeric: tabular-nums; }
+td.row-actions { text-align: end; padding-block: 0.2rem; }
+td.row-actions .icon-group { justify-content: flex-end; }
+
+/* --- 后台：编辑器 ------------------------------------------------------- */
+
+/* 编辑页的统一宽度容器。限宽是为了 Markdown 的行长可读，
+   但必须连标题栏一起限，否则右边会差出一截。 */
+/* 回列表。比标题小一档、在标题上方单独一行——它是上一层的导航，
+   混进标题那一行会和"查看页面"抢同一条视线。 */
+.back-link {
+  display: inline-block;
+  margin-bottom: var(--s3);
+  font-size: var(--t-sm);
+  color: var(--muted);
+}
+.back-link:hover { color: var(--accent); text-decoration: none; }
+
+/* 编辑页工具条：所有操作都在这里，并且跟着滚动。
+   top 取站点头部的高度（.site-header .wrap 的 min-height 是 3.5rem），
+   z-index 压在它下面——两条都 sticky，叠上去的时候顺序不能乱。 */
+.editor-toolbar {
+  position: sticky;
+  top: 3.5rem;
+  z-index: 15;
+  gap: var(--s3);
+  margin-bottom: var(--s5);
+  padding-block: var(--s3);
+  background: color-mix(in srgb, var(--bg) 92%, transparent);
+  backdrop-filter: saturate(1.4) blur(8px);
+}
+/* 徽章要紧跟标题，不能被推到右边去，所以撤掉 .toolbar h1 的 auto */
+.editor-toolbar h1 { margin-inline-end: 0; }
+.editor-toolbar .spacer { margin-inline-start: auto; }
+/* 没有改动时保存置灰。用 :disabled 而不是藏起来——按钮消失会让工具条
+   左右跳动，而且"存过了"本身是有用的信息。 */
+.btn[data-dirty-save]:disabled { opacity: 0.45; cursor: default; }
+
+/* 编辑页：左边写字，右边元数据。
+   宽度跟其他后台页一致（不再单独收窄到 52rem）——右栏吃掉的正好是原先
+   那 12rem 的差额，正文栏反而比单栏时更宽。 */
+.editor-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 19rem;
+  gap: var(--s6);
+  align-items: start;
+}
+.editor-main { min-width: 0; }
+.editor-side { min-width: 0; }
+.editor-side .field:last-of-type { margin-bottom: var(--s4); }
+/* 保存条横跨两栏：它管的是整张表单，不是左边那一半 */
+.editor-layout .editor-bar { grid-column: 1 / -1; }
+
+/* 放不下两栏时叠成一栏。元数据跟在正文后面，顺序本来就是先写后设。 */
+@media (max-width: 58rem) {
+  .editor-layout { grid-template-columns: minmax(0, 1fr); gap: var(--s5); }
+}
+
+.editor { max-width: none; }
+/* 标题框比普通字段重一档就够了。原本用 --t-lg(20px) + 12/16 的内距，
+   算出来 60px 高——一个输入框比页面标题还抢眼，本末倒置。 */
+.editor .field-title input {
+  font-size: var(--t-md);
+  font-weight: 600;
+  padding: 0.4rem 0.7rem;
+}
+.editor textarea[name="body_md"] {
+  min-height: 34rem;
+  font-family: var(--font-mono);
+  font-size: 0.9375rem;
+  line-height: 1.8;
+  padding: var(--s4);
+  tab-size: 2;
+}
+
+.editor-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+  flex-wrap: wrap;
+  padding: var(--s4) 0;
+  margin-top: var(--s2);
+  border-top: 1px solid var(--line);
+  position: sticky;
+  bottom: 0;
+  background: color-mix(in srgb, var(--bg) 92%, transparent);
+  backdrop-filter: blur(8px);
+}
+.editor-bar .spacer { margin-inline-start: auto; }
+
+.danger-zone {
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+  flex-wrap: wrap;
+  margin-top: var(--s7);
+  padding-top: var(--s4);
+  border-top: 1px dashed var(--line-strong);
+  font-size: var(--t-sm);
+  color: var(--muted);
+}
+.danger-zone .zone-label { margin-inline-end: auto; }
+
+/* --- 后台：Token ------------------------------------------------------- */
+
+.token-reveal {
+  margin: var(--s5) 0;
+  padding: var(--s4);
+  background: var(--seal-soft);
+  border: 1px solid color-mix(in srgb, var(--seal) 35%, transparent);
+  border-radius: var(--radius-lg);
+}
+.token-reveal .title {
+  margin: 0 0 var(--s3);
+  font-weight: 600;
+  color: var(--seal);
+  font-size: var(--t-base);
+}
+.copyable {
+  display: block;
+  padding: var(--s3);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  font-size: var(--t-sm);
+  word-break: break-all;
+  cursor: pointer;
+  transition: border-color 0.15s var(--ease);
+}
+.copyable:hover { border-color: var(--accent); }
+.token-reveal .hint { margin: var(--s3) 0 0; font-size: var(--t-xs); color: var(--muted); }
+
+code.scope {
+  display: inline-block;
+  padding: 0.1rem 0.4rem;
+  margin-inline-end: 0.2rem;
+  font-size: var(--t-xs);
+  line-height: 1.5;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  color: var(--muted);
+}
+code.scope.publish { color: var(--seal); background: var(--seal-soft); }
+
+.warn { color: var(--seal); font-size: var(--t-xs); }
+
+/* --- 媒体库 ------------------------------------------------------------- */
+
+input[type="file"] {
+  width: 100%;
+  padding: var(--s2) 0;
+  font-size: var(--t-sm);
+  color: var(--muted);
+}
+input[type="file"]::file-selector-button {
+  margin-inline-end: var(--s3);
+  padding: var(--s2) var(--s4);
+  font: inherit;
+  color: var(--fg);
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+
+.media-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+  gap: var(--s4);
+  margin-top: var(--s4);
+}
+.media-item {
+  position: relative;
+  margin: 0;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  transition: border-color 0.15s var(--ease), box-shadow 0.15s var(--ease);
+}
+.media-item:hover { border-color: var(--line-strong); box-shadow: var(--shadow); }
+
+/* 删除压在缩略图右上角，悬停才现身。它是破坏性操作，不该和"复制 Markdown"
+   这种日常动作并排常驻在卡片底部——两者点错的代价差得太远。
+   键盘用户靠 :focus-within 同样能拿到它。 */
+.media-acts {
+  position: absolute;
+  top: var(--s2);
+  inset-inline-end: var(--s2);
+  z-index: 1;
+  display: flex;
+  gap: 0.25rem;
+  opacity: 0;
+  transition: opacity 0.15s var(--ease);
+}
+.media-item:hover .media-acts,
+.media-item:focus-within .media-acts { opacity: 1; }
+.media-acts .icon-btn {
+  background: color-mix(in srgb, var(--surface) 88%, transparent);
+  backdrop-filter: blur(6px);
+  border: 1px solid var(--line);
+}
+.media-thumb {
+  display: block;
+  aspect-ratio: 4 / 3;
+  background: var(--surface-2);
+}
+.media-thumb img {
+  width: 100%;
+  height: 100%;
+  /* contain 而不是 cover：媒体库是让你认出"是哪张图"，裁掉边缘会帮倒忙 */
+  object-fit: contain;
+  display: block;
+}
+.media-item figcaption {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--s2);
+  padding: var(--s3);
+  border-top: 1px solid var(--line);
+  font-size: var(--t-xs);
+}
+.media-name {
+  font-weight: 500;
+  color: var(--fg);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.media-meta { color: var(--muted); font-variant-numeric: tabular-nums; }
+/* 可复制的 markdown 片段：单行省略而不是多行截断。
+   内容寻址的文件名有 64 个十六进制字符，多行截断只会在中间切一刀，
+   看起来像渲染坏了；单行省略号是明确的"这里还有内容"信号。
+   反正它的用途是点一下复制，不是拿来读的。 */
+/* 计数和"上传"排在同一行：这一页的主体是已有的图片，上传是偶尔为之。 */
+.list-head {
+  display: flex;
+  align-items: center;
+  gap: var(--s4);
+  margin-top: var(--s5);
+}
+.list-head .count { margin: 0; margin-inline-end: auto; }
+.list-head .section-title { margin: 0; }
+.list-head .spacer { margin-inline-start: auto; }
+.list-head + .table-wrap,
+.list-head + .media-grid { margin-top: var(--s4); }
+.copyable.small {
+  padding: var(--s2);
+  font-size: var(--t-xs);
+  line-height: 1.5;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  word-break: normal;
+}
+
+/* --- 评论审核队列 ------------------------------------------------------- */
+
+.comment-queue {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s3);
+  margin-top: var(--s4);
+}
+.queue-item {
+  padding: var(--s4);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+}
+.queue-item header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s2) var(--s3);
+  margin-bottom: var(--s3);
+  font-size: var(--t-sm);
+}
+.queue-item header time { color: var(--muted); }
+.queue-post {
+  margin-inline-start: auto;
+  color: var(--muted);
+  font-size: var(--t-xs);
+  max-width: 18rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.queue-body {
+  margin: 0 0 var(--s3);
+  padding: var(--s3);
+  background: var(--surface-2);
+  border-radius: var(--radius);
+  color: var(--fg-soft);
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+  font-size: var(--t-base);
+}
+.queue-actions { display: flex; flex-wrap: wrap; gap: var(--s2); align-items: center; }

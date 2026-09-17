@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="cligc">
+  <!-- 带底色的方版：favicon 画在浏览器标签栏上，而标签栏的底色随系统主题
+       和浏览器而变。不带底色的话，浅色描边在浅色标签栏上会直接消失。
+       几何与导航栏的站标同构，按比例缩小并留出圆角边距。 -->
+  <rect width="32" height="32" rx="7" fill="#14161c"/>
+  <circle cx="14.54" cy="14.54" r="7.51" fill="none" stroke="#c6c9d4" stroke-width="1.67"/>
+  <circle cx="20.8" cy="20.8" r="5" fill="#3b6bff"/>
+</svg>

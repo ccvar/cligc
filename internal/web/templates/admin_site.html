@@ -1,0 +1,59 @@
+{{define "content"}}
+{{$d := .Data}}
+{{$s := .Settings}}
+<div class="toolbar"><h1>{{t "admin.site.title"}}</h1></div>
+{{template "admintabs" $}}
+
+<form class="settings" method="post" action="{{lurl "/admin/site"}}">
+
+  <h2 class="section-title">{{t "admin.site.seoSection"}}</h2>
+
+  <label class="field">
+    <span class="label">{{t "admin.site.gsc"}}</span>
+    <input type="text" name="google_verify" value="{{$s.GoogleVerify}}" autocomplete="off"
+           placeholder="google-site-verification">
+    <span class="hint">{{tf "admin.site.gscHint" (printf "<code>%s/sitemap.xml</code>" $d.BaseURL) | safeHTML}}</span>
+  </label>
+
+  <label class="field">
+    <span class="label">{{t "admin.site.bing"}}</span>
+    <input type="text" name="bing_verify" value="{{$s.BingVerify}}" autocomplete="off"
+           placeholder="msvalidate.01">
+    <span class="hint">{{t "admin.site.bingHint"}}</span>
+  </label>
+
+  <label class="field">
+    <span class="label">
+      {{t "admin.site.indexnow"}}
+      {{if $s.IndexNowKey}}<span class="badge b-published">{{t "admin.site.on"}}</span>
+      {{else}}<span class="badge b-draft plain">{{t "admin.site.off"}}</span>{{end}}
+    </span>
+    <span class="with-action">
+      <input type="text" name="indexnow_key" value="{{$s.IndexNowKey}}" autocomplete="off"
+             pattern="[0-9a-fA-F]{8,128}" data-genkey>
+      <button type="button" class="btn small" data-genkey-btn>{{t "admin.site.generate"}}</button>
+    </span>
+    <span class="hint">
+      {{t "admin.site.indexnowHint"}}<br>
+      {{if $s.IndexNowKey}}
+        {{tf "admin.site.keyFile" (printf "<a href=\"%s\" target=\"_blank\" rel=\"noopener\"><code>%s</code></a>" $d.KeyFileURL $d.KeyFileURL) | safeHTML}}
+      {{else}}
+        {{tf "admin.site.keyFileOff" (printf "<code>%s</code>" $d.KeyFileURL) | safeHTML}}
+      {{end}}
+    </span>
+  </label>
+
+  <h2 class="section-title">{{t "admin.site.analyticsSection"}}</h2>
+
+  <label class="field">
+    <span class="label">
+      {{t "admin.site.ga4"}}
+      {{if $s.GA4ID}}<span class="badge b-archived">{{t "admin.site.ga4Warn"}}</span>{{end}}
+    </span>
+    <input type="text" name="ga4_id" value="{{$s.GA4ID}}" autocomplete="off" placeholder="G-XXXXXXXXXX">
+    <span class="hint">{{t "admin.site.ga4Hint"}}</span>
+  </label>
+
+  <button type="submit" class="btn primary">{{t "admin.site.save"}}</button>
+</form>
+{{end}}

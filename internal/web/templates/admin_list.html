@@ -1,0 +1,104 @@
+{{define "content"}}
+{{$d := .Data}}
+<div class="toolbar">
+  <h1>{{t "admin.posts.title"}}</h1>
+  <a class="btn primary" href="{{lurl "/admin/new"}}">{{t "admin.posts.new"}}</a>
+</div>
+
+{{template "admintabs" $}}
+
+<div class="quota{{if and (gt $d.DailyCap 0) (le $d.CapLeft 0)}} full{{end}}">
+  {{if gt $d.DailyCap 0}}
+    <div class="quota-pips" role="img"
+         aria-label="{{tf "admin.quota.aria" (itoa $d.PublishedToday) (itoa $d.DailyCap)}}">
+      {{range $i := seq $d.DailyCap}}<span class="quota-pip{{if lt $i $d.PublishedToday}} used{{end}}"></span>{{end}}
+    </div>
+    <span class="quota-label">
+      {{tf "admin.quota.today" (itoa $d.PublishedToday) (itoa $d.DailyCap) (itoa $d.CapLeft)}}
+    </span>
+  {{else}}
+    <span class="quota-label">{{tf "admin.quota.noLimit" (itoa $d.PublishedToday)}}</span>
+  {{end}}
+  <p class="quota-note">
+    {{t "admin.quota.note"}}
+  </p>
+</div>
+
+{{if gt $d.Featured 0}}
+<p class="count">
+  {{if gt $d.Featured $d.MaxFeatured}}{{tf "admin.posts.featuredOver" (itoa $d.Featured) (itoa $d.MaxFeatured)}}{{else}}{{tn "admin.posts.featuredCount" $d.Featured}}{{end}}
+</p>
+{{end}}
+
+<form class="filters" method="get" action="{{lurl "/admin"}}">
+  <input type="search" name="q" value="{{$d.Query}}" placeholder="{{t "admin.posts.searchPlace"}}" aria-label="{{t "nav.search"}}">
+  <select name="status" aria-label="{{t "admin.posts.statusLabel"}}">
+    <option value="" {{if eq $d.Status ""}}selected{{end}}>{{t "admin.posts.allStatus"}}</option>
+    <option value="draft" {{if eq $d.Status "draft"}}selected{{end}}>{{t "status.draft"}}</option>
+    <option value="published" {{if eq $d.Status "published"}}selected{{end}}>{{t "status.published"}}</option>
+    <option value="archived" {{if eq $d.Status "archived"}}selected{{end}}>{{t "status.archived"}}</option>
+  </select>
+  <button type="submit" class="btn">{{t "common.filter"}}</button>
+</form>
+
+<p class="count">{{tn "common.count" $d.Total}}</p>
+
+{{if $d.Posts}}
+<div class="table-wrap">
+  <table class="data">
+    <thead>
+      <tr>
+        <th>{{t "admin.posts.colTitle"}}</th><th>{{t "admin.posts.colStatus"}}</th><th>{{t "admin.posts.colSource"}}</th><th>{{t "admin.posts.colLang"}}</th>
+        <th class="num">{{t "admin.posts.colWords"}}</th><th>{{t "admin.posts.colUpdated"}}</th><th></th>
+      </tr>
+    </thead>
+    <tbody>
+    {{range $d.Posts}}
+      <tr{{if eq .Status "archived"}} class="dim"{{end}}>
+        <td class="title-cell">
+          <a href="{{lurl (printf "/admin/edit/%d" .ID)}}">{{.Title}}</a>
+          {{if .NoIndex}}<span class="row-badges"><span class="badge b-noindex plain"
+             title="noindex">noindex</span></span>{{end}}
+        </td>
+        <td><span class="badge b-{{.Status}}">{{statusLabel .Status}}</span></td>
+        <td>{{if ne .Source "human"}}<span class="badge b-ai">{{sourceLabel .Source}}</span>{{else}}<span class="badge b-draft plain">{{t "source.human"}}</span>{{end}}</td>
+        <td><span class="badge b-draft plain">{{.Lang}}</span></td>
+        <td class="num">{{.WordCount}}</td>
+        <td class="when">{{date .UpdatedAt}}</td>
+        {{/* aria-label 给辅助技术和无 JS 环境，data-tip 给鼠标用户看。
+             两者是同一句话，但缺一不可：只写 data-tip 的话图标按钮对读屏
+             就是个没有名字的控件。 */}}
+        <td class="row-actions">
+          <span class="icon-group">
+            <a class="icon-btn" href="{{lurl (printf "/p/%s" .Slug)}}"
+               aria-label="{{t "admin.posts.viewPage"}}" data-tip="{{t "admin.posts.viewPage"}}">{{template "icon-view"}}</a>
+            {{/* 只有已发布的能被精选：精选区是首页最显眼的位置，
+                 草稿出现在那里等于绕过了发布这道闸门 */}}
+            {{if eq .Status "published"}}
+              <form method="post" action="/admin/posts/{{.ID}}/feature" class="inline">
+                <button type="submit" class="icon-btn{{if .FeaturedAt}} on{{end}}"
+                        aria-label="{{if .FeaturedAt}}{{t "admin.posts.unfeatureFull"}}{{else}}{{t "admin.posts.featureFull"}}{{end}}"
+                        data-tip="{{if .FeaturedAt}}{{t "admin.posts.unfeature"}}{{else}}{{t "admin.posts.feature"}}{{end}}"
+                  >{{if .FeaturedAt}}{{template "icon-star-on"}}{{else}}{{template "icon-star"}}{{end}}</button></form>
+            {{end}}
+            {{if eq .Status "published"}}
+              <form method="post" action="/admin/posts/{{.ID}}/unpublish" class="inline">
+                <button type="submit" class="icon-btn"
+                        aria-label="{{t "admin.posts.unpublishFull"}}" data-tip="{{t "admin.posts.unpublish"}}">{{template "icon-unpublish"}}</button></form>
+            {{else}}
+              <form method="post" action="/admin/posts/{{.ID}}/publish" class="inline">
+                <button type="submit" class="icon-btn go"
+                        aria-label="{{t "admin.edit.publishThis"}}" data-tip="{{t "admin.posts.publish"}}">{{template "icon-publish"}}</button></form>
+            {{end}}
+          </span>
+        </td>
+      </tr>
+    {{end}}
+    </tbody>
+  </table>
+</div>
+{{else}}
+  {{template "empty" dict "Big" (t "admin.posts.empty") "Hint" (t "admin.posts.emptyHint")}}
+{{end}}
+{{template "pager" .}}
+{{end}}

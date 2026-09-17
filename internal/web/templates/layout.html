@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="{{.Lang.Code}}" dir="{{.Lang.Dir}}">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{.Title}}</title>
+{{if .Desc}}<meta name="description" content="{{.Desc}}">{{end}}
+<link rel="canonical" href="{{.Canonical}}">
+{{/* noindex,follow：这一页本身不进索引，但内链仍然传递权重。
+     对标签页、分页、搜索页来说这正是想要的效果。 */}}
+{{if .NoIndex}}<meta name="robots" content="noindex,follow">{{end}}
+{{if .Prev}}<link rel="prev" href="{{.Prev}}">{{end}}
+{{if .Next}}<link rel="next" href="{{.Next}}">{{end}}
+{{/* hreflang。三条规则错一条整套失效：
+     1) 必须互相引用——每一版都要列出所有版本，包括它自己（Alternates 里
+        包含 Self）。单向标注会被 Google 整体忽略，而且不报错。
+     2) 必须有 x-default 指向默认版本。
+     3) 每一版的 canonical 必须指向它自己（见 handlePost）。 */}}
+{{range .Alternates}}<link rel="alternate" hreflang="{{.Code}}" href="{{.URL}}">
+{{end}}{{if .Alternates}}<link rel="alternate" hreflang="x-default" href="{{xdefault .Alternates}}">{{end}}
+<meta property="og:type" content="{{if .IsArticle}}article{{else}}website{{end}}">
+<meta property="og:site_name" content="{{.SiteTitle}}">
+<meta property="og:title" content="{{.Title}}">
+{{if .Desc}}<meta property="og:description" content="{{.Desc}}">{{end}}
+<meta property="og:url" content="{{.Canonical}}">
+<meta name="twitter:card" content="summary">
+<meta name="theme-color" content="#fcfbf9" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#14151a" media="(prefers-color-scheme: dark)">
+<link rel="icon" type="image/svg+xml" href="{{asset "favicon.svg"}}">
+<link rel="alternate" type="application/rss+xml" title="{{.SiteTitle}}" href="/feed.xml">
+{{/* 站点归属验证：两个 meta，没有运行时代价 */}}
+{{if .Settings.GoogleVerify}}<meta name="google-site-verification" content="{{.Settings.GoogleVerify}}">{{end}}
+{{if .Settings.BingVerify}}<meta name="msvalidate.01" content="{{.Settings.BingVerify}}">{{end}}
+{{/* 三层样式：base 是两边共用的契约，site 和 admin 互不加载。
+     前端视觉大改只动 site.css，后台不受影响；反之亦然。 */}}
+<link rel="stylesheet" href="{{asset "base.css"}}">
+{{if .IsAdmin}}<link rel="stylesheet" href="{{asset "admin.css"}}">
+{{else}}<link rel="stylesheet" href="{{asset "site.css"}}">{{end}}
+</head>
+<body{{if .Wide}} class="wide"{{else if .Reading}} class="reading"{{end}}>
+<a class="skip" href="#main">{{t "nav.skip"}}</a>
+
+<header class="site-header">
+  <div class="wrap">
+    <a class="brand" href="{{lurl "/"}}">
+      {{/* 站标：一个描边圆 + 一个实心圆错位相交。
+           空心是草稿、实心是已发布，交集是人和 AI 一起完成的那部分——
+           这个站的核心结构正好是这个形状。
+           内联 SVG 而不是图片文件：一个请求都不多发，颜色还能跟着主题走。 */}}
+      {{/* viewBox 是 34 而不是刚好框住图形的 32：小圆会绕环心公转，
+           轨道整圈都得在画布内，否则转到左边就被裁掉。
+           静止位（右下 45°）的外框宽度仍是 23.5，和固定版一模一样。 */}}
+      <svg class="brand-mark" viewBox="0 0 34 34" aria-hidden="true">
+        <circle class="mark-ring" cx="17" cy="17" r="9" fill="none" stroke-width="2"/>
+        <circle class="mark-disc" cx="24.51" cy="24.51" r="6"/>
+      </svg>
+      {{/* 品牌 = 字标 + 站名其余部分。站名不以 cligc 开头时整串走纯文字，
+           这样别人 fork 过去改个名字不用动任何代码。 */}}
+      {{if .BrandMark}}{{template "wordmark"}}{{end}}
+      {{if .BrandText}}<span class="brand-text">{{.BrandText}}</span>{{end}}
+    </a>
+    <nav class="site-nav">
+      <form class="nav-search" action="{{lurl "/search"}}" method="get" role="search">
+        {{/* 放大镜本身就是"一个圆 + 一条线"，和站标的两个圆是同一套语言 */}}
+        {{template "icon-search"}}
+        <input type="search" name="q" placeholder="{{t "nav.search"}}" aria-label="{{t "nav.searchLabel"}}">
+      </form>
+      {{/* 语言菜单。没有 JS 时就是几个并排的链接，完全可用；
+           app.js 会把它收成一个下拉按钮。切到对应语言版本——文章页有译文
+           就跳译文，其余跳该语言首页，因为"这个标签在英文站的对应页"
+           通常并不存在，硬跳过去只会得到一个空列表。 */}}
+      {{if gt (len langs) 1}}
+      <div class="lang-menu" data-lang-menu data-label="{{t "nav.language"}}" data-filter="{{t "nav.langFilter"}}">
+        <span class="lang-current" data-lang-current>{{template "icon-globe"}}{{.Lang.Name}}</span>
+        {{$cur := .Lang}}{{range langs}}
+        <a href="{{altHref $ .Code}}" hreflang="{{.Code}}" lang="{{.Code}}"
+           {{if eq .Code $cur.Code}}data-current-lang{{end}}>{{.Name}}</a>
+        {{end}}
+      </div>
+      {{end}}
+      {{/* 登录入口不放主导航：它只对站长有用，而访客每页都要看见它。
+           未登录时这里什么都不出，入口挪到页脚。
+
+           已登录时管理和退出收进一个账号菜单——和语言菜单同构：服务端
+           渲染成并排两项，没有 JS 时直接可用，app.js 才把它折成下拉。 */}}
+      {{if .User}}
+      <div class="user-menu" data-menu>
+        <span class="user-current" data-menu-current>{{template "icon-user"}}<span>{{.User.Name}}</span></span>
+        <a class="nav-action" href="{{lurl "/admin"}}">{{template "icon-admin"}}<span>{{t "nav.admin"}}</span></a>
+        <form action="{{lurl "/logout"}}" method="post" class="inline">
+          <button type="submit" class="nav-action">{{template "icon-logout"}}<span>{{t "nav.logout"}}</span></button>
+        </form>
+      </div>
+      {{end}}
+    </nav>
+  </div>
+</header>
+
+{{/* 板块导航。没有分类时整条不出现——站上只有一类内容时不需要它，
+     而一条只有一个项目的导航栏比没有导航栏更糟。后台页面也不出：
+     那里的导航是标签页，不是板块。 */}}
+{{if and .Categories (not .IsAdmin)}}
+<nav class="sections" aria-label="{{t "nav.categories"}}">
+  <div class="wrap">
+    {{range .Categories}}<a href="{{lurl (printf "/c/%s" .Slug)}}">{{.Name}}</a>{{end}}
+  </div>
+</nav>
+{{end}}
+
+{{if .Flash}}<div class="wrap"><p class="flash">{{.Flash}}</p></div>{{end}}
+
+<main id="main">
+  <div class="wrap">{{template "content" .}}</div>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    {{/* 页脚这枚是静态的：会跟鼠标转的只有顶部那一枚。
+         两个同时动会互相抢注意力，而页脚本来就是让视线落下来的地方。 */}}
+    <a class="foot-brand" href="/">
+      <svg class="brand-mark" viewBox="0 0 34 34" aria-hidden="true">
+        <circle class="mark-ring" cx="17" cy="17" r="9" fill="none" stroke-width="2"/>
+        <circle class="mark-disc" cx="24.51" cy="24.51" r="6"/>
+      </svg>
+      {{/* 品牌 = 字标 + 站名其余部分。站名不以 cligc 开头时整串走纯文字，
+           这样别人 fork 过去改个名字不用动任何代码。 */}}
+      {{if .BrandMark}}{{template "wordmark"}}{{end}}
+      {{if .BrandText}}<span class="brand-text">{{.BrandText}}</span>{{end}}
+    </a>
+    <span class="spacer"></span>
+    <a href="/feed.xml">RSS</a>
+    <a href="/sitemap.xml">Sitemap</a>
+    {{if not .User}}<a href="{{lurl "/login"}}">{{t "nav.login"}}</a>{{end}}
+  </div>
+</footer>
+<script src="{{asset "base.js"}}" defer></script>
+{{if .IsAdmin}}<script src="{{asset "admin.js"}}" defer></script>
+{{else}}<script src="{{asset "site.js"}}" defer></script>{{end}}
+{{if .Settings.GA4ID}}
+{{/* GA4 只在显式配置了衡量 ID 时才出现，并且只有这时 CSP 才会放开到
+     googletagmanager.com。后台页面不加载它——那些页面 noindex，
+     也不该把自己的后台路径送到第三方去。 */}}
+{{if not .NoIndex}}
+<script async src="https://www.googletagmanager.com/gtag/js?id={{.Settings.GA4ID}}"></script>
+<script src="{{asset "ga4.js"}}" data-ga4="{{.Settings.GA4ID}}" defer></script>
+{{end}}
+{{end}}
+</body>
+</html>

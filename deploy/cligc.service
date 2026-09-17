@@ -1,0 +1,39 @@
+# /etc/systemd/system/cligc.service
+[Unit]
+Description=cligc content site
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=cligc
+Group=cligc
+WorkingDirectory=/var/lib/cligc
+
+Environment=CLIGC_DB=/var/lib/cligc/cligc.db
+Environment=CLIGC_MEDIA=/var/lib/cligc/media
+Environment=CLIGC_ADDR=127.0.0.1:8866
+Environment=CLIGC_BASE_URL=https://example.com
+Environment=CLIGC_TITLE=站点标题
+# 每人每日发布上限。这是架构级约束，不是建议值——见 README。
+Environment=CLIGC_DAILY_CAP=5
+# 部署在 Caddy/Nginx 后面时打开，登录限速才能拿到真实客户端 IP
+Environment=CLIGC_TRUST_PROXY=1
+
+ExecStart=/usr/local/bin/cligc serve
+Restart=always
+RestartSec=2
+
+# 单二进制 + SQLite，可以把权限收得很紧
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/cligc
+ProtectKernelTunables=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+LockPersonality=true
+
+[Install]
+WantedBy=multi-user.target

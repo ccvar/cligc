@@ -1,0 +1,57 @@
+{{define "content"}}
+{{$d := .Data}}
+<div class="toolbar"><h1>{{t "admin.media.title"}}</h1></div>
+{{template "admintabs" $}}
+
+{{/* 上传收进弹窗，和计数排在同一行。原来是一整块常驻面板占着首屏，
+     而这一页的主体是已有的图片，上传是偶尔为之的动作。 */}}
+<div class="list-head">
+  <p class="count">{{tn "admin.media.count" $d.Total}}</p>
+  <details class="create-panel" data-dialog data-title="{{t "admin.media.upload"}}">
+  <summary class="btn primary">{{t "admin.media.upload"}}</summary>
+  <form method="post" action="{{lurl "/admin/media"}}" enctype="multipart/form-data">
+    <label class="field">
+      <input type="file" name="file" accept="image/*" multiple required>
+      <span class="hint">{{tf "admin.media.hint" (itoa $d.MaxMB)}}</span>
+    </label>
+    <button type="submit" class="btn primary">{{t "admin.media.uploadBtn"}}</button>
+  </form>
+  </details>
+</div>
+
+{{if $d.Media}}
+<div class="media-grid">
+  {{range $d.Media}}
+  <figure class="media-item">
+    <a class="media-thumb" href="/media/{{.Path}}" target="_blank" rel="noopener">
+      <img src="/media/{{.Path}}" alt="{{.Filename}}" loading="lazy" decoding="async">
+      {{/* 删除压在缩略图右上角，鼠标移到卡片上才出现——它是破坏性操作，
+           不该和"复制 Markdown"这种日常动作并排常驻。 */}}
+    </a>
+    {{/* 复制和删除都压在缩略图右上角，悬停才现身。
+         原先卡片底部那个 Markdown 片段长得像输入框，却既不能编辑也读不全
+         （内容寻址的文件名有 64 个十六进制字符，横着截断）——它唯一的用途
+         是点一下复制，那就该长成一个按钮。 */}}
+    <div class="media-acts">
+      <button type="button" class="icon-btn"
+              data-copy-text="![{{.Filename}}](/media/{{.Path}})"
+              data-copied="{{t "common.copied"}}"
+              aria-label="{{t "admin.media.copyMd"}}" data-tip="{{t "common.copy"}}">{{template "icon-copy"}}</button>
+      <form method="post" action="{{lurl (printf "/admin/media/%d/delete" .ID)}}"
+            data-confirm="{{t "admin.media.deleteConfirm"}}">
+        <button type="submit" class="icon-btn danger"
+                aria-label="{{t "admin.media.deleteFull"}}" data-tip="{{t "common.delete"}}">{{template "icon-trash"}}</button>
+      </form>
+    </div>
+    <figcaption>
+      <span class="media-name" title="{{.Filename}}">{{.Filename}}</span>
+      <span class="media-meta">{{filesize .Size}} · {{date .CreatedAt}}</span>
+    </figcaption>
+  </figure>
+  {{end}}
+</div>
+{{else}}
+  {{template "empty" dict "Big" (t "admin.media.empty") "Hint" (t "admin.media.emptyHint")}}
+{{end}}
+{{template "pager" .}}
+{{end}}

@@ -1,0 +1,50 @@
+{{/* 只在公开页面用到的片段：文章卡片、首页精选卡、侧栏。
+     单独一个文件，是为了让"这些东西属于公开页"在目录结构上就成立——
+     跟 site.css / site.js 对齐。partials.html 里留下的是两边共用的：
+     翻页、空状态、后台标签页、图标、字标。 */}}
+{{define "postcard"}}
+<article class="card">
+  <h2><a href="{{lurl (printf "/p/%s" .Slug)}}">{{.Title}}</a></h2>
+  <p class="meta">
+    {{if .CategoryName}}<a class="sec-tag" href="{{lurl (printf "/c/%s" .CategorySlug)}}">{{.CategoryName}}</a>{{end}}
+    <a href="{{lurl (printf "/u/%s" .AuthorSlug)}}">{{.AuthorName}}</a>
+    {{if .PublishedAt}}<time datetime="{{rfc3339 .PublishedAt.UTC}}">{{datep .PublishedAt}}</time>{{end}}
+    <span>{{readtime .WordCount}}</span>
+    {{if ne .Status "published"}}<span class="badge b-{{.Status}}">{{statusLabel .Status}}</span>{{end}}
+  </p>
+  {{if .Summary}}<p class="summary">{{.Summary}}</p>{{end}}
+  {{if .Tags}}
+  <ul class="tags">
+    {{range .Tags}}<li><a class="tag" href="{{lurl (printf "/t/%s" (urlp .Slug))}}">{{.Name}}</a></li>{{end}}
+  </ul>
+  {{end}}
+</article>
+{{end}}
+
+{{define "featured-card"}}
+<article class="feat-card">
+  <h3><a href="{{lurl (printf "/p/%s" .Slug)}}">{{.Title}}</a></h3>
+  {{if .Summary}}<p class="feat-summary">{{.Summary}}</p>{{end}}
+  <p class="meta">
+    <a href="{{lurl (printf "/u/%s" .AuthorSlug)}}">{{.AuthorName}}</a>
+    {{if .PublishedAt}}<time datetime="{{rfc3339 .PublishedAt.UTC}}">{{datep .PublishedAt}}</time>{{end}}
+    <span>{{readtime .WordCount}}</span>
+  </p>
+</article>
+{{end}}
+
+{{/* 列表页的右侧栏。和文章页的大纲占同一个位置，保证两类页面的
+     内容左边缘和栏宽完全一致——页面之间不跳，靠的就是这个。 */}}
+{{define "rail"}}
+{{if .Data.RailTags}}
+<aside class="rail" aria-label="{{t "rail.tags"}}">
+  <p class="rail-label">{{t "rail.tags"}}</p>
+  <ul class="tags">
+    {{range .Data.RailTags}}
+    <li><a class="tag" href="{{lurl (printf "/t/%s" (urlp .Slug))}}">{{.Name}}<span class="n">{{.Count}}</span></a></li>
+    {{end}}
+  </ul>
+</aside>
+{{end}}
+{{end}}
+
