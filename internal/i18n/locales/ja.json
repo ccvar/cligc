@@ -248,7 +248,6 @@
   "flash.saveFailed": "保存できませんでした：{0}",
   "flash.publishFailed": "公開できませんでした：{0}",
   "flash.opFailed": "操作に失敗しました：{0}",
-  "site.description": "軽量・サーバーサイドレンダリング。検索エンジンに実際に載ることを前提に作られたサイト。",
   "admin.edit.editingFmt": "編集：{0}",
   "search.titleFmt": "検索：{0}",
   "brand.companion": "軽格",
@@ -326,6 +325,16 @@
   "scopeGroup.comments": "コメント",
   "scopeGroup.admin": "サイト管理",
   "admin.tokens.selectAll": "すべて選択",
-  "admin.tokens.selectNone": "選択を解除"
+  "admin.tokens.selectNone": "選択を解除",
+  "admin.site.basicSection": "サイト情報",
+  "admin.site.name": "サイト名",
+  "admin.site.nameHint": "ヘッダー、タブのタイトル、共有カードに出ます。空欄なら起動時の -title を使います。",
+  "admin.site.desc": "サイトの説明",
+  "admin.site.descHint": "トップページの一文の紹介で、meta description と共有カードにも使われます。全角 60 字程度までに——超えた分は検索結果で切れます。空欄なら -desc を使います。言語ごとに変えたい場合は -lang-dir の目録に site.title / site.description を置いてください。",
+  "admin.cats.desc": "説明",
+  "admin.cats.descHint": "セクションページの meta description。セクションページには要約を取れる本文がないので、未記入だとサイトの説明で代用されます。",
+  "admin.cats.drag": "並べ替え",
+  "admin.cats.saveOrder": "順序を保存",
+  "admin.cats.orderHint": "行頭のハンドルをドラッグして並べ替え、保存を押してください。"
  }
 }

@@ -255,7 +255,6 @@
   "flash.saveFailed": "Speichern fehlgeschlagen: {0}",
   "flash.publishFailed": "Veröffentlichen fehlgeschlagen: {0}",
   "flash.opFailed": "Vorgang fehlgeschlagen: {0}",
-  "site.description": "Leichtgewichtig, serverseitig gerendert und von Anfang an darauf ausgelegt, von Suchmaschinen tatsächlich aufgenommen zu werden.",
   "admin.edit.editingFmt": "Bearbeiten: {0}",
   "search.titleFmt": "Suche: {0}",
   "common.more": "Mehr",
@@ -332,6 +331,16 @@
   "scopeGroup.comments": "Kommentare",
   "scopeGroup.admin": "Verwaltung",
   "admin.tokens.selectAll": "Alle auswählen",
-  "admin.tokens.selectNone": "Auswahl aufheben"
+  "admin.tokens.selectNone": "Auswahl aufheben",
+  "admin.site.basicSection": "Website",
+  "admin.site.name": "Name der Website",
+  "admin.site.nameHint": "Steht im Kopfbereich, im Browser-Tab und auf Share-Karten. Leer greift der Wert von -title.",
+  "admin.site.desc": "Beschreibung",
+  "admin.site.descHint": "Der Einzeiler auf der Startseite, zugleich meta description und Text der Share-Karten. Unter etwa 155 Zeichen halten – Suchmaschinen schneiden den Rest ab. Leer greift -desc. Für sprachabhängige Fassungen site.title / site.description in den -lang-dir-Katalog legen.",
+  "admin.cats.desc": "Beschreibung",
+  "admin.cats.descHint": "Die meta description der Bereichsseite. Solche Seiten haben keinen Fließtext zum Zusammenfassen – ohne das greift die Beschreibung der Website.",
+  "admin.cats.drag": "Sortieren",
+  "admin.cats.saveOrder": "Reihenfolge speichern",
+  "admin.cats.orderHint": "Zieh den Griff am Zeilenanfang und speichere danach."
  }
 }

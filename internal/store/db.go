@@ -125,6 +125,7 @@ func migrate(db *sql.DB) error {
 		{"posts", "translation_key", "text not null default ''"},
 		{"posts", "publish_at", "integer"},
 		{"posts", "category_id", "integer references categories(id) on delete set null"},
+		{"categories", "description", "text not null default ''"},
 	} {
 		has, err := hasColumn(db, c.table, c.name)
 		if err != nil {

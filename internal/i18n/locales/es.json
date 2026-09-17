@@ -255,7 +255,6 @@
   "flash.saveFailed": "No se ha podido guardar: {0}",
   "flash.publishFailed": "No se ha podido publicar: {0}",
   "flash.opFailed": "La operación ha fallado: {0}",
-  "site.description": "Ligero, renderizado en el servidor y pensado desde el principio para que los buscadores lo indexen de verdad.",
   "admin.edit.editingFmt": "Editando: {0}",
   "search.titleFmt": "Búsqueda: {0}",
   "common.more": "Más",
@@ -332,6 +331,16 @@
   "scopeGroup.comments": "Comentarios",
   "scopeGroup.admin": "Administración",
   "admin.tokens.selectAll": "Seleccionar todo",
-  "admin.tokens.selectNone": "Ninguno"
+  "admin.tokens.selectNone": "Ninguno",
+  "admin.site.basicSection": "Sitio",
+  "admin.site.name": "Nombre del sitio",
+  "admin.site.nameHint": "Aparece en la cabecera, en la pestaña del navegador y en las tarjetas al compartir. Vacío usa el valor de -title.",
+  "admin.site.desc": "Descripción del sitio",
+  "admin.site.descHint": "La frase de presentación de la portada; también es la meta description y el texto de las tarjetas al compartir. No pases de unos 155 caracteres: los buscadores cortan el resto. Vacío usa -desc. Para versiones por idioma, pon site.title / site.description en tu catálogo de -lang-dir.",
+  "admin.cats.desc": "Descripción",
+  "admin.cats.descHint": "La meta description de la página de sección. Esas páginas no tienen texto que resumir, así que sin esto se usa la descripción del sitio.",
+  "admin.cats.drag": "Reordenar",
+  "admin.cats.saveOrder": "Guardar el orden",
+  "admin.cats.orderHint": "Arrastra el asa al principio de la fila y luego guarda."
  }
 }

@@ -13,6 +13,14 @@ import (
 // 基本不动。放在库里而不是命令行参数上，是因为"改一个统计 ID 要重启服务"
 // 不是一个合理的流程。
 type SiteSettings struct {
+	// SiteTitle / SiteDescription 是站点自己的名字和一句话描述。
+	//
+	// 放在这里而不是只当命令行参数：这两个是站长随时会改的内容，
+	// 而且直接决定 <title> 和 meta description——改一次要重启服务不合理。
+	// 留空则退回命令行的 -title / -desc。
+	SiteTitle       string
+	SiteDescription string
+
 	// GoogleVerify 是 Search Console 的 google-site-verification 值。
 	GoogleVerify string
 	// BingVerify 是 Bing 站长平台的 msvalidate.01 值。
@@ -38,6 +46,8 @@ const (
 	keyGA4          = "ga4_id"
 	keyIndexNow     = "indexnow_key"
 	keyCommentsOff  = "comments_off"
+	keySiteTitle    = "site_title"
+	keySiteDesc     = "site_desc"
 )
 
 // Settings 返回当前设置。读的是内存快照——它在每个页面的 <head> 里都要用到，
@@ -74,6 +84,10 @@ func (d *DB) loadSettings(ctx context.Context) SiteSettings {
 			s.IndexNowKey = v
 		case keyCommentsOff:
 			s.CommentsEnabled = v == ""
+		case keySiteTitle:
+			s.SiteTitle = v
+		case keySiteDesc:
+			s.SiteDescription = v
 		}
 	}
 	return s
@@ -85,6 +99,8 @@ func (d *DB) SaveSettings(ctx context.Context, in SiteSettings) error {
 	in.BingVerify = strings.TrimSpace(in.BingVerify)
 	in.GA4ID = strings.TrimSpace(in.GA4ID)
 	in.IndexNowKey = strings.ToLower(strings.TrimSpace(in.IndexNowKey))
+	in.SiteTitle = strings.TrimSpace(in.SiteTitle)
+	in.SiteDescription = strings.TrimSpace(in.SiteDescription)
 
 	err := d.tx(ctx, func(t *sql.Tx) error {
 		now := time.Now().Unix()
@@ -94,6 +110,8 @@ func (d *DB) SaveSettings(ctx context.Context, in SiteSettings) error {
 			{keyGA4, in.GA4ID},
 			{keyIndexNow, in.IndexNowKey},
 			{keyCommentsOff, boolOff(in.CommentsEnabled)},
+			{keySiteTitle, in.SiteTitle},
+			{keySiteDesc, in.SiteDescription},
 		} {
 			if _, err := t.ExecContext(ctx,
 				`insert into settings(key,value,updated_at) values(?,?,?)

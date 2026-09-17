@@ -14,41 +14,51 @@
       <span class="label">{{t "admin.cats.name"}}</span>
       <input type="text" name="name" required>
     </label>
-    <div class="grid2">
-      <label class="field">
-        <span class="label">{{t "admin.cats.slug"}}</span>
-        <input type="text" name="slug" placeholder="{{t "admin.cats.slugPlace"}}">
-      </label>
-      <label class="field">
-        <span class="label">{{t "admin.cats.sort"}}</span>
-        <input type="number" name="sort" value="0">
-        <span class="hint">{{t "admin.cats.sortHint"}}</span>
-      </label>
-    </div>
+    <label class="field">
+      <span class="label">{{t "admin.cats.slug"}}</span>
+      <input type="text" name="slug" placeholder="{{t "admin.cats.slugPlace"}}">
+    </label>
+    <label class="field">
+      <span class="label">{{t "admin.cats.desc"}}</span>
+      <textarea name="description" rows="2"></textarea>
+      <span class="hint">{{t "admin.cats.descHint"}}</span>
+    </label>
     <button type="submit" class="btn primary">{{t "common.save"}}</button>
   </form>
   </details>
 </div>
 
 {{if $d.Cats}}
+{{/* 排序表单套在整张表外面：拖动只改 DOM 顺序，真正落库要点保存。
+     没有 JS 时拖不动，但每行的排序数字框照常可用——两种方式都通向
+     同一个结果，不需要任何降级分支。 */}}
+<form method="post" action="{{lurl "/admin/categories/reorder"}}" id="reorder" data-reorder>
 <div class="table-wrap">
-  <table class="data">
+  <table class="data cats">
     <thead>
-      <tr><th>{{t "admin.cats.name"}}</th><th>{{t "admin.cats.slug"}}</th>
-          <th class="num">{{t "admin.cats.sort"}}</th><th class="num">{{t "admin.cats.colPosts"}}</th><th></th></tr>
+      <tr><th class="drag-col"></th>
+          <th>{{t "admin.cats.name"}}</th><th>{{t "admin.cats.slug"}}</th>
+          <th>{{t "admin.cats.desc"}}</th>
+          <th class="num">{{t "admin.cats.sort"}}</th>
+          <th class="num">{{t "admin.cats.colPosts"}}</th><th></th></tr>
     </thead>
-    <tbody>
+    <tbody data-reorder-rows>
     {{range $d.Cats}}
       {{/* 每一行本身就是一张编辑表单：分类总共就几个，为了改个名字
            再跳一个页面不划算。 */}}
-      <tr>
+      <tr data-id="{{.ID}}">
         <form method="post" action="{{lurl "/admin/categories"}}" id="cat-{{.ID}}"></form>
+        <td class="drag-col">
+          <span class="drag-handle" data-drag title="{{t "admin.cats.drag"}}" aria-hidden="true">⠿</span>
+          <input form="reorder" type="hidden" name="id" value="{{.ID}}">
+        </td>
         <td><input form="cat-{{.ID}}" type="hidden" name="id" value="{{.ID}}">
             <input form="cat-{{.ID}}" type="text" name="name" value="{{.Name}}" required></td>
         <td><input form="cat-{{.ID}}" type="text" name="slug" value="{{.Slug}}"></td>
+        <td><input form="cat-{{.ID}}" type="text" name="description" value="{{.Desc}}"></td>
         <td class="num"><input form="cat-{{.ID}}" type="number" name="sort" value="{{.Sort}}" class="w-xs"></td>
         <td class="num">
-          {{if gt .Count 0}}<a href="{{lurl (printf "/c/%s" .Slug)}}">{{.Count}}</a>{{else}}—{{end}}
+          {{if gt .Count 0}}<a href="{{lurl (printf "/c/%s" (urlp .Slug))}}">{{.Count}}</a>{{else}}—{{end}}
         </td>
         <td class="row-actions">
           <button form="cat-{{.ID}}" type="submit" class="icon-btn"
@@ -64,6 +74,13 @@
     </tbody>
   </table>
 </div>
+{{/* 只有真的拖动过才显示保存按钮：一个常驻的"保存顺序"会让人以为
+     不点它顺序就丢了，而多数时候根本没动过顺序。 */}}
+<div class="reorder-bar" data-reorder-bar hidden>
+  <span class="hint">{{t "admin.cats.orderHint"}}</span>
+  <button type="submit" class="btn primary">{{t "admin.cats.saveOrder"}}</button>
+</div>
+</form>
 {{else}}
   {{template "empty" dict "Big" (t "admin.cats.empty") "Hint" (t "admin.cats.emptyHint")}}
 {{end}}

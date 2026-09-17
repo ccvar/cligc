@@ -958,7 +958,7 @@ func TestCategoryIsNavigationNotOwnership(t *testing.T) {
 	}
 	a := Actor{UserID: u.ID}
 
-	cat, err := d.CreateCategory(ctx, "随笔", "", 1)
+	cat, err := d.CreateCategory(ctx, "随笔", "", "随笔与杂记", 1)
 	if err != nil {
 		t.Fatal(err)
 	}

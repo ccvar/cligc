@@ -445,6 +445,9 @@ func (s *Server) handleSite(w http.ResponseWriter, r *http.Request) {
 			// 命令行关死时把勾选框置灰：让人点一个点了不生效的开关，
 			// 比不给这个开关更糟。
 			"CommentsHardOff": !s.cfg.CommentsEnabled,
+			// 占位符显示命令行给的兜底值，让人一眼看出"留空会变成什么"
+			"FallbackTitle": s.cfg.Title,
+			"FallbackDesc":  s.cfg.Description,
 		},
 	})
 }
@@ -456,6 +459,8 @@ func (s *Server) handleSiteSave(w http.ResponseWriter, r *http.Request) {
 	}
 	in := store.SiteSettings{
 		CommentsEnabled: r.FormValue("comments") != "",
+		SiteTitle:       r.FormValue("site_title"),
+		SiteDescription: r.FormValue("site_desc"),
 		GoogleVerify:    r.FormValue("google_verify"),
 		BingVerify:      r.FormValue("bing_verify"),
 		GA4ID:           r.FormValue("ga4_id"),

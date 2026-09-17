@@ -497,3 +497,33 @@ input[type="file"]::file-selector-button {
   gap: var(--s3);
   width: 100%;
 }
+
+/* --- 拖动排序 ------------------------------------------------------------ */
+
+.drag-col { width: 1.75rem; padding-inline-end: 0 !important; }
+.drag-handle {
+  display: inline-block;
+  /* 手柄默认不可见，鼠标进了这一行才出现——一列常驻的点阵符号是噪音 */
+  opacity: 0;
+  color: var(--faint);
+  cursor: grab;
+  user-select: none;
+  line-height: 1;
+  transition: opacity 0.12s var(--ease), color 0.12s var(--ease);
+}
+tr:hover .drag-handle, tr:focus-within .drag-handle { opacity: 1; }
+.drag-handle:active { cursor: grabbing; color: var(--fg); }
+tr.dragging { opacity: 0.4; }
+
+/* 只有拖动过才出现，见模板里的注释 */
+.reorder-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--s4);
+  margin-top: var(--s4);
+}
+.reorder-bar .hint { margin-inline-end: auto; }
+
+/* 分类表的描述列吃掉剩余宽度，别让名称和地址被挤扁 */
+table.data.cats td input[name="description"] { width: 100%; }
+table.data.cats td { white-space: normal; }

@@ -269,7 +269,6 @@
   "flash.saveFailed": "Не удалось сохранить: {0}",
   "flash.publishFailed": "Не удалось опубликовать: {0}",
   "flash.opFailed": "Не удалось выполнить: {0}",
-  "site.description": "Лёгкий сайт с серверным рендерингом, с самого начала рассчитанный на то, чтобы его действительно индексировали поисковики.",
   "admin.edit.editingFmt": "Редактирование: {0}",
   "search.titleFmt": "Поиск: {0}",
   "common.more": "Ещё",
@@ -346,6 +345,16 @@
   "scopeGroup.comments": "Комментарии",
   "scopeGroup.admin": "Управление сайтом",
   "admin.tokens.selectAll": "Выбрать всё",
-  "admin.tokens.selectNone": "Снять всё"
+  "admin.tokens.selectNone": "Снять всё",
+  "admin.site.basicSection": "Сайт",
+  "admin.site.name": "Название сайта",
+  "admin.site.nameHint": "Показывается в шапке, во вкладке браузера и на карточках при репосте. Пусто — берётся значение -title.",
+  "admin.site.desc": "Описание сайта",
+  "admin.site.descHint": "Фраза-представление на главной; она же meta description и текст карточек при репосте. Держитесь в пределах ~155 знаков — остальное поисковик обрежет. Пусто — берётся -desc. Для версий по языкам положите site.title / site.description в каталог -lang-dir.",
+  "admin.cats.desc": "Описание",
+  "admin.cats.descHint": "meta description страницы раздела. Там нет текста, из которого можно взять выдержку, поэтому без этого подставится описание сайта.",
+  "admin.cats.drag": "Порядок",
+  "admin.cats.saveOrder": "Сохранить порядок",
+  "admin.cats.orderHint": "Потяните за ручку в начале строки, затем сохраните."
  }
 }

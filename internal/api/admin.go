@@ -218,6 +218,8 @@ func (s *Server) handleGetSite(w http.ResponseWriter, r *http.Request) {
 func (s *Server) handlePatchSite(w http.ResponseWriter, r *http.Request) {
 	cur := s.db.Settings(r.Context())
 	var in struct {
+		SiteTitle       *string `json:"site_title"`
+		SiteDescription *string `json:"site_description"`
 		CommentsEnabled *bool   `json:"comments_enabled"`
 		GoogleVerify    *string `json:"google_verify"`
 		BingVerify      *string `json:"bing_verify"`
@@ -230,6 +232,12 @@ func (s *Server) handlePatchSite(w http.ResponseWriter, r *http.Request) {
 	}
 	// 指针语义：没给的字段保持不变，给了空串才是清空。全量覆盖的话，
 	// 一次只想改 GA4 的调用会把另外三项一并抹掉。
+	if in.SiteTitle != nil {
+		cur.SiteTitle = *in.SiteTitle
+	}
+	if in.SiteDescription != nil {
+		cur.SiteDescription = *in.SiteDescription
+	}
 	if in.CommentsEnabled != nil {
 		cur.CommentsEnabled = *in.CommentsEnabled
 	}
@@ -257,6 +265,8 @@ func (s *Server) handlePatchSite(w http.ResponseWriter, r *http.Request) {
 
 func siteDTO(st store.SiteSettings) map[string]any {
 	return map[string]any{
+		"site_title":       st.SiteTitle,
+		"site_description": st.SiteDescription,
 		"comments_enabled": st.CommentsEnabled,
 		"google_verify":    st.GoogleVerify,
 		"bing_verify":      st.BingVerify,
@@ -324,7 +334,8 @@ func (s *Server) handleListCategories(w http.ResponseWriter, r *http.Request) {
 	out := make([]map[string]any, 0, len(cats))
 	for _, c := range cats {
 		out = append(out, map[string]any{
-			"id": c.ID, "slug": c.Slug, "name": c.Name, "sort": c.Sort, "published": c.Count,
+			"id": c.ID, "slug": c.Slug, "name": c.Name, "description": c.Desc,
+			"sort": c.Sort, "published": c.Count,
 		})
 	}
 	writeJSON(w, http.StatusOK, map[string]any{
@@ -338,19 +349,20 @@ func (s *Server) handleCreateCategory(w http.ResponseWriter, r *http.Request) {
 	var in struct {
 		Name string `json:"name"`
 		Slug string `json:"slug"`
+		Desc string `json:"description"`
 		Sort int    `json:"sort"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&in); err != nil {
 		badRequest(w, "body must be JSON")
 		return
 	}
-	c, err := s.db.CreateCategory(r.Context(), in.Name, in.Slug, in.Sort)
+	c, err := s.db.CreateCategory(r.Context(), in.Name, in.Slug, in.Desc, in.Sort)
 	if err != nil {
 		fail(w, err)
 		return
 	}
 	writeJSON(w, http.StatusCreated, map[string]any{
-		"id": c.ID, "slug": c.Slug, "name": c.Name, "sort": c.Sort})
+		"id": c.ID, "slug": c.Slug, "name": c.Name, "description": c.Desc, "sort": c.Sort})
 }
 
 func (s *Server) handleUpdateCategory(w http.ResponseWriter, r *http.Request) {
@@ -361,17 +373,19 @@ func (s *Server) handleUpdateCategory(w http.ResponseWriter, r *http.Request) {
 	var in struct {
 		Name string `json:"name"`
 		Slug string `json:"slug"`
+		Desc string `json:"description"`
 		Sort int    `json:"sort"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&in); err != nil {
 		badRequest(w, "body must be JSON")
 		return
 	}
-	if err := s.db.UpdateCategory(r.Context(), id, in.Name, in.Slug, in.Sort); err != nil {
+	if err := s.db.UpdateCategory(r.Context(), id, in.Name, in.Slug, in.Desc, in.Sort); err != nil {
 		fail(w, err)
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"id": id, "name": in.Name, "slug": in.Slug, "sort": in.Sort})
+	writeJSON(w, http.StatusOK, map[string]any{"id": id, "name": in.Name, "slug": in.Slug,
+		"description": in.Desc, "sort": in.Sort})
 }
 
 func (s *Server) handleDeleteCategory(w http.ResponseWriter, r *http.Request) {

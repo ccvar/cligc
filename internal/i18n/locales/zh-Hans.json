@@ -313,7 +313,17 @@
   "scopeGroup.comments": "评论",
   "scopeGroup.admin": "站点管理",
   "admin.tokens.selectAll": "全选",
-  "admin.tokens.selectNone": "全不选"
+  "admin.tokens.selectNone": "全不选",
+  "admin.site.basicSection": "站点信息",
+  "admin.site.name": "站点名称",
+  "admin.site.nameHint": "出现在导航、标签页标题和分享卡片上。留空则用启动参数 -title 的值。",
+  "admin.site.desc": "站点描述",
+  "admin.site.descHint": "首页的一句话介绍，同时作为 meta description 和分享卡片的描述。控制在 60 个汉字以内——超出的部分搜索结果里会被截断。留空则用 -desc。多语言站要按语言区分的话，在 -lang-dir 的目录里放 site.title / site.description。",
+  "admin.cats.desc": "描述",
+  "admin.cats.descHint": "板块页的 meta description。板块页没有正文可以自动截取摘要，不写就只能拿站点描述凑。",
+  "admin.cats.drag": "拖动排序",
+  "admin.cats.saveOrder": "保存顺序",
+  "admin.cats.orderHint": "拖动行首的手柄调整顺序，改完点保存。"
  },
  "name": "中文"
 }

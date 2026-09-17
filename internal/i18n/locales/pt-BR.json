@@ -255,7 +255,6 @@
   "flash.saveFailed": "Não foi possível salvar: {0}",
   "flash.publishFailed": "Não foi possível publicar: {0}",
   "flash.opFailed": "A operação falhou: {0}",
-  "site.description": "Leve, renderizado no servidor e pensado desde o começo para ser de fato indexado pelos buscadores.",
   "admin.edit.editingFmt": "Editando: {0}",
   "search.titleFmt": "Busca: {0}",
   "common.more": "Mais",
@@ -332,6 +331,16 @@
   "scopeGroup.comments": "Comentários",
   "scopeGroup.admin": "Administração",
   "admin.tokens.selectAll": "Selecionar tudo",
-  "admin.tokens.selectNone": "Limpar"
+  "admin.tokens.selectNone": "Limpar",
+  "admin.site.basicSection": "Site",
+  "admin.site.name": "Nome do site",
+  "admin.site.nameHint": "Aparece no cabeçalho, na aba do navegador e nos cartões de compartilhamento. Em branco, vale o -title.",
+  "admin.site.desc": "Descrição do site",
+  "admin.site.descHint": "A frase de apresentação da home; também é a meta description e o texto dos cartões de compartilhamento. Fique abaixo de uns 155 caracteres — os buscadores cortam o resto. Em branco, vale o -desc. Para versões por idioma, ponha site.title / site.description no catálogo do -lang-dir.",
+  "admin.cats.desc": "Descrição",
+  "admin.cats.descHint": "A meta description da página da seção. Essas páginas não têm texto para resumir, então sem isso vale a descrição do site.",
+  "admin.cats.drag": "Reordenar",
+  "admin.cats.saveOrder": "Salvar a ordem",
+  "admin.cats.orderHint": "Arraste a alça no início da linha e depois salve."
  }
 }

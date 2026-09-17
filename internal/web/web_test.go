@@ -972,10 +972,10 @@ func TestNonDefaultUILanguageHasNoChineseChrome(t *testing.T) {
 			t.Errorf("%s = %d", path, w.Code)
 			continue
 		}
-		// 两类中文是应该留着的：站名和作者名是这个站自己的专名；
+		// 三类中文是应该留着的：站名、站点描述和作者名都是这个站自己的文案；
 		// 语言切换器里每一项都用该语言自己的说法（中文 / 日本語 / العربية），
 		// 换成英文反而没法用。剩下的中文才是漏翻。
-		body := strings.NewReplacer("测试站", "", "作者", "").Replace(w.Body.String())
+		body := strings.NewReplacer("测试站", "", "描述", "", "作者", "").Replace(w.Body.String())
 		body = langOptionRE.ReplaceAllString(body, "")
 		for _, ru := range body {
 			if ru >= 0x4E00 && ru <= 0x9FFF {
@@ -1291,9 +1291,14 @@ func TestStyleLayersStaySeparated(t *testing.T) {
 // 两边都算，因此不会落进任何一个 only 集合。
 func templateClasses(t *testing.T) (adminOnly, publicOnly map[string]bool) {
 	t.Helper()
-	admin := map[string]bool{"admin_list": true, "admin_edit": true, "admin_comments": true,
-		"admin_media": true, "admin_tokens": true, "admin_profile": true, "admin_site": true,
-		"login": true}
+	// 按文件名前缀判断，不手写枚举。
+	//
+	// 原来是一份手写清单，加 admin_categories.html 时忘了往里加，结果它的
+	// 类名被当成"公开页专用"，admin.css 里引用自己的类反而被判越界。
+	// 一份需要人记得同步的清单，迟早会有人忘。
+	isAdmin := func(name string) bool {
+		return strings.HasPrefix(name, "admin_") || name == "login"
+	}
 	shared := map[string]bool{"layout": true, "partials": true, "error": true}
 	// partials_site.html 里的片段只给公开页用，按公开归类——不这么分的话，
 	// 把 .feat-card 这种公开页的类写进 admin.css 就查不出来。
@@ -1312,7 +1317,7 @@ func templateClasses(t *testing.T) (adminOnly, publicOnly map[string]bool) {
 		base := strings.TrimSuffix(filepath.Base(n), ".html")
 		into := inPublic
 		switch {
-		case admin[base]:
+		case isAdmin(base):
 			into = inAdmin
 		case shared[base]:
 			into = inShared
@@ -1405,4 +1410,64 @@ func TestCommentAbuseGates(t *testing.T) {
 			t.Errorf("登录用户被队列上限挡住了（%d）—— 他的评论不进队列", w.Code)
 		}
 	})
+}
+
+// TestSiteTitlePrecedence 守住站名/描述的三层优先级，尤其是
+// "内置词表不许盖掉站长在后台输入的名字"这一条。
+//
+// 这个坑踩过一次：内置词表原本带着 site.description（描述的是 cligc
+// 自己），而词表优先级最高。结果是站长在后台改了描述，10 种语言下看到的
+// 仍然是 cligc 的宣传语——而且不报错，只是输入的东西像没生效。
+func TestSiteTitlePrecedence(t *testing.T) {
+	mustLoadLocales(t)
+
+	// 内置词表不许带这两个 key
+	for _, code := range i18n.Codes() {
+		for _, key := range []string{"site.title", "site.description"} {
+			if v, ok := i18n.Own(code, key); ok {
+				t.Errorf("内置词表 %s 带着 %s=%q —— 它会盖掉站长自己设的值", code, key, v)
+			}
+		}
+	}
+
+	dir := t.TempDir()
+	db, err := store.Open(filepath.Join(dir, "t.db"), "example.com")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer db.Close()
+	srv, err := New(db, Config{BaseURL: "https://example.com",
+		Title: "命令行给的名字", Description: "命令行给的描述", MediaRoot: dir})
+	if err != nil {
+		t.Fatal(err)
+	}
+	mux := http.NewServeMux()
+	srv.Routes(mux)
+	h := srv.WithLang(srv.WithSession(mux))
+
+	get := func() string {
+		w := httptest.NewRecorder()
+		h.ServeHTTP(w, httptest.NewRequest("GET", "/", nil))
+		return w.Body.String()
+	}
+
+	if body := get(); !strings.Contains(body, "命令行给的名字") {
+		t.Error("没设置过时，应当用命令行的值")
+	}
+	// 后台设置要能盖过命令行
+	if err := db.SaveSettings(t.Context(), store.SiteSettings{
+		CommentsEnabled: true, SiteTitle: "后台设的名字", SiteDescription: "后台设的描述",
+	}); err != nil {
+		t.Fatal(err)
+	}
+	body := get()
+	if !strings.Contains(body, "后台设的名字") {
+		t.Error("后台设了名字却没生效 —— 命令行的值盖住了它")
+	}
+	if !strings.Contains(body, "后台设的描述") {
+		t.Error("后台设了描述却没生效")
+	}
+	if strings.Contains(body, "命令行给的名字") {
+		t.Error("后台设了之后命令行的值还在页面上")
+	}
 }

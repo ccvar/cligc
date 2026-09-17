@@ -248,7 +248,6 @@
   "flash.saveFailed": "儲存失敗：{0}",
   "flash.publishFailed": "發佈失敗：{0}",
   "flash.opFailed": "操作失敗：{0}",
-  "site.description": "輕量、伺服器端算繪，衝著「真的被搜尋引擎收錄」這件事設計的網站。",
   "admin.edit.editingFmt": "編輯：{0}",
   "search.titleFmt": "搜尋：{0}",
   "brand.companion": "輕格",
@@ -326,6 +325,16 @@
   "scopeGroup.comments": "留言",
   "scopeGroup.admin": "站點管理",
   "admin.tokens.selectAll": "全選",
-  "admin.tokens.selectNone": "全不選"
+  "admin.tokens.selectNone": "全不選",
+  "admin.site.basicSection": "站點資訊",
+  "admin.site.name": "站點名稱",
+  "admin.site.nameHint": "出現在導覽、分頁標題和分享卡片上。留空則用啟動參數 -title 的值。",
+  "admin.site.desc": "站點描述",
+  "admin.site.descHint": "首頁的一句話介紹，同時作為 meta description 和分享卡片的描述。控制在 60 個漢字以內——超出的部分搜尋結果裡會被截斷。留空則用 -desc。多語言站要按語言區分的話，在 -lang-dir 的目錄裡放 site.title / site.description。",
+  "admin.cats.desc": "描述",
+  "admin.cats.descHint": "板塊頁的 meta description。板塊頁沒有內文可以自動擷取摘要，不寫就只能拿站點描述湊。",
+  "admin.cats.drag": "拖動排序",
+  "admin.cats.saveOrder": "儲存順序",
+  "admin.cats.orderHint": "拖動列首的把手調整順序，改完點儲存。"
  }
 }

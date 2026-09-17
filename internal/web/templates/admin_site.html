@@ -6,6 +6,22 @@
 
 <form class="settings" method="post" action="{{lurl "/admin/site"}}">
 
+  {{/* 站点名称和描述放在最前面：它们决定 <title> 和 meta description，
+       是这一页里最影响搜索结果长相的两项。 */}}
+  <h2 class="section-title">{{t "admin.site.basicSection"}}</h2>
+
+  <label class="field">
+    <span class="label">{{t "admin.site.name"}}</span>
+    <input type="text" name="site_title" value="{{$s.SiteTitle}}" placeholder="{{$d.FallbackTitle}}">
+    <span class="hint">{{t "admin.site.nameHint"}}</span>
+  </label>
+
+  <label class="field">
+    <span class="label">{{t "admin.site.desc"}}</span>
+    <textarea name="site_desc" rows="2" placeholder="{{$d.FallbackDesc}}">{{$s.SiteDescription}}</textarea>
+    <span class="hint">{{t "admin.site.descHint"}}</span>
+  </label>
+
   <h2 class="section-title">{{t "admin.site.seoSection"}}</h2>
 
   <label class="field">

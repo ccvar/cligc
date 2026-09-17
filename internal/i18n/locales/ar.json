@@ -283,7 +283,6 @@
   "flash.saveFailed": "تعذّر الحفظ: {0}",
   "flash.publishFailed": "تعذّر النشر: {0}",
   "flash.opFailed": "فشلت العملية: {0}",
-  "site.description": "موقع خفيف يُبنى على الخادم، مصمَّم منذ البداية ليُفهرَس فعلًا في محركات البحث.",
   "admin.edit.editingFmt": "تحرير: {0}",
   "search.titleFmt": "بحث: {0}",
   "common.more": "المزيد",
@@ -360,6 +359,16 @@
   "scopeGroup.comments": "التعليقات",
   "scopeGroup.admin": "إدارة الموقع",
   "admin.tokens.selectAll": "تحديد الكل",
-  "admin.tokens.selectNone": "إلغاء التحديد"
+  "admin.tokens.selectNone": "إلغاء التحديد",
+  "admin.site.basicSection": "معلومات الموقع",
+  "admin.site.name": "اسم الموقع",
+  "admin.site.nameHint": "يظهر في الترويسة وعنوان التبويب وبطاقات المشاركة. وإن تُرك فارغًا استُخدمت قيمة ‎-title‎.",
+  "admin.site.desc": "وصف الموقع",
+  "admin.site.descHint": "جملة التعريف في الصفحة الرئيسية، وتُستخدم أيضًا وصفًا في meta description وفي بطاقات المشاركة. أبقِها دون 155 محرفًا تقريبًا، فما زاد تقتطعه محركات البحث. وإن تُرك فارغًا استُخدمت ‎-desc‎. وللنسخ الخاصة بكل لغة ضع site.title / site.description في دليل ‎-lang-dir‎.",
+  "admin.cats.desc": "الوصف",
+  "admin.cats.descHint": "وصف meta لصفحة القسم. صفحات الأقسام لا متن فيها يُقتطع منه ملخّص، فإن تُرك فارغًا استُخدم وصف الموقع بدلًا منه.",
+  "admin.cats.drag": "إعادة الترتيب",
+  "admin.cats.saveOrder": "حفظ الترتيب",
+  "admin.cats.orderHint": "اسحب المقبض في أول الصف ثم احفظ."
  }
 }

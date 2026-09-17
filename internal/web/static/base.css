@@ -238,6 +238,13 @@ p { text-wrap: pretty; }
 }
 .skip:focus { transform: none; }
 
+/* hidden 属性必须真的隐藏。
+   浏览器默认表里是有 [hidden]{display:none} 的，但那是 UA 规则——作者写的
+   任何一条 display 都赢过它。所以 `<div class="x" hidden>` 配上
+   `.x{display:flex}` 会照常显示，而且不报错。站里十几处菜单、弹层、下拉
+   都靠 el.hidden 开关，缺这条兜底迟早踩中一次。 */
+[hidden] { display: none !important; }
+
 /* --- 容器 --------------------------------------------------------------- */
 
 .wrap {

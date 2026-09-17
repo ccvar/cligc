@@ -228,6 +228,7 @@ func (s *Server) Routes(mux *http.ServeMux) {
 	mux.Handle("GET /admin/categories", a(s.handleCategories))
 	mux.Handle("POST /admin/categories", a(s.handleCategorySave))
 	mux.Handle("POST /admin/categories/{id}/delete", a(s.handleCategoryDelete))
+	mux.Handle("POST /admin/categories/reorder", a(s.handleCategoryReorder))
 	mux.Handle("GET /admin/site", a(s.handleSite))
 	mux.Handle("GET /admin/skill-pack", a(s.handleSkillPack))
 	mux.Handle("POST /admin/site", a(s.handleSiteSave))
@@ -326,20 +327,34 @@ func (s *Server) render(w http.ResponseWriter, r *http.Request, name string, p p
 	if p.User == nil {
 		p.User = userFrom(r.Context())
 	}
-	// 站名和描述允许按语言覆盖：目录里有 site.title 就用它，没有就用配置值。
-	// 单语言站完全不用管这两个 key；多语言站也不必为此增加命令行参数。
+	p.Settings = s.db.Settings(r.Context())
+
+	// 站名和描述的优先级：词表 > 后台设置 > 命令行。
+	//
+	//   命令行  部署时定的兜底值
+	//   后台    站长随时改的，多数站只用到这一层
+	//   词表    多语言站按语言区分时用，放自己的 -lang-dir 目录
+	//
+	// 内置词表**不带** site.title / site.description。带了的话，站长在
+	// 后台里输入的名字会被内置文案无声盖掉——那是在替别人的站做主。
 	siteTitle := s.cfg.Title
+	if v := p.Settings.SiteTitle; v != "" {
+		siteTitle = v
+	}
 	if v := i18n.T(lang.Code, "site.title"); v != "site.title" {
 		siteTitle = v
 	}
+
+	p.SiteDesc = s.cfg.Description
+	if v := p.Settings.SiteDescription; v != "" {
+		p.SiteDesc = v
+	}
 	if v := i18n.T(lang.Code, "site.description"); v != "site.description" {
 		p.SiteDesc = v
-	} else {
-		p.SiteDesc = s.cfg.Description
 	}
+
 	p.SiteTitle = siteTitle
 	p.BrandMark, p.BrandText = splitBrand(siteTitle)
-	p.Settings = s.db.Settings(r.Context())
 	p.CommentsOn = s.commentsOn(r)
 	// 语言前缀已经被 WithLang 剥掉，这里看到的是规范化后的路径。
 	p.IsAdmin = strings.HasPrefix(r.URL.Path, "/admin") || strings.HasPrefix(r.URL.Path, "/login")

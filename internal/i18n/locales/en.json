@@ -244,7 +244,6 @@
   "search.promptHint": "Searches both titles and bodies.",
   "search.submit": "Search",
   "search.title": "Search",
-  "site.description": "Lightweight, server-rendered, built to actually get indexed.",
   "source.aiAssist": "AI-assisted",
   "source.aiGen": "AI-generated",
   "source.human": "Human",
@@ -328,7 +327,17 @@
   "scopeGroup.comments": "Comments",
   "scopeGroup.admin": "Site admin",
   "admin.tokens.selectAll": "Select all",
-  "admin.tokens.selectNone": "Clear"
+  "admin.tokens.selectNone": "Clear",
+  "admin.site.basicSection": "Site",
+  "admin.site.name": "Site name",
+  "admin.site.nameHint": "Shown in the header, the browser tab and share cards. Empty falls back to the -title flag.",
+  "admin.site.desc": "Site description",
+  "admin.site.descHint": "The one-line introduction on the home page, also used as the meta description and in share cards. Keep it under about 155 characters — search results cut off the rest. Empty falls back to -desc. For per-language versions, put site.title / site.description in your -lang-dir catalogue.",
+  "admin.cats.desc": "Description",
+  "admin.cats.descHint": "The section page's meta description. Section pages have no body text to summarise, so without this they fall back to the site description.",
+  "admin.cats.drag": "Reorder",
+  "admin.cats.saveOrder": "Save order",
+  "admin.cats.orderHint": "Drag the handle at the start of a row, then save."
  },
  "name": "English"
 }

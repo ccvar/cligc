@@ -90,6 +90,9 @@ create table if not exists categories (
   id   integer primary key,
   slug text not null unique,
   name text not null,
+  -- 板块的一句话说明。用在板块页的 meta description 上——
+  -- 板块页是聚合页，没有正文可以自动截取摘要，不写就只能拿站点描述凑。
+  description text not null default '',
   -- 导航顺序。相同时按 name 兜底，保证结果稳定。
   sort integer not null default 0
 );

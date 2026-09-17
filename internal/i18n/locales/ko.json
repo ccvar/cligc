@@ -248,7 +248,6 @@
   "flash.saveFailed": "저장하지 못했습니다: {0}",
   "flash.publishFailed": "게시하지 못했습니다: {0}",
   "flash.opFailed": "처리하지 못했습니다: {0}",
-  "site.description": "가볍고 서버에서 렌더링하는, 검색엔진에 실제로 실리는 것을 전제로 만든 사이트.",
   "admin.edit.editingFmt": "편집: {0}",
   "search.titleFmt": "검색: {0}",
   "brand.companion": "경격",
@@ -326,6 +325,16 @@
   "scopeGroup.comments": "댓글",
   "scopeGroup.admin": "사이트 관리",
   "admin.tokens.selectAll": "전체 선택",
-  "admin.tokens.selectNone": "선택 해제"
+  "admin.tokens.selectNone": "선택 해제",
+  "admin.site.basicSection": "사이트 정보",
+  "admin.site.name": "사이트 이름",
+  "admin.site.nameHint": "머리글, 탭 제목, 공유 카드에 나옵니다. 비우면 실행 인자 -title 을 씁니다.",
+  "admin.site.desc": "사이트 설명",
+  "admin.site.descHint": "첫 화면의 한 줄 소개이자 meta description과 공유 카드에도 쓰입니다. 대략 80자 안쪽으로 — 넘치면 검색 결과에서 잘립니다. 비우면 -desc 를 씁니다. 언어별로 다르게 하려면 -lang-dir 목록에 site.title / site.description 을 넣으세요.",
+  "admin.cats.desc": "설명",
+  "admin.cats.descHint": "섹션 페이지의 meta description입니다. 섹션 페이지에는 요약할 본문이 없어서, 비워 두면 사이트 설명으로 대신합니다.",
+  "admin.cats.drag": "순서 바꾸기",
+  "admin.cats.saveOrder": "순서 저장",
+  "admin.cats.orderHint": "행 앞의 손잡이를 끌어 순서를 바꾼 뒤 저장하세요."
  }
 }

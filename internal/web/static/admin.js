@@ -101,4 +101,53 @@
     fs.addEventListener('change', sync);
     sync();
   }
+
+  // 表格拖动排序
+  //
+  // 用原生 HTML5 拖放，不引库。只改 DOM 顺序和隐藏字段的排列，落库要点
+  // 保存——拖一下就发一次请求的话，中途松手、误拖都会立刻写进库。
+  //
+  // 没有 JS 时这段不运行，每行的排序数字框照常可用，两条路通向同一个结果。
+  for (const form of document.querySelectorAll('[data-reorder]')) {
+    const body = form.querySelector('[data-reorder-rows]');
+    const bar = form.querySelector('[data-reorder-bar]');
+    if (!body) continue;
+
+    let dragging = null;
+    let touched = false;
+
+    for (const row of body.querySelectorAll('tr')) {
+      const handle = row.querySelector('[data-drag]');
+      if (!handle) continue;
+      // 只有按住手柄才能拖：整行可拖的话，在输入框里选文字会变成拖行。
+      handle.addEventListener('mousedown', () => { row.draggable = true; });
+      handle.addEventListener('mouseup', () => { row.draggable = false; });
+
+      row.addEventListener('dragstart', (e) => {
+        dragging = row;
+        row.classList.add('dragging');
+        e.dataTransfer.effectAllowed = 'move';
+        // Firefox 不设 data 就不触发 drop
+        e.dataTransfer.setData('text/plain', '');
+      });
+      row.addEventListener('dragend', () => {
+        row.classList.remove('dragging');
+        row.draggable = false;
+        dragging = null;
+      });
+      row.addEventListener('dragover', (e) => {
+        if (!dragging || dragging === row) return;
+        e.preventDefault();
+        const box = row.getBoundingClientRect();
+        // 过了中线才换位，否则在边界上会来回抖
+        const after = e.clientY > box.top + box.height / 2;
+        body.insertBefore(dragging, after ? row.nextSibling : row);
+        if (!touched) { touched = true; if (bar) bar.hidden = false; }
+      });
+    }
+
+    // 拖动改的是 DOM 顺序，而表单提交按的是 hidden input 在文档里的顺序，
+    // 两者本来就一致——不需要再同步一遍。
+    form.addEventListener('submit', () => { touched = false; });
+  }
 })();

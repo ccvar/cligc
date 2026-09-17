@@ -255,7 +255,6 @@
   "flash.saveFailed": "Échec de l’enregistrement : {0}",
   "flash.publishFailed": "Échec de la publication : {0}",
   "flash.opFailed": "L’opération a échoué : {0}",
-  "site.description": "Léger, rendu côté serveur, conçu dès le départ pour être vraiment indexé par les moteurs de recherche.",
   "admin.edit.editingFmt": "Modification : {0}",
   "search.titleFmt": "Recherche : {0}",
   "common.more": "Plus",
@@ -332,6 +331,16 @@
   "scopeGroup.comments": "Commentaires",
   "scopeGroup.admin": "Administration",
   "admin.tokens.selectAll": "Tout sélectionner",
-  "admin.tokens.selectNone": "Tout décocher"
+  "admin.tokens.selectNone": "Tout décocher",
+  "admin.site.basicSection": "Site",
+  "admin.site.name": "Nom du site",
+  "admin.site.nameHint": "Apparaît dans l’en-tête, l’onglet du navigateur et les cartes de partage. Vide, c’est la valeur de -title qui sert.",
+  "admin.site.desc": "Description du site",
+  "admin.site.descHint": "La phrase de présentation en page d’accueil, qui sert aussi de meta description et de texte pour les cartes de partage. Reste sous ~155 caractères : les moteurs coupent le reste. Vide, c’est -desc. Pour des versions par langue, mets site.title / site.description dans ton catalogue -lang-dir.",
+  "admin.cats.desc": "Description",
+  "admin.cats.descHint": "La meta description de la page de rubrique. Ces pages n’ont pas de texte à résumer : sans ça, c’est la description du site qui sert.",
+  "admin.cats.drag": "Réordonner",
+  "admin.cats.saveOrder": "Enregistrer l’ordre",
+  "admin.cats.orderHint": "Fais glisser la poignée en début de ligne, puis enregistre."
  }
 }
