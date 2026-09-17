@@ -27,6 +27,8 @@ import (
 	"syscall"
 	"time"
 
+	"golang.org/x/term"
+
 	"cligc.com/internal/api"
 	"cligc.com/internal/i18n"
 	"cligc.com/internal/indexnow"
@@ -431,8 +433,17 @@ func cmdUser(args []string) error {
 	pw := *password
 	generated := false
 	if pw == "" {
-		pw = store.RandomSlug() + store.RandomSlug()
-		generated = true
+		// 交互式终端就当面问，输入不回显；非终端（脚本、CI）保持原样
+		// 生成一个并打印，否则自动化流程会卡在一个没人回答的提示上。
+		//
+		// 为什么不让脚本用 -password 传：命令行参数会出现在 ps 的输出里，
+		// 同一台机器上任何一个用户都看得到。
+		if p, err := promptPassword(); err == nil {
+			pw = p
+		} else {
+			pw = store.RandomSlug() + store.RandomSlug()
+			generated = true
+		}
 	}
 	db, err := openDB(*dbPath, "")
 	if err != nil {
@@ -615,4 +626,45 @@ func langCheck(dir string) error {
 		}
 	}
 	return nil
+}
+
+// promptPassword 当面问一次密码，输入不回显，并要求确认。
+//
+// 读的是 /dev/tty 而不是 os.Stdin。这两者在最常见的安装方式下并不是同一个
+// 东西：`curl … | sh` 时，脚本自己的 stdin 就是那条管道，从 os.Stdin 读会
+// 立刻拿到 EOF。/dev/tty 永远指向真正的控制终端，不受重定向影响。
+//
+// 拿不到控制终端时返回错误，让调用方回退到"生成一个并打印"——CI 和无人值守
+// 的脚本不该卡在一个没人会回答的提示上。
+func promptPassword() (string, error) {
+	tty, err := os.OpenFile("/dev/tty", os.O_RDWR, 0)
+	if err != nil {
+		return "", err
+	}
+	defer tty.Close()
+	fd := int(tty.Fd())
+	if !term.IsTerminal(fd) {
+		return "", errors.New("not a terminal")
+	}
+	ask := func(label string) (string, error) {
+		fmt.Fprint(tty, label)
+		b, err := term.ReadPassword(fd)
+		fmt.Fprintln(tty)
+		return string(b), err
+	}
+	first, err := ask("密码（至少 8 位，不回显）：")
+	if err != nil {
+		return "", err
+	}
+	if len(first) < 8 {
+		return "", errors.New("too short")
+	}
+	again, err := ask("再输一次：")
+	if err != nil {
+		return "", err
+	}
+	if first != again {
+		return "", errors.New("mismatch")
+	}
+	return first, nil
 }

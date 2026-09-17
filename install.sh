@@ -68,23 +68,32 @@ info "$(cd "$DIR" && pwd)/cligc"
 
 # --- 建管理员 -------------------------------------------------------------
 #
-# 密码不走命令行参数，也不由脚本生成后打印出来：
-#   - 参数会出现在 ps 的输出和 shell 历史里
-#   - 打印出来的密码会留在终端回滚缓冲区里
-# cligc user add 不带 -password 时会交互式提示，输入不回显。
+# 所有交互输入都显式走 /dev/tty，不走 stdin。
+#
+# 因为最常见的安装方式是 `curl … | sh`，那时脚本自己的 stdin 就是那条管道：
+# read 会立刻读到 EOF，看起来像"用户什么都没输"。这不是假想的问题——
+# 第一版就是这么写的，实测直接报"邮箱不能为空"然后装不下去。
+#
+# 密码也不由脚本收集再用 -password 传给 cligc：命令行参数会出现在 ps 的
+# 输出里，同一台机器上任何一个用户都看得到。cligc user add 自己会去
+# /dev/tty 问，输入不回显。
 DB="$DIR/data/cligc.db"
 if [ -f "$DB" ]; then
   say "已有数据库，跳过建账号"
   info "$DB"
-else
+elif [ -r /dev/tty ] && [ -w /dev/tty ]; then
   say "创建管理员账号"
-  printf '  邮箱: '
-  read -r EMAIL
+  printf '  邮箱: ' > /dev/tty
+  read -r EMAIL < /dev/tty
   [ -n "$EMAIL" ] || die "邮箱不能为空"
-  printf '  显示名: '
-  read -r NAME
+  printf '  显示名: ' > /dev/tty
+  read -r NAME < /dev/tty
   [ -n "$NAME" ] || NAME="$EMAIL"
   ( cd "$DIR" && ./cligc user add -db data/cligc.db -email "$EMAIL" -name "$NAME" -admin )
+else
+  # 完全无人值守（CI、容器构建）：不猜，让人自己建
+  say "没有可用的终端，跳过建账号"
+  info "装好后运行： cd $DIR && ./cligc user add -email you@example.com -name 你的名字 -admin"
 fi
 
 # --- 收尾 -----------------------------------------------------------------
