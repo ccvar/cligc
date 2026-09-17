@@ -96,17 +96,6 @@
   </div>
 </header>
 
-{{/* 板块导航。没有分类时整条不出现——站上只有一类内容时不需要它，
-     而一条只有一个项目的导航栏比没有导航栏更糟。后台页面也不出：
-     那里的导航是标签页，不是板块。 */}}
-{{if and .Categories (not .IsAdmin)}}
-<nav class="sections" aria-label="{{t "nav.categories"}}">
-  <div class="wrap">
-    {{range .Categories}}<a href="{{lurl (printf "/c/%s" .Slug)}}">{{.Name}}</a>{{end}}
-  </div>
-</nav>
-{{end}}
-
 {{if .Flash}}<div class="wrap"><p class="flash">{{.Flash}}</p></div>{{end}}
 
 <main id="main">

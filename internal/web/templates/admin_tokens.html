@@ -7,7 +7,7 @@
 {{template "admintabs" $}}
 
 <p class="count">
-  {{tf "admin.tokens.intro" "<code class=\"scope publish\">posts:publish</code>" | safeHTML}}
+  {{tf "admin.tokens.intro" "<code class=\"scope\">posts:publish</code>" | safeHTML}}
 </p>
 <p class="count hint">{{t "admin.tokens.packHint"}}</p>
 
@@ -45,8 +45,8 @@
         <input type="checkbox" name="scopes" value="{{.}}">
         <span>
           <span class="scope-desc">{{scopeDesc .}}</span>
-          <code class="scope{{if or (eq . "posts:publish") (eq . "comments:moderate")}} publish{{end}}">{{.}}</code>
-          {{if eq . "posts:publish"}}<span class="warn">{{t "admin.tokens.publishWarn"}}</span>{{end}}
+          <code class="scope{{if eq . "comments:moderate"}} publish{{end}}">{{.}}</code>
+          {{if eq . "posts:publish"}}<span class="hint">{{t "admin.tokens.publishWarn"}}</span>{{end}}
           {{if eq . "comments:moderate"}}<span class="warn">{{t "admin.tokens.moderateWarn"}}</span>{{end}}
         </span>
       </label>
@@ -69,7 +69,7 @@
       <tr{{if .RevokedAt}} class="dim"{{end}}>
         <td class="title-cell">{{.Name}}</td>
         <td><code class="scope">{{.Prefix}}…</code></td>
-        <td class="scopes">{{range .Scopes}}<code class="scope{{if or (eq . "posts:publish") (eq . "comments:moderate")}} publish{{end}}">{{.}}</code>{{end}}</td>
+        <td class="scopes">{{range .Scopes}}<code class="scope{{if eq . "comments:moderate"}} publish{{end}}">{{.}}</code>{{end}}</td>
         <td class="when">{{if .LastUsedAt}}{{datep .LastUsedAt}}{{else}}—{{end}}</td>
         <td>
           {{if .RevokedAt}}<span class="badge b-archived">{{t "admin.tokens.revoked"}}</span>

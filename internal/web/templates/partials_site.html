@@ -36,14 +36,32 @@
 {{/* 列表页的右侧栏。和文章页的大纲占同一个位置，保证两类页面的
      内容左边缘和栏宽完全一致——页面之间不跳，靠的就是这个。 */}}
 {{define "rail"}}
-{{if .Data.RailTags}}
-<aside class="rail" aria-label="{{t "rail.tags"}}">
-  <p class="rail-label">{{t "rail.tags"}}</p>
-  <ul class="tags">
-    {{range .Data.RailTags}}
-    <li><a class="tag" href="{{lurl (printf "/t/%s" (urlp .Slug))}}">{{.Name}}<span class="n">{{.Count}}</span></a></li>
-    {{end}}
-  </ul>
+{{if or $.Categories .Data.RailTags}}
+<aside class="rail">
+  {{/* 板块和标签并排放在侧栏，两个维度在视觉上也挨着——
+       原先板块在站点头部下面自成一条横带，只有一两个板块时那条带子
+       看起来像掉在那儿的。 */}}
+  {{if $.Categories}}
+  <nav aria-label="{{t "nav.categories"}}">
+    <p class="rail-label">{{t "nav.categories"}}</p>
+    <ul class="sec-list">
+      {{range $.Categories}}
+      <li><a href="{{lurl (printf "/c/%s" (urlp .Slug))}}">{{.Name}}{{if gt .Count 0}}<span class="n">{{.Count}}</span>{{end}}</a></li>
+      {{end}}
+    </ul>
+  </nav>
+  {{end}}
+
+  {{if .Data.RailTags}}
+  <nav aria-label="{{t "rail.tags"}}">
+    <p class="rail-label">{{t "rail.tags"}}</p>
+    <ul class="tags">
+      {{range .Data.RailTags}}
+      <li><a class="tag" href="{{lurl (printf "/t/%s" (urlp .Slug))}}">{{.Name}}<span class="n">{{.Count}}</span></a></li>
+      {{end}}
+    </ul>
+  </nav>
+  {{end}}
 </aside>
 {{end}}
 {{end}}

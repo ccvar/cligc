@@ -573,21 +573,23 @@ mark {
 
 /* --- 板块 --------------------------------------------------------------- */
 
-/* 板块导航。贴在站点头部下面，自己一条细横带——它是站点结构，
-   和搜索、语言那些操作不是一类东西，挤进同一行会让两边都变钝。 */
-.sections {
-  border-bottom: 1px solid var(--line);
-  background: var(--bg);
-}
-.sections .wrap {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--s4);
-  padding-block: 0.55rem;
+/* 板块列表在侧栏，和标签并排。竖排而不是标签那样的圆角胶囊：
+   板块是导航（要能一眼扫完有哪几项），标签是集合（挤在一起才看得出疏密）。 */
+.sec-list {
+  list-style: none;
+  margin: 0 0 var(--s5);
+  padding: 0;
   font-size: var(--t-sm);
 }
-.sections a { color: var(--muted); }
-.sections a:hover { color: var(--fg); text-decoration: none; }
+.sec-list li + li { margin-top: 0.3rem; }
+.sec-list a { color: var(--fg-soft); }
+.sec-list a:hover { color: var(--accent); text-decoration: none; }
+.sec-list .n {
+  margin-inline-start: 0.35rem;
+  color: var(--faint);
+  font-size: var(--t-xs);
+  font-variant-numeric: tabular-nums;
+}
 
 /* 文章署名行里的板块标。比标签重一档：它是"这篇属于哪儿"，
    标签是"这篇讲了什么"，前者该先被看到。 */
