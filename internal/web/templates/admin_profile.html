@@ -38,20 +38,22 @@
         <span class="label">{{t "admin.profile.name"}}</span>
         <input type="text" name="name" value="{{$me.Name}}" required>
       </label>
-      {{/* 主页地址只在多作者时出现。单人站上 /u/{slug} 和首页是同一批
-           文章，署名行也不再链过去——留一个没人会走的入口只是噪音。 */}}
+      {{/* 主页地址和简介都只在多作者时出现：它们唯一露面的地方是
+           /u/{slug}，而单人站上那一页和首页是同一批文章、本身 noindex、
+           署名行也不链过去。填一段没有任何页面会显示的简介，比不给这个
+           框更让人困惑——人会以为它出现在某处，然后到处找。 */}}
       {{if $.MultiAuthor}}
       <label class="field">
         <span class="label">{{t "admin.profile.slug"}}</span>
         <input type="text" name="slug" value="{{$me.Slug}}" placeholder="{{t "admin.profile.slugPlace"}}">
         <span class="hint">{{tf "admin.profile.slugHint" (printf "<code>/u/%s</code>" $me.Slug) | safeHTML}}</span>
       </label>
-      {{end}}
       <label class="field">
         <span class="label">{{t "admin.profile.bio"}}</span>
         <textarea name="bio" rows="4" placeholder="{{t "admin.profile.bioPlace"}}">{{$me.Bio}}</textarea>
         <span class="hint">{{t "admin.profile.bioHint"}}</span>
       </label>
+      {{end}}
       <p class="hint">
         {{tf "admin.profile.emailNote" (printf "<code>%s</code>" $me.Email) | safeHTML}}
       </p>

@@ -356,6 +356,10 @@
   "admin.media.pickEmpty": "보관함이 아직 비었습니다. 한 장 올려 보세요.",
   "admin.media.uploading": "올리는 중…",
   "admin.media.uploadErr": "올리지 못했습니다: {0}",
-  "admin.edit.coverNone": "대표 이미지 없음"
+  "admin.edit.coverNone": "대표 이미지 없음",
+  "admin.posts.langLabel": "언어",
+  "admin.posts.allLangs": "모든 언어",
+  "admin.cats.slugShared": "주소는 언어끼리 공유합니다. /c/essays와 /en/c/essays는 같은 섹션입니다. 바꾸면 예전 주소는 끊깁니다.",
+  "admin.cats.langHint": "섹션은 하나의 구조에 언어별 이름이 붙는 것이지, 언어마다 따로 만드는 것이 아닙니다. 아래 탭은 ‘어느 언어의 이름을 넣는가’만 바꿉니다. 주소와 순서는 공유합니다."
  }
 }

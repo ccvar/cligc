@@ -10,23 +10,43 @@
   <details class="create-panel" data-dialog data-title="{{t "admin.cats.new"}}">
   <summary class="btn primary">{{t "admin.cats.new"}}</summary>
   <form method="post" action="{{lurl "/admin/categories"}}">
+    {{range $d.Langs}}
     <label class="field">
-      <span class="label">{{t "admin.cats.name"}}</span>
-      <input type="text" name="name" required>
+      <span class="label">
+        {{t "admin.cats.name"}}
+        {{if gt (len $d.Langs) 1}}<span class="label-lang" lang="{{.Code}}">{{.Name}}</span>{{end}}
+      </span>
+      <input type="text" name="name:{{.Code}}" lang="{{.Code}}" dir="{{.Dir}}"
+             {{if eq .Code $d.Default}}required{{end}}>
     </label>
+    {{end}}
     <label class="field">
       <span class="label">{{t "admin.cats.slug"}}</span>
       <input type="text" name="slug" placeholder="{{t "admin.cats.slugPlace"}}">
+      <span class="hint">{{t "admin.cats.slugShared"}}</span>
     </label>
+    {{range $d.Langs}}
     <label class="field">
-      <span class="label">{{t "admin.cats.desc"}}</span>
-      <textarea name="description" rows="2"></textarea>
-      <span class="hint">{{t "admin.cats.descHint"}}</span>
+      <span class="label">
+        {{t "admin.cats.desc"}}
+        {{if gt (len $d.Langs) 1}}<span class="label-lang" lang="{{.Code}}">{{.Name}}</span>{{end}}
+      </span>
+      <textarea name="description:{{.Code}}" rows="2" lang="{{.Code}}" dir="{{.Dir}}"></textarea>
+      {{if eq .Code $d.Default}}<span class="hint">{{t "admin.cats.descHint"}}</span>{{end}}
     </label>
+    {{end}}
     <button type="submit" class="btn primary">{{t "common.save"}}</button>
   </form>
   </details>
 </div>
+
+{{if and $d.Cats (gt (len $d.Langs) 1)}}
+{{/* 板块是一套结构配多份名字，不是每种语言各一套板块：slug 是共用的，
+     /c/essays 和 /en/c/essays 指的是同一块。所以这里切的只是"现在填
+     哪种语言的名字"，不是切到另一批板块。 */}}
+<p class="hint">{{t "admin.cats.langHint"}}</p>
+<div class="lang-tabs" data-langcells role="tablist" hidden></div>
+{{end}}
 
 {{if $d.Cats}}
 {{/* 排序表单套在整张表外面：拖动只改 DOM 顺序，真正落库要点保存。
@@ -47,15 +67,29 @@
       {{/* 每一行本身就是一张编辑表单：分类总共就几个，为了改个名字
            再跳一个页面不划算。 */}}
       <tr data-id="{{.ID}}">
-        <form method="post" action="{{lurl "/admin/categories"}}" id="cat-{{.ID}}"></form>
         <td class="drag-col">
           <span class="drag-handle" data-drag title="{{t "admin.cats.drag"}}" aria-hidden="true">⠿</span>
           <input form="reorder" type="hidden" name="id" value="{{.ID}}">
         </td>
+        {{$c := .}}
         <td><input form="cat-{{.ID}}" type="hidden" name="id" value="{{.ID}}">
-            <input form="cat-{{.ID}}" type="text" name="name" value="{{.Name}}" required></td>
+            {{range $d.Langs}}
+            <span class="lang-cell" data-langcell="{{.Code}}">
+              <small class="lang-tag" lang="{{.Code}}">{{.Name}}</small>
+              <input form="cat-{{$c.ID}}" type="text" name="name:{{.Code}}"
+                     lang="{{.Code}}" dir="{{.Dir}}"
+                     value="{{index $c.Names .Code}}"
+                     {{if eq .Code $d.Default}}required{{end}}>
+            </span>
+            {{end}}</td>
         <td><input form="cat-{{.ID}}" type="text" name="slug" value="{{.Slug}}"></td>
-        <td><input form="cat-{{.ID}}" type="text" name="description" value="{{.Desc}}"></td>
+        <td>{{range $d.Langs}}
+            <span class="lang-cell" data-langcell="{{.Code}}">
+              <small class="lang-tag" lang="{{.Code}}">{{.Name}}</small>
+              <input form="cat-{{$c.ID}}" type="text" name="description:{{.Code}}"
+                     lang="{{.Code}}" dir="{{.Dir}}" value="{{index $c.Descs .Code}}">
+            </span>
+            {{end}}</td>
         <td class="num"><input form="cat-{{.ID}}" type="number" name="sort" value="{{.Sort}}" class="w-xs"></td>
         <td class="num">
           {{if gt .Count 0}}<a href="{{lurl (printf "/c/%s" (urlp .Slug))}}">{{.Count}}</a>{{else}}—{{end}}
@@ -63,11 +97,8 @@
         <td class="row-actions">
           <button form="cat-{{.ID}}" type="submit" class="icon-btn"
                   aria-label="{{t "common.save"}}" data-tip="{{t "common.save"}}">{{template "icon-check"}}</button>
-          <form method="post" action="{{lurl (printf "/admin/categories/%d/delete" .ID)}}" class="inline"
-                data-confirm="{{t "admin.cats.deleteConfirm"}}">
-            <button type="submit" class="icon-btn danger"
-                    aria-label="{{t "admin.cats.deleteFull"}}" data-tip="{{t "common.delete"}}">{{template "icon-trash"}}</button>
-          </form>
+          <button form="del-{{.ID}}" type="submit" class="icon-btn danger"
+                  aria-label="{{t "admin.cats.deleteFull"}}" data-tip="{{t "common.delete"}}">{{template "icon-trash"}}</button>
         </td>
       </tr>
     {{end}}
@@ -81,6 +112,21 @@
   <button type="submit" class="btn primary">{{t "admin.cats.saveOrder"}}</button>
 </div>
 </form>
+
+{{/* 每一行的编辑表单和删除表单都放在表格外面，行里的控件靠 form=
+     指过来。
+
+     它们本来写在 <tr> 里。HTML 的表格解析规则不允许那个位置出现
+     <form>：外面已经有一张排序表单把"表单指针"占住了，于是这些
+     <form> 开始标签被整个忽略——DOM 里根本没有 id="cat-N" 这个元素，
+     行里的 input.form 全是 null，点保存什么都不会发生。而且页面
+     照常渲染，控制台一声不吭。加拖动排序那次把表格包进 #reorder，
+     就是从那一刻起分类行再也存不下来的。 */}}
+{{range $d.Cats}}
+<form method="post" action="{{lurl "/admin/categories"}}" id="cat-{{.ID}}"></form>
+<form method="post" action="{{lurl (printf "/admin/categories/%d/delete" .ID)}}" id="del-{{.ID}}"
+      data-confirm="{{t "admin.cats.deleteConfirm"}}"></form>
+{{end}}
 {{else}}
   {{template "empty" dict "Big" (t "admin.cats.empty") "Hint" (t "admin.cats.emptyHint")}}
 {{end}}

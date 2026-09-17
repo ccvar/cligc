@@ -362,6 +362,10 @@
   "admin.media.pickEmpty": "La biblioteca está vacía; sube una primero.",
   "admin.media.uploading": "Subiendo…",
   "admin.media.uploadErr": "No se pudo subir: {0}",
-  "admin.edit.coverNone": "Sin portada"
+  "admin.edit.coverNone": "Sin portada",
+  "admin.posts.langLabel": "Idioma",
+  "admin.posts.allLangs": "Todos los idiomas",
+  "admin.cats.slugShared": "El slug se comparte entre idiomas: /c/essays y /en/c/essays son la misma sección. Cambiarlo rompe los enlaces existentes.",
+  "admin.cats.langHint": "Una sección es una sola estructura con un nombre por idioma, no una sección por idioma. Las pestañas de abajo solo cambian a qué idioma le pones nombre; el slug y el orden son comunes."
  }
 }

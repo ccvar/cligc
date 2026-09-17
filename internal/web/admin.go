@@ -41,6 +41,7 @@ func (s *Server) handleAdminList(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	u := userFrom(ctx)
 	status := r.URL.Query().Get("status")
+	lang := r.URL.Query().Get("lang")
 	q := strings.TrimSpace(r.URL.Query().Get("q"))
 	pg := pageParam(r)
 
@@ -50,11 +51,11 @@ func (s *Server) handleAdminList(w http.ResponseWriter, r *http.Request) {
 		scopeUser = u.ID
 	}
 
-	data := map[string]any{"Status": status, "Query": q, "Page": pg}
+	data := map[string]any{"Status": status, "Query": q, "Page": pg, "Lang": lang}
 
 	if q != "" {
 		hits, total, err := s.db.Search(ctx, q, store.SearchFilter{
-			UserID: scopeUser, Status: status,
+			UserID: scopeUser, Status: status, Lang: lang,
 			Limit: s.cfg.PerPage, Offset: (pg - 1) * s.cfg.PerPage,
 		})
 		if err != nil {
@@ -68,7 +69,7 @@ func (s *Server) handleAdminList(w http.ResponseWriter, r *http.Request) {
 		data["Posts"], data["Total"] = posts, total
 	} else {
 		posts, total, err := s.db.ListPosts(ctx, store.ListFilter{
-			Status: status, UserID: scopeUser,
+			Status: status, UserID: scopeUser, Lang: lang,
 			Limit: s.cfg.PerPage, Offset: (pg - 1) * s.cfg.PerPage,
 		})
 		if err != nil {
@@ -86,8 +87,14 @@ func (s *Server) handleAdminList(w http.ResponseWriter, r *http.Request) {
 	data["DailyCap"] = s.cfg.DailyPublishCap
 	data["CapLeft"] = s.cfg.DailyPublishCap - used
 
+	// 语言筛选只在站上真有第二种语言的文章时出现。只写中文的站摆一个
+	// 永远只有一个选项的下拉，是在为一个不存在的问题占地方。
+	if langs, err := s.db.PostLangs(ctx, scopeUser); err == nil && len(langs) > 1 {
+		data["Langs"] = langs
+	}
+
 	total, _ := data["Total"].(int)
-	prev, next := pager("/admin", url.Values{"q": {q}, "status": {status}},
+	prev, next := pager("/admin", url.Values{"q": {q}, "status": {status}, "lang": {lang}},
 		pg, s.cfg.PerPage, total)
 
 	s.render(w, r, "admin_list.html", page{
@@ -197,10 +204,13 @@ func (s *Server) transCandidates(r *http.Request, p *store.Post) []transCandidat
 	return out
 }
 
-// cats 取分类列表给模板用。取不到就当没有分类——分类是可选的，
+// cats 取板块列表给编辑器的下拉用。取不到就当没有板块——板块是可选的，
 // 它挂了不该让整个编辑页打不开。
+//
+// 用后台那一份而不是按当前语言的：下拉里要列出**全部**板块，包括这个
+// 语言下还一篇都没有的那些——不然给一篇英文文章根本选不到刚建的板块。
 func (s *Server) cats(r *http.Request) []store.Category {
-	c, err := s.db.ListCategories(r.Context())
+	c, err := s.db.ListCategoriesAdmin(r.Context(), i18n.Default().Code)
 	if err != nil {
 		return nil
 	}

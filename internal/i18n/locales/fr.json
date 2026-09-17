@@ -362,6 +362,10 @@
   "admin.media.pickEmpty": "La bibliothèque est encore vide — envoie-en une.",
   "admin.media.uploading": "Envoi…",
   "admin.media.uploadErr": "Échec de l’envoi : {0}",
-  "admin.edit.coverNone": "Sans couverture"
+  "admin.edit.coverNone": "Sans couverture",
+  "admin.posts.langLabel": "Langue",
+  "admin.posts.allLangs": "Toutes les langues",
+  "admin.cats.slugShared": "Le slug est commun à toutes les langues : /c/essays et /en/c/essays désignent la même rubrique. Le changer casse les liens existants.",
+  "admin.cats.langHint": "Une rubrique, c’est une seule structure avec un nom par langue, pas une rubrique par langue. Les onglets ci-dessous changent seulement la langue que tu nommes ; le slug et l’ordre sont communs."
  }
 }

@@ -21,8 +21,18 @@ func (s *Server) handleProfileSave(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	u := userFrom(r.Context())
+	// 单人站上"主页地址"和"简介"这两个框根本没渲染出来，表单里也就没有
+	// 这两个字段。直接拿 FormValue 会得到空串，于是保存一次显示名就把
+	// 简介抹掉、slug 按新名字重算一遍——旧的 /u/xxx 从此 404，而页面上
+	// 没有任何地方提示发生了这件事。
+	keep := func(field, cur string) string {
+		if r.Form.Has(field) {
+			return r.FormValue(field)
+		}
+		return cur
+	}
 	if _, err := s.db.UpdateUser(r.Context(), u.ID,
-		r.FormValue("name"), r.FormValue("bio"), r.FormValue("slug")); err != nil {
+		r.FormValue("name"), keep("bio", u.Bio), keep("slug", u.Slug)); err != nil {
 		redirectFlash(w, r, "/admin/profile", s.tr(r, "flash.saveFailed", err.Error()))
 		return
 	}

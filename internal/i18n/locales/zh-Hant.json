@@ -356,6 +356,10 @@
   "admin.media.pickEmpty": "媒體庫還是空的，先傳一張。",
   "admin.media.uploading": "上傳中…",
   "admin.media.uploadErr": "上傳失敗：{0}",
-  "admin.edit.coverNone": "無封面"
+  "admin.edit.coverNone": "無封面",
+  "admin.posts.langLabel": "語言",
+  "admin.posts.allLangs": "全部語言",
+  "admin.cats.slugShared": "網址在各語言之間是共用的：/c/essays 和 /en/c/essays 指的是同一塊。改了之後舊網址會失效。",
+  "admin.cats.langHint": "版塊是一套結構配多份名字，不是每種語言各建一套。下面切的只是「現在填哪種語言的名字」，網址和順序是共用的。"
  }
 }

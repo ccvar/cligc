@@ -146,7 +146,12 @@ func (s *Server) handleListPosts(w http.ResponseWriter, r *http.Request) {
 
 	if q := strings.TrimSpace(r.URL.Query().Get("q")); q != "" {
 		hits, total, err := s.db.Search(ctx, q, store.SearchFilter{
-			UserID: userID, Status: status, Limit: limit, Offset: offset,
+			UserID: userID, Status: status,
+			// 和下面浏览那条路一致：给了 lang 就限定，不给就跨语言。
+			// 两条路对同一个参数的反应不一样，是最难查的那种不一致——
+			// 加个 q 就悄悄变成全语言，而调用方以为自己一直限定着。
+			Lang:  r.URL.Query().Get("lang"),
+			Limit: limit, Offset: offset,
 		})
 		if err != nil {
 			fail(w, err)

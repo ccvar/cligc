@@ -429,12 +429,21 @@ func (d *DB) PublishedToday(ctx context.Context, userID int64) (int, error) {
 const postCols = `p.id,p.user_id,p.slug,p.title,p.summary,p.body_md,p.body_html,p.status,p.source,
 	p.indexable,p.canonical_url,p.word_count,p.created_at,p.updated_at,p.published_at,p.featured_at,
 	p.toc_json,p.lang,p.translation_key,p.publish_at,u.name,u.slug,
-	p.category_id,coalesce(c.slug,''),coalesce(c.name,''),` + coverCols
+	p.category_id,coalesce(c.slug,''),` + catName + `,` + coverCols
 
 const postColsList = `p.id,p.user_id,p.slug,p.title,p.summary,'' as body_md,'' as body_html,p.status,p.source,
 	p.indexable,p.canonical_url,p.word_count,p.created_at,p.updated_at,p.published_at,p.featured_at,
 	'' as toc_json,p.lang,p.translation_key,p.publish_at,u.name,u.slug,
-	p.category_id,coalesce(c.slug,''),coalesce(c.name,''),` + coverCols
+	p.category_id,coalesce(c.slug,''),` + catName + `,` + coverCols
+
+// catName 取板块名，按**这篇文章自己的语言**解析。
+//
+// 不是按页面的语言：一篇文章只有一种语言，也只会出现在那种语言的页面上，
+// 所以 p.lang 就是答案——顺带这个 join 不需要额外的参数，每个取文章的
+// 查询都白拿这个能力。
+//
+// 漏掉它的表现是：英文首页上的文章卡片，板块标签写着「随笔」。
+const catName = `coalesce(nullif(ct.name,''), c.name, '')`
 
 // coverCols 是封面那几列。列表页也要它——卡片上就是靠它出图。
 const coverCols = `p.cover_media_id,p.cover_alt,
@@ -446,6 +455,7 @@ const coverCols = `p.cover_media_id,p.cover_alt,
 const postFrom = ` from posts p
 	join users u on u.id=p.user_id
 	left join categories c on c.id=p.category_id
+	left join category_i18n ct on ct.category_id=p.category_id and ct.lang=p.lang
 	left join media m on m.id=p.cover_media_id`
 
 func scanPost(sc interface{ Scan(...any) error }) (*Post, error) {
@@ -1062,6 +1072,36 @@ func (d *DB) CountByLang(ctx context.Context) (map[string]int, error) {
 			return nil, err
 		}
 		out[l] = n
+	}
+	return out, rows.Err()
+}
+
+// PostLangs 返回后台列表里实际出现过的语言，按词表顺序无关的字母序。
+// userID 为 0 表示全站（管理员视角）。
+//
+// 和"站点启用了哪些语言"不是一回事：筛选器要列的是**选了能筛出东西**的
+// 那些值。一个只有中文文章的站，下拉里摆着十种语言，选哪个都是空列表。
+// 反过来，某个语言后来被关掉了，它的文章还在库里，也得能筛出来。
+func (d *DB) PostLangs(ctx context.Context, userID int64) ([]string, error) {
+	q := `select distinct lang from posts`
+	var args []any
+	if userID > 0 {
+		q += ` where user_id=?`
+		args = append(args, userID)
+	}
+	q += ` order by lang`
+	rows, err := d.R.QueryContext(ctx, q, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var out []string
+	for rows.Next() {
+		var l string
+		if err := rows.Scan(&l); err != nil {
+			return nil, err
+		}
+		out = append(out, l)
 	}
 	return out, rows.Err()
 }

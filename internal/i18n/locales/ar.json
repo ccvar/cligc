@@ -390,6 +390,10 @@
   "admin.media.pickEmpty": "المكتبة فارغة بعد — ارفع واحدة أولًا.",
   "admin.media.uploading": "جارٍ الرفع…",
   "admin.media.uploadErr": "تعذّر الرفع: {0}",
-  "admin.edit.coverNone": "بلا غلاف"
+  "admin.edit.coverNone": "بلا غلاف",
+  "admin.posts.langLabel": "اللغة",
+  "admin.posts.allLangs": "كل اللغات",
+  "admin.cats.slugShared": "‏العنوان مشترك بين اللغات: فـ /c/essays و /en/c/essays قسم واحد. وتغييره يقطع الروابط القائمة.",
+  "admin.cats.langHint": "القسم بنية واحدة لها اسم في كل لغة، لا قسم مستقل لكل لغة. وألسنة التبويب أدناه تبدّل اللغة التي تسمّي بها فحسب؛ أما العنوان والترتيب فمشتركان."
  }
 }

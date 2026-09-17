@@ -356,6 +356,10 @@
   "admin.media.pickEmpty": "ライブラリはまだ空です。まず一枚どうぞ。",
   "admin.media.uploading": "アップロード中…",
   "admin.media.uploadErr": "アップロードに失敗しました：{0}",
-  "admin.edit.coverNone": "カバーなし"
+  "admin.edit.coverNone": "カバーなし",
+  "admin.posts.langLabel": "言語",
+  "admin.posts.allLangs": "すべての言語",
+  "admin.cats.slugShared": "アドレスは言語をまたいで共通です。/c/essays と /en/c/essays は同じ区分を指します。変えると古いアドレスは切れます。",
+  "admin.cats.langHint": "区分は一つの構成に言語ごとの名前が付くもので、言語ごとに別の区分を作るわけではありません。下の切り替えは「どの言語の名前を入れるか」だけで、アドレスと並び順は共通です。"
  }
 }

@@ -386,7 +386,15 @@ func (s *Server) render(w http.ResponseWriter, r *http.Request, name string, p p
 	// 语言前缀已经被 WithLang 剥掉，这里看到的是规范化后的路径。
 	p.IsAdmin = isAdminPath(r.URL.Path)
 	if !p.IsAdmin {
-		p.Categories, _ = s.db.ListCategories(r.Context())
+		// 侧栏只列**当前语言下有文章**的板块。全站口径的话，英文站的侧栏
+		// 会写着"随笔 9"，点进去一篇都没有——那比不显示这个板块更糟。
+		if cats, err := s.db.ListCategories(r.Context(), lang.Code); err == nil {
+			for _, c := range cats {
+				if c.Count > 0 {
+					p.Categories = append(p.Categories, c)
+				}
+			}
+		}
 	}
 
 	// 站名就是光秃秃一个 cligc 时，按界面语言补上本地文字的副名。
@@ -454,6 +462,15 @@ func (s *Server) funcs(lang i18n.Lang) template.FuncMap {
 		// 切换器只列站点实际提供的语言。ReadyLanguages 是"翻译够完整"，
 		// 和"这个站对外提供它"是两回事——前者是词表的属性，后者是站长的决定。
 		"langs": func() []i18n.Lang { return s.enabledLangs(context.Background()) },
+
+		// langName 把 zh-Hans 这样的代码换成"中文"。认不出的原样返回——
+		// 库里可能留着某个已经不在词表里的语言的文章。
+		"langName": func(code string) string {
+			if l, ok := i18n.ByCode(code); ok {
+				return l.Name
+			}
+			return code
+		},
 
 		"itoa":     strconv.Itoa,
 		"itoa64":   func(n int64) string { return strconv.FormatInt(n, 10) },

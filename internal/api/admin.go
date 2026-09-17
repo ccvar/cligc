@@ -12,6 +12,7 @@ import (
 	"strings"
 	"time"
 
+	"cligc.com/internal/i18n"
 	"cligc.com/internal/store"
 )
 
@@ -332,8 +333,23 @@ func pathID(w http.ResponseWriter, r *http.Request, what string) (int64, bool) {
 
 // --- 分类 ---
 
+// categoryReq 是新建/修改板块的请求体。
+//
+// names / descriptions 按语言给，key 是语言代码。板块是一套结构配多份
+// 名字，不是每种语言各一套板块——slug 是共用的，/c/essays 和
+// /en/c/essays 指的是同一块。
+type categoryReq struct {
+	Name  string            `json:"name"` // 默认语言那一份的简写
+	Slug  string            `json:"slug"`
+	Desc  string            `json:"description"`
+	Sort  int               `json:"sort"`
+	Names map[string]string `json:"names"`
+	Descs map[string]string `json:"descriptions"`
+}
+
 func (s *Server) handleListCategories(w http.ResponseWriter, r *http.Request) {
-	cats, err := s.db.ListCategories(r.Context())
+	def := i18n.Default().Code
+	cats, err := s.db.ListCategoriesAdmin(r.Context(), def)
 	if err != nil {
 		fail(w, err)
 		return
@@ -342,28 +358,55 @@ func (s *Server) handleListCategories(w http.ResponseWriter, r *http.Request) {
 	for _, c := range cats {
 		out = append(out, map[string]any{
 			"id": c.ID, "slug": c.Slug, "name": c.Name, "description": c.Desc,
+			"names": c.Names, "descriptions": c.Descs,
 			"sort": c.Sort, "published": c.Count,
 		})
 	}
 	writeJSON(w, http.StatusOK, map[string]any{
-		"categories": out,
+		"categories":      out,
+		"default_lang":    def,
+		"published_count": "across all languages",
 		"note": "Categories are the site's sections: few, stable, one per post. " +
-			"Tags are the other dimension — many, flat, several per post. Don't mix them.",
+			"Tags are the other dimension — many, flat, several per post. Don't mix them. " +
+			"A category is one section with a name per language, not one section per language: " +
+			"the slug is shared, so /c/essays and /en/c/essays are the same section.",
 	})
 }
 
-func (s *Server) handleCreateCategory(w http.ResponseWriter, r *http.Request) {
-	var in struct {
-		Name string `json:"name"`
-		Slug string `json:"slug"`
-		Desc string `json:"description"`
-		Sort int    `json:"sort"`
+// catInput 把请求体摊成 store 要的形状。
+//
+// name/description 是默认语言那一份的简写——绝大多数站只有一种语言，
+// 让它们为了填一个板块名去构造一个 map 是没道理的。
+func catInput(name, slug, desc string, sort int,
+	names, descs map[string]string) store.CategoryInput {
+	def := i18n.Default().Code
+	in := store.CategoryInput{
+		Slug: slug, Sort: sort, DefaultLang: def,
+		Names: map[string]string{}, Descs: map[string]string{},
 	}
+	for k, v := range names {
+		in.Names[k] = v
+	}
+	for k, v := range descs {
+		in.Descs[k] = v
+	}
+	if name != "" || in.Names[def] == "" {
+		in.Names[def] = name
+	}
+	if desc != "" || in.Descs[def] == "" {
+		in.Descs[def] = desc
+	}
+	return in
+}
+
+func (s *Server) handleCreateCategory(w http.ResponseWriter, r *http.Request) {
+	var in categoryReq
 	if err := json.NewDecoder(r.Body).Decode(&in); err != nil {
 		badRequest(w, "body must be JSON")
 		return
 	}
-	c, err := s.db.CreateCategory(r.Context(), in.Name, in.Slug, in.Desc, in.Sort)
+	c, err := s.db.CreateCategory(r.Context(),
+		catInput(in.Name, in.Slug, in.Desc, in.Sort, in.Names, in.Descs))
 	if err != nil {
 		fail(w, err)
 		return
@@ -377,22 +420,18 @@ func (s *Server) handleUpdateCategory(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	var in struct {
-		Name string `json:"name"`
-		Slug string `json:"slug"`
-		Desc string `json:"description"`
-		Sort int    `json:"sort"`
-	}
+	var in categoryReq
 	if err := json.NewDecoder(r.Body).Decode(&in); err != nil {
 		badRequest(w, "body must be JSON")
 		return
 	}
-	if err := s.db.UpdateCategory(r.Context(), id, in.Name, in.Slug, in.Desc, in.Sort); err != nil {
+	if err := s.db.UpdateCategory(r.Context(), id,
+		catInput(in.Name, in.Slug, in.Desc, in.Sort, in.Names, in.Descs)); err != nil {
 		fail(w, err)
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]any{"id": id, "name": in.Name, "slug": in.Slug,
-		"description": in.Desc, "sort": in.Sort})
+		"description": in.Desc, "names": in.Names, "descriptions": in.Descs, "sort": in.Sort})
 }
 
 func (s *Server) handleDeleteCategory(w http.ResponseWriter, r *http.Request) {

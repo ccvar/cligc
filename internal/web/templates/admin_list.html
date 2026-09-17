@@ -38,6 +38,14 @@
     <option value="published" {{if eq $d.Status "published"}}selected{{end}}>{{t "status.published"}}</option>
     <option value="archived" {{if eq $d.Status "archived"}}selected{{end}}>{{t "status.archived"}}</option>
   </select>
+  {{if $d.Langs}}
+  <select name="lang" aria-label="{{t "admin.posts.langLabel"}}">
+    <option value="" {{if eq $d.Lang ""}}selected{{end}}>{{t "admin.posts.allLangs"}}</option>
+    {{range $d.Langs}}
+    <option value="{{.}}" lang="{{.}}" {{if eq . $d.Lang}}selected{{end}}>{{langName .}}</option>
+    {{end}}
+  </select>
+  {{end}}
   <button type="submit" class="btn">{{t "common.filter"}}</button>
 </form>
 

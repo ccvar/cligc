@@ -344,7 +344,11 @@
   "admin.media.pickEmpty": "媒体库还是空的，先传一张。",
   "admin.media.uploading": "上传中…",
   "admin.media.uploadErr": "上传失败：{0}",
-  "admin.edit.coverNone": "无封面"
+  "admin.edit.coverNone": "无封面",
+  "admin.posts.langLabel": "语言",
+  "admin.posts.allLangs": "全部语言",
+  "admin.cats.slugShared": "地址在各语言之间是共用的：/c/essays 和 /en/c/essays 指的是同一块。改了之后旧地址会失效。",
+  "admin.cats.langHint": "板块是一套结构配多份名字，不是每种语言各建一套。下面切的只是「现在填哪种语言的名字」，地址和顺序是共用的。"
  },
  "name": "中文"
 }

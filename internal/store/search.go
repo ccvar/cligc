@@ -49,6 +49,10 @@ func (d *DB) Search(ctx context.Context, q string, f SearchFilter) ([]SearchHit,
 		cond = append(cond, "p.user_id=?")
 		args = append(args, f.UserID)
 	}
+	if f.Lang != "" {
+		cond = append(cond, "p.lang=?")
+		args = append(args, f.Lang)
+	}
 	where := strings.Join(cond, " and ")
 
 	var total int
@@ -68,6 +72,7 @@ func (d *DB) Search(ctx context.Context, q string, f SearchFilter) ([]SearchHit,
 		   join posts p on p.id=post_fts.rowid
 		   join users u on u.id=p.user_id
 		   left join categories c on c.id=p.category_id
+		   left join category_i18n ct on ct.category_id=p.category_id and ct.lang=p.lang
 		   left join media m on m.id=p.cover_media_id
 		  where `+where+`
 		  order by post_fts.rank

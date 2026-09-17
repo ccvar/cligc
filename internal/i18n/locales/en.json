@@ -358,7 +358,11 @@
   "admin.media.pickEmpty": "Nothing in the library yet — upload one first.",
   "admin.media.uploading": "Uploading…",
   "admin.media.uploadErr": "Upload failed: {0}",
-  "admin.edit.coverNone": "No cover"
+  "admin.edit.coverNone": "No cover",
+  "admin.posts.langLabel": "Language",
+  "admin.posts.allLangs": "All languages",
+  "admin.cats.slugShared": "The slug is shared across languages: /c/essays and /en/c/essays are the same section. Changing it breaks existing links.",
+  "admin.cats.langHint": "A section is one structure with a name per language, not one section per language. The tabs below only switch which language you are naming — the slug and the order are shared."
  },
  "name": "English"
 }

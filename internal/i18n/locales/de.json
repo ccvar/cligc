@@ -362,6 +362,10 @@
   "admin.media.pickEmpty": "Die Mediathek ist noch leer – lade zuerst eines hoch.",
   "admin.media.uploading": "Wird hochgeladen…",
   "admin.media.uploadErr": "Hochladen fehlgeschlagen: {0}",
-  "admin.edit.coverNone": "Kein Titelbild"
+  "admin.edit.coverNone": "Kein Titelbild",
+  "admin.posts.langLabel": "Sprache",
+  "admin.posts.allLangs": "Alle Sprachen",
+  "admin.cats.slugShared": "Der Slug ist für alle Sprachen derselbe: /c/essays und /en/c/essays meinen denselben Bereich. Ihn zu ändern bricht bestehende Links.",
+  "admin.cats.langHint": "Ein Bereich ist eine Struktur mit je einem Namen pro Sprache, nicht ein Bereich je Sprache. Die Reiter unten wechseln nur, welche Sprache du gerade benennst – Slug und Reihenfolge sind gemeinsam."
  }
 }

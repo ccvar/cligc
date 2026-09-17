@@ -362,6 +362,10 @@
   "admin.media.pickEmpty": "A biblioteca ainda está vazia — envie uma primeiro.",
   "admin.media.uploading": "Enviando…",
   "admin.media.uploadErr": "Falha ao enviar: {0}",
-  "admin.edit.coverNone": "Sem capa"
+  "admin.edit.coverNone": "Sem capa",
+  "admin.posts.langLabel": "Idioma",
+  "admin.posts.allLangs": "Todos os idiomas",
+  "admin.cats.slugShared": "O slug é comum a todos os idiomas: /c/essays e /en/c/essays são a mesma seção. Mudá-lo quebra os links existentes.",
+  "admin.cats.langHint": "Uma seção é uma estrutura só, com um nome por idioma — não uma seção por idioma. As abas abaixo mudam apenas qual idioma você está nomeando; o slug e a ordem são compartilhados."
  }
 }

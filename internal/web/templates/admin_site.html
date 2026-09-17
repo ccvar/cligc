@@ -43,9 +43,13 @@
   <h2 class="section-title">{{t "admin.site.basicSection"}}</h2>
   <p class="hint multilang-only">{{t "admin.site.copyHint"}}</p>
 
+  {{/* 标签条由 JS 按"当前开着哪几种语言"生成。关掉 JS 时它不出现，
+       下面的几块就原样竖着排——每块自带语言小标题，读得通。 */}}
+  <div class="lang-tabs multilang-only" data-langtabs role="tablist" hidden></div>
+
   {{range $d.Langs}}
   {{if .Ready}}
-  <section class="sitecopy" data-langblock="{{.Code}}"
+  <section class="sitecopy" data-langblock="{{.Code}}" data-langname="{{.Name}}"
            {{if not ($s.LangEnabled .Code $def)}}data-langoff{{end}}>
     <h3 class="sitecopy-head">
       <span lang="{{.Code}}" dir="{{.Dir}}">{{.Name}}</span>

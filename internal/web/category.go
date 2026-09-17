@@ -5,6 +5,7 @@ import (
 	"net/url"
 	"strconv"
 
+	"cligc.com/internal/i18n"
 	"cligc.com/internal/store"
 )
 
@@ -15,12 +16,14 @@ import (
 // 让读者知道"这个站分几块"，而不是让搜索引擎多抓几个列表页。
 func (s *Server) handleCategory(w http.ResponseWriter, r *http.Request) {
 	slug := r.PathValue("slug")
-	c, err := s.db.CategoryBySlug(r.Context(), slug)
+	lang := LangFrom(r.Context())
+	// 板块名按当前语言解析：一个叫「随笔」的板块，在英文站上标题写着
+	// 「随笔」，那一页的 <title> 和面包屑就都是没人看得懂的。
+	c, err := s.db.CategoryBySlug(r.Context(), slug, lang.Code)
 	if err != nil {
 		s.renderError(w, r, http.StatusNotFound, s.tr(r, "err.notFound"))
 		return
 	}
-	lang := LangFrom(r.Context())
 	pg := pageParam(r)
 	posts, total, err := s.db.ListPosts(r.Context(), store.ListFilter{
 		Status: store.StatusPublished, CategorySlug: c.Slug, Lang: lang.Code,
@@ -49,7 +52,8 @@ func (s *Server) handleCategory(w http.ResponseWriter, r *http.Request) {
 // --- 后台 ---
 
 func (s *Server) handleCategories(w http.ResponseWriter, r *http.Request) {
-	cats, err := s.db.ListCategories(r.Context())
+	def := i18n.Default().Code
+	cats, err := s.db.ListCategoriesAdmin(r.Context(), def)
 	if err != nil {
 		s.renderError(w, r, http.StatusInternalServerError, s.tr(r, "err.internal"))
 		return
@@ -57,7 +61,13 @@ func (s *Server) handleCategories(w http.ResponseWriter, r *http.Request) {
 	s.render(w, r, "admin_categories.html", page{
 		Title: s.tr(r, "admin.cats.title"), NoIndex: true, Wide: true, AdminTab: "categories",
 		Flash: r.URL.Query().Get("flash"),
-		Data:  map[string]any{"Cats": cats},
+		Data: map[string]any{
+			"Cats": cats,
+			// 译名只给**对外提供**的语言留格子：站上不开日文，却要人填
+			// 一份日文板块名，那份名字没有任何页面会用到。
+			"Langs":   s.enabledLangs(r.Context()),
+			"Default": def,
+		},
 	})
 }
 
@@ -67,13 +77,29 @@ func (s *Server) handleCategorySave(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	sort, _ := strconv.Atoi(r.FormValue("sort"))
-	name, slug := r.FormValue("name"), r.FormValue("slug")
+	in := store.CategoryInput{
+		Slug: r.FormValue("slug"), Sort: sort, DefaultLang: i18n.Default().Code,
+		Names: map[string]string{}, Descs: map[string]string{},
+	}
+	// 表单里按语言的字段叫 name:en / description:en。只认对外提供的
+	// 那几种语言——多出来的键是客户端瞎填的，不该进库。
+	for _, l := range s.enabledLangs(r.Context()) {
+		in.Names[l.Code] = r.FormValue("name:" + l.Code)
+		in.Descs[l.Code] = r.FormValue("description:" + l.Code)
+	}
+	// 只有一种语言时表单不带前缀，走简写字段。
+	if v := r.FormValue("name"); v != "" {
+		in.Names[in.DefaultLang] = v
+	}
+	if v := r.FormValue("description"); v != "" {
+		in.Descs[in.DefaultLang] = v
+	}
 
 	var err error
 	if id, _ := strconv.ParseInt(r.FormValue("id"), 10, 64); id > 0 {
-		err = s.db.UpdateCategory(r.Context(), id, name, slug, r.FormValue("description"), sort)
+		err = s.db.UpdateCategory(r.Context(), id, in)
 	} else {
-		_, err = s.db.CreateCategory(r.Context(), name, slug, r.FormValue("description"), sort)
+		_, err = s.db.CreateCategory(r.Context(), in)
 	}
 	if err != nil {
 		redirectFlash(w, r, "/admin/categories", s.tr(r, "flash.saveFailed", err.Error()))

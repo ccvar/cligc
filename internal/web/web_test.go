@@ -1005,8 +1005,16 @@ func TestNonDefaultUILanguageHasNoChineseChrome(t *testing.T) {
 	}
 }
 
-// langOptionRE 匹配语言切换器里的选项：带 lang 属性的 <a>。
-var langOptionRE = regexp.MustCompile(`(?s)<a[^>]*\blang="[^"]*"[^>]*>.*?</a>`)
+// langOptionRE 匹配"用某种语言写的、标注了 lang 的一小段文字"。
+//
+// 原来只认语言切换器里的 <a>。但"这一段是那个语言自己的说法"这件事
+// 不止出现在切换器里——后台的语言筛选下拉、按语言分的设置标签页，
+// 列的都是「中文 / 日本語 / العربية」，换成英文反而没法用。
+//
+// 判据就用 HTML 自己的那个：带 lang 属性的元素，里面本来就该是那个
+// 语言的文字。标签名限定在这几个行内元素上——不能放开到任意标签，
+// 否则会匹配到 <html lang="en"> 而把整页抹掉，测试从此永远是绿的。
+var langOptionRE = regexp.MustCompile(`(?s)<(a|option|span|button)[^>]*\blang="[^"]*"[^>]*>.*?</(?:a|option|span|button)>`)
 
 // chineseRunContext 把漏网的那串中文连同前后文摘出来，方便一眼看出是哪处。
 func chineseRunContext(body string, first rune) string {

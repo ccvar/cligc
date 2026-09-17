@@ -653,3 +653,58 @@ table.data.cats td { white-space: normal; }
   border-color: var(--accent);
   transform: translateY(-1px);
 }
+
+/* --- 站点文案的语言标签页 --- */
+
+/* 和后台顶部那排标签同一套长相：站长在一个页面里看到两种不同的标签
+   条，会以为它们是两种不同的东西。 */
+.lang-tabs {
+  display: flex;
+  gap: var(--s4);
+  flex-wrap: wrap;
+  margin-bottom: var(--s4);
+  border-bottom: 1px solid var(--line);
+  font-size: var(--t-ui);
+}
+.lang-tabs button {
+  padding: 0.25rem 0 0.6rem;
+  color: var(--muted);
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  cursor: pointer;
+  transition: color 0.15s var(--ease), border-color 0.15s var(--ease);
+}
+.lang-tabs button:hover { color: var(--fg); }
+.lang-tabs button.on { color: var(--fg); border-bottom-color: var(--accent); }
+
+/* 分页之后语言小标题就多余了——标签条上已经写着现在是哪一种。 */
+.sitecopy.is-hidden { display: none; }
+.settings:has(.lang-tabs:not([hidden])) .sitecopy {
+  border-inline-start: none;
+  padding-inline-start: 0;
+}
+.settings:has(.lang-tabs:not([hidden])) .sitecopy-head { display: none; }
+
+/* 分类表格里按语言的那一对格子。JS 在时只留当前标签那一种；
+   关掉 JS 就竖着排，每格上面标着是哪种语言。 */
+.lang-cell { display: block; }
+.lang-cell + .lang-cell { margin-top: var(--s2); }
+.lang-cell.is-hidden { display: none; }
+.lang-tag {
+  display: block;
+  font-size: var(--t-xs);
+  color: var(--muted);
+  margin-bottom: 1px;
+}
+/* 标签条接管之后就不用再逐格标语言了——上面写着呢。 */
+body:has(.lang-tabs[data-langcells]:not([hidden])) .lang-tag { display: none; }
+
+/* 新建面板里按语言的字段，标签后面缀一个语种名 */
+.label-lang {
+  margin-inline-start: 0.4rem;
+  font-weight: 400;
+  color: var(--muted);
+  font-size: var(--t-xs);
+}

@@ -101,6 +101,23 @@ create table if not exists categories (
   sort integer not null default 0
 );
 
+-- 板块名的其它语言版本。
+--
+-- 板块是站点的**结构**（这个站分几块），结构在各语言之间是同一套，
+-- 只有名字要翻译——所以是一个板块配多份名字，而不是每种语言各建一套
+-- 板块。后者会让 /c/essays 和 /en/c/essays 变成互不相干的两个东西，
+-- 在板块页上切语言也就没地方可去了。
+--
+-- 只存非默认语言。默认语言那一份仍然在 categories.name 上，取值时
+-- 先找这张表、找不到退回去——和站名的处理是同一套路，也省掉一次迁移。
+create table if not exists category_i18n (
+  category_id integer not null references categories(id) on delete cascade,
+  lang        text    not null,
+  name        text    not null default '',
+  description text    not null default '',
+  primary key (category_id, lang)
+);
+
 create table if not exists post_tags (
   post_id integer not null references posts(id) on delete cascade,
   tag_id  integer not null references tags(id)  on delete cascade,

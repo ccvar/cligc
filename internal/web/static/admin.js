@@ -368,4 +368,104 @@
       });
     }
   }
+
+  // 7. 站点设置：按语言分的标签页。
+  //
+  // 开三种语言就是六个输入框竖着排，中间还夹着语言小标题——要改英文
+  // 那两格得先滚过中文那两格。标签条让每次只出现一种语言的那一份。
+  //
+  // 注意不能写进上面那段选图的 if (picker) {} 里：站点设置页没有选图
+  // 弹窗，picker 是 null，整块就一次都不会跑。
+  const tabs = document.querySelector('[data-langtabs]');
+  if (tabs) {
+    const blocks = () => [...document.querySelectorAll('.sitecopy:not([data-langoff])')];
+    let active = null;
+
+    const show = (code) => {
+      active = code;
+      for (const b of blocks()) {
+        b.classList.toggle('is-hidden', b.dataset.langblock !== code);
+      }
+      for (const t of tabs.children) {
+        const on = t.dataset.tab === code;
+        t.classList.toggle('on', on);
+        t.setAttribute('aria-selected', on ? 'true' : 'false');
+      }
+    };
+
+    const build = () => {
+      const list = blocks();
+      // 只有一种语言时不需要标签条，也不该把那一块藏起来。
+      if (list.length < 2) {
+        tabs.hidden = true;
+        tabs.replaceChildren();
+        for (const b of list) b.classList.remove('is-hidden');
+        active = null;
+        return;
+      }
+      tabs.hidden = false;
+      tabs.replaceChildren(...list.map((b) => {
+        const t = document.createElement('button');
+        t.type = 'button';
+        t.dataset.tab = b.dataset.langblock;
+        t.setAttribute('role', 'tab');
+        t.lang = b.dataset.langblock;
+        t.textContent = b.dataset.langname || b.dataset.langblock;
+        t.addEventListener('click', () => show(t.dataset.tab));
+        return t;
+      }));
+      // 原来停在哪一页就还停在哪一页；那一页没了才回到第一页。
+      show(list.some((b) => b.dataset.langblock === active)
+        ? active : list[0].dataset.langblock);
+    };
+
+    build();
+    // 勾选语言会增减块，标签条要跟着重建——在选图那段的 change 之后跑。
+    for (const cb of document.querySelectorAll('[data-langpick]')) {
+      cb.addEventListener('change', () => {
+        build();
+        if (cb.checked) show(cb.value);
+      });
+    }
+  }
+
+  // 8. 分类表格：同一条标签条，切的是"现在填哪种语言的名字"。
+  //
+  // 和上面那段共用 .lang-tabs 的长相，但驱动的东西不一样：那边是整块
+  // 显示/隐藏，这边是表格里每行的一对格子。关掉 JS 时所有语言的格子
+  // 竖着排，每个上面标着语言名——窄了点，但能用。
+  const cellTabs = document.querySelector('[data-langcells]');
+  if (cellTabs) {
+    const codes = [...new Set([...document.querySelectorAll('[data-langcell]')]
+      .map((c) => c.dataset.langcell))];
+    if (codes.length > 1) {
+      const nameOf = (code) => {
+        const tag = document.querySelector(`[data-langcell="${code}"] .lang-tag`);
+        return tag ? tag.textContent : code;
+      };
+      const show = (code) => {
+        for (const c of document.querySelectorAll('[data-langcell]')) {
+          c.classList.toggle('is-hidden', c.dataset.langcell !== code);
+        }
+        for (const t of cellTabs.children) {
+          const on = t.dataset.tab === code;
+          t.classList.toggle('on', on);
+          t.setAttribute('aria-selected', on ? 'true' : 'false');
+        }
+      };
+      cellTabs.hidden = false;
+      cellTabs.replaceChildren(...codes.map((code) => {
+        const t = document.createElement('button');
+        t.type = 'button';
+        t.dataset.tab = code;
+        t.setAttribute('role', 'tab');
+        t.lang = code;
+        t.textContent = nameOf(code);
+        t.addEventListener('click', () => show(code));
+        return t;
+      }));
+      show(codes[0]);
+    }
+  }
+
 })();

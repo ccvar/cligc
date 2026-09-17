@@ -961,7 +961,11 @@ func TestCategoryIsNavigationNotOwnership(t *testing.T) {
 	}
 	a := Actor{UserID: u.ID}
 
-	cat, err := d.CreateCategory(ctx, "随笔", "", "随笔与杂记", 1)
+	cat, err := d.CreateCategory(ctx, CategoryInput{
+		Sort: 1, DefaultLang: "zh-Hans",
+		Names: map[string]string{"zh-Hans": "随笔"},
+		Descs: map[string]string{"zh-Hans": "随笔与杂记"},
+	})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -986,13 +990,13 @@ func TestCategoryIsNavigationNotOwnership(t *testing.T) {
 	}
 
 	// 分类计数只算已发布的：导航上写着"随笔 3"点进去只有 1 篇，比不显示更糟
-	cats, _ := d.ListCategories(ctx)
+	cats, _ := d.ListCategories(ctx, "zh-Hans")
 	if len(cats) != 1 || cats[0].Count != 1 {
 		t.Fatalf("分类计数不对：%+v", cats)
 	}
 	draft, _ := d.CreatePost(ctx, a, CreatePostInput{
 		Title: "草稿", BodyMD: "正文", CategorySlug: cat.Slug})
-	cats, _ = d.ListCategories(ctx)
+	cats, _ = d.ListCategories(ctx, "zh-Hans")
 	if cats[0].Count != 1 {
 		t.Errorf("草稿被算进了分类计数：%d", cats[0].Count)
 	}
