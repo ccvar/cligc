@@ -796,29 +796,58 @@ JS 语法检查、词表完整性。
 **`deploy.yml`** —— 合进 main 之后：交叉编译 linux 静态二进制 → scp 到
 服务器 → `deploy/deploy.sh` 原子替换、重启、健康检查，**失败自动回滚**。
 
-### 先配这些
+### 两条路线，选一条
 
-仓库 Settings → Secrets and variables → Actions：
+**路线一：自托管 Runner（推荐）。** 在服务器上跑一个代理，它主动去 GitHub
+拉任务。仓库里一个 secret 都不用配，服务器也不用对外开端口。
+
+在服务器上以 root 执行一次：
+
+```bash
+git clone https://github.com/ccvar/cligc && cd cligc/deploy
+REPO=你的用户名/cligc TOKEN=<从GitHub页面复制> sh setup-runner.sh
+```
+
+TOKEN 在 仓库 → Settings → Actions → Runners → New self-hosted runner
+那个页面上，`./config.sh --token AXXXX` 里的 `AXXXX` 就是。它一小时内有效，
+只用于注册这一次。
+
+脚本会建一个专用用户、注册 Runner、装成开机自启的服务，并写一条
+**只允许执行部署脚本一条命令**的 sudoers。
+
+> ⚠️ 自托管 Runner 执行的是工作流里的代码。这个仓库的 `deploy.yml` 只在
+> `push` 到 main 和手动触发时跑，**不在 `pull_request` 上跑**——否则任何人
+> 提一个 PR 就能在你的服务器上执行代码。改这个触发条件前想清楚。
+
+**路线二：SSH 推送。** 适合不想在服务器上跑 Runner 的情况。把仓库变量
+`DEPLOY_RUNNER` 设成 `ubuntu-latest`，然后配这些 secret：
 
 | Secret | 内容 |
 |---|---|
 | `DEPLOY_HOST` | 服务器地址 |
 | `DEPLOY_USER` | 登录用户 |
-| `DEPLOY_SSH_KEY` | 私钥（该用户的部署专用密钥，不要复用你自己的） |
-| `DEPLOY_KNOWN_HOSTS` | `ssh-keyscan -p 22 你的服务器` 的输出 |
+| `DEPLOY_SSH_KEY` | 私钥（部署专用，不要复用你自己的） |
+| `DEPLOY_KNOWN_HOSTS` | `ssh-keyscan 你的服务器` 的输出 |
 
-可选的 Variables：`DEPLOY_PORT`（默认 22）、`DEPLOY_ARCH`（默认 amd64）。
+`DEPLOY_KNOWN_HOSTS` 不是可选的。省掉它就得用 `StrictHostKeyChecking=no`，
+那等于把这条通道对中间人敞开——而它手里有一把能替换服务器上二进制的密钥。
 
-**`DEPLOY_KNOWN_HOSTS` 不是可选的。** 省掉它就得用
-`StrictHostKeyChecking=no`，那等于把这条通道对中间人敞开——而它手里
-有一把能替换服务器上二进制的密钥。
+服务器上仍然要预先装好部署脚本：
 
-服务器上给部署用户一条免密 sudo：
-
+```bash
+sudo install -D -m 755 deploy/deploy.sh /usr/local/lib/cligc/deploy.sh
+echo 'deployuser ALL=(root) NOPASSWD: /usr/local/lib/cligc/deploy.sh' \
+  | sudo tee /etc/sudoers.d/cligc-deploy && sudo chmod 440 /etc/sudoers.d/cligc-deploy
 ```
-# /etc/sudoers.d/cligc-deploy
-deployuser ALL=(root) NOPASSWD: /tmp/deploy.sh
-```
+
+### root 执行的脚本必须在仓库之外
+
+两条路线都调 `/usr/local/lib/cligc/deploy.sh`，而不是 CI 里 checkout 出来的
+那份 `deploy/deploy.sh`，sudoers 也只授权这一个绝对路径。
+
+这不是绕远路：允许 root 执行仓库里的脚本，等于把「能往仓库推代码」直接
+升级成「能在服务器上当 root」。改一行 `deploy.sh` 就能拿下整台机器，
+而那一行在 diff 里毫不起眼。
 
 ### 人在中间那一关
 

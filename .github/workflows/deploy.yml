@@ -1,20 +1,20 @@
 name: Deploy
 
 on:
-  # 只在 CI 全绿之后才可能跑到这里——下面 needs 依赖了 test job。
   push:
     branches: [main]
-  # 也可以手动触发，用来重新部署某个已经合过的提交
   workflow_dispatch:
 
 concurrency:
   # 部署不允许并发：两个任务同时替换二进制会互相覆盖，而且后完成的那个
-  # 未必是后提交的那个。cancel-in-progress 设成 false —— 排队等，
-  # 不要把一个已经替换了二进制、正在做健康检查的任务砍掉。
+  # 未必是后提交的那个。cancel-in-progress 设成 false —— 排队等，不要把
+  # 一个已经替换了二进制、正在做健康检查的任务砍掉。
   group: deploy-production
   cancel-in-progress: false
 
 jobs:
+  # 测试永远跑在 GitHub 的机器上，不占自托管 Runner，也不让还没验证过的
+  # 代码碰到服务器。
   test:
     runs-on: ubuntu-latest
     steps:
@@ -32,11 +32,17 @@ jobs:
 
   deploy:
     needs: test
-    runs-on: ubuntu-latest
-    # 绑定到 production 环境。在仓库的 Settings → Environments 里给它
-    # 配上 required reviewers，每次部署就都要人点一下同意——
-    # 发错一篇文章撤下就行，发错一个二进制站点就下线了。
+    # 默认跑在服务器自己的 Runner 上——那样不需要任何 SSH 密钥，服务器
+    # 也不用对外开端口。想用 SSH 推送的话，把仓库变量 DEPLOY_RUNNER
+    # 设成 ubuntu-latest 并配上下面那几个 secret。
+    runs-on: ${{ vars.DEPLOY_RUNNER || 'self-hosted' }}
+    # 绑定到 production 环境。在 Settings → Environments 里给它配上
+    # required reviewers，每次部署就都要人点一下同意。
     environment: production
+    # secrets 在步骤的 if 里不一定可用（GitHub 的上下文可用性有限制），
+    # 先落到 job 级 env 再判断——env 在 if 里是明确可用的。
+    env:
+      SSH_HOST: ${{ secrets.DEPLOY_HOST }}
     steps:
       - uses: actions/checkout@v4
 
@@ -45,38 +51,53 @@ jobs:
           go-version-file: go.mod
           cache: true
 
-      - name: 交叉编译 linux/amd64
-        # 纯 Go（modernc.org/sqlite 没有 cgo），所以交叉编译出来的是
-        # 静态二进制，目标机器上不需要装任何运行时。
-        # -trimpath 去掉构建机的绝对路径，产物可复现也不泄露目录结构。
+      - name: 构建
+        # 纯 Go（modernc.org/sqlite 无 cgo），产物是静态二进制。
+        # 跑在自托管 Runner 上时 GOOS/GOARCH 就是本机，不需要交叉编译。
         run: |
-          CGO_ENABLED=0 GOOS=linux GOARCH=${{ vars.DEPLOY_ARCH || 'amd64' }} \
+          CGO_ENABLED=0 GOOS=${{ vars.DEPLOY_OS || 'linux' }} GOARCH=${{ vars.DEPLOY_ARCH || 'amd64' }} \
             go build -trimpath -ldflags="-s -w" -o cligc-deploy ./cmd/cligc
           ls -la cligc-deploy
 
+      # --- 路线一：自托管 Runner（默认）---
+      #
+      # 代码和二进制已经在服务器上了，直接执行替换脚本。没有网络传输，
+      # 没有密钥，没有入站连接。
+      #
+      # 注意调的是 /usr/local/lib/cligc/deploy.sh 而不是仓库里 checkout
+      # 出来的那份。这不是绕远路——sudoers 只授权了那一个绝对路径，
+      # 而它由管理员用 setup-runner.sh 安装、不在仓库里。
+      # 允许 root 执行仓库里的脚本，等于把"能往仓库推代码"直接升级成
+      # "能在服务器上当 root"。
+      - name: 部署（本机）
+        if: env.SSH_HOST == ''
+        run: sudo -n /usr/local/lib/cligc/deploy.sh "$PWD/cligc-deploy"
+
+      # --- 路线二：SSH 推送 ---
       - name: 配置 SSH
+        if: env.SSH_HOST != ''
         run: |
           install -m 700 -d ~/.ssh
           printf '%s\n' "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/id_deploy
           chmod 600 ~/.ssh/id_deploy
-          # 用 known_hosts 固定主机指纹，而不是 StrictHostKeyChecking=no。
-          # 关掉主机校验等于把这条部署通道对中间人敞开——而它手里有的是
-          # 一把能替换服务器上二进制的密钥。
+          # 固定主机指纹，而不是 StrictHostKeyChecking=no：这条通道手里
+          # 有一把能替换服务器上二进制的密钥，对中间人敞开代价太大。
           printf '%s\n' "${{ secrets.DEPLOY_KNOWN_HOSTS }}" > ~/.ssh/known_hosts
           chmod 600 ~/.ssh/known_hosts
 
-      - name: 上传并部署
+      - name: 部署（SSH）
+        if: env.SSH_HOST != ''
         env:
-          HOST: ${{ secrets.DEPLOY_HOST }}
           USER: ${{ secrets.DEPLOY_USER }}
           PORT: ${{ vars.DEPLOY_PORT || '22' }}
         run: |
-          SSH="ssh -i ~/.ssh/id_deploy -p $PORT -o BatchMode=yes"
+          # 只传二进制，不传脚本。服务器上那份 deploy.sh 由管理员预先
+          # 安装在 /usr/local/lib/cligc/ 下，sudoers 也只授权那一个路径——
+          # 传一份脚本过去再用 root 执行，等于把仓库写权限变成服务器 root。
           scp -i ~/.ssh/id_deploy -P "$PORT" -o BatchMode=yes \
-              cligc-deploy deploy/deploy.sh "$USER@$HOST:/tmp/"
-          # deploy.sh 做原子替换、重启、健康检查，失败自动回滚并返回非 0。
-          $SSH "$USER@$HOST" \
-            "chmod +x /tmp/deploy.sh && sudo -n /tmp/deploy.sh /tmp/cligc-deploy"
+              cligc-deploy "$USER@$SSH_HOST:/tmp/"
+          ssh -i ~/.ssh/id_deploy -p "$PORT" -o BatchMode=yes "$USER@$SSH_HOST" \
+              "sudo -n /usr/local/lib/cligc/deploy.sh /tmp/cligc-deploy"
 
       - name: 清理
         if: always()
