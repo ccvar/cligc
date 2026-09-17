@@ -328,13 +328,20 @@
   "admin.tokens.selectNone": "選択を解除",
   "admin.site.basicSection": "サイト情報",
   "admin.site.name": "サイト名",
-  "admin.site.nameHint": "ヘッダー、タブのタイトル、共有カードに出ます。空欄なら起動時の -title を使います。",
+  "admin.site.nameHint": "ヘッダー、タブの見出し、共有カードに出ます。",
   "admin.site.desc": "サイトの説明",
-  "admin.site.descHint": "トップページの一文の紹介で、meta description と共有カードにも使われます。全角 60 字程度までに——超えた分は検索結果で切れます。空欄なら -desc を使います。言語ごとに変えたい場合は -lang-dir の目録に site.title / site.description を置いてください。",
+  "admin.site.descHint": "トップページの一行紹介で、meta description と共有カードの説明も兼ねます。全角 60 字ほどに収めてください——それ以上は検索結果で切られます。",
   "admin.cats.desc": "説明",
   "admin.cats.descHint": "セクションページの meta description。セクションページには要約を取れる本文がないので、未記入だとサイトの説明で代用されます。",
   "admin.cats.drag": "並べ替え",
   "admin.cats.saveOrder": "順序を保存",
-  "admin.cats.orderHint": "行頭のハンドルをドラッグして並べ替え、保存を押してください。"
+  "admin.cats.orderHint": "行頭のハンドルをドラッグして並べ替え、保存を押してください。",
+  "admin.site.langSection": "言語",
+  "admin.site.langHint": "チェックした言語だけを公開します。切替メニュー、hreflang、サイトマップに載るのはそれだけです。外した言語のパスは 404 を返します——中身のない一覧ページをクロールさせるくらいなら、その言語を提供しないほうがましだからです。既定の言語は外せません。管理画面の表示言語はここの影響を受けません。",
+  "admin.site.langNotReady": "翻訳率が 80% に届かないため選べません",
+  "admin.site.langDefault": "既定",
+  "admin.site.langEmpty": "まだ記事がありません",
+  "admin.site.copyHint": "言語ごとに保存します。<title> と meta description はそのまま検索結果に出るので、英語版に日本語の題名が付いていては意味がありません。空にした言語は既定の言語のものを使います。",
+  "admin.site.fromCatalog": "この項目は -lang-dir の辞書から来ています。ここに入力しても効きません。"
  }
 }

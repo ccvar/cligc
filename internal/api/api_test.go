@@ -6,9 +6,11 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"path/filepath"
+	"slices"
 	"strings"
 	"testing"
 
+	"cligc.com/internal/i18n"
 	"cligc.com/internal/store"
 )
 
@@ -328,5 +330,42 @@ func TestCommentsScopedToOwnPosts(t *testing.T) {
 	h.req("GET", "/api/v1/comments", tok, nil, &list)
 	if n := list["total"].(float64); n != 0 {
 		t.Errorf("another author saw %v comments on someone else's post", n)
+	}
+}
+
+// TestWhoamiListsPublicLanguages whoami 要带上站点对外提供的语言。
+//
+// 这是 AI 的第一次调用，而"我能给哪些语种写东西"正是它接下来要做的判断。
+// /site 那个接口要 site:admin，多数 token 没有——光靠它，这条信息到不了
+// 写文章的那一端，于是翻译好、发布了，读者点进去还是 404。
+func TestWhoamiListsPublicLanguages(t *testing.T) {
+	if err := i18n.LoadBuiltin(); err != nil {
+		t.Fatal(err)
+	}
+	h := setup(t, 0)
+
+	langs := func() []string {
+		t.Helper()
+		var out struct {
+			SiteLangs []string `json:"site_langs"`
+		}
+		if code := h.req("GET", "/api/v1/me", h.write, nil, &out); code != http.StatusOK {
+			t.Fatalf("GET /me = %d", code)
+		}
+		return out.SiteLangs
+	}
+
+	if got := langs(); !slices.Equal(got, []string{"zh-Hans"}) {
+		t.Fatalf("site_langs = %v，默认只该有默认语言", got)
+	}
+
+	st := h.db.Settings(t.Context())
+	st.EnabledLangs = []string{"en", "ja"}
+	if err := h.db.SaveSettings(t.Context(), st); err != nil {
+		t.Fatal(err)
+	}
+	// 默认语言排第一：模型多半只读第一个，而那个才是它该默认写的语种。
+	if got, want := langs(), []string{"zh-Hans", "en", "ja"}; !slices.Equal(got, want) {
+		t.Errorf("site_langs = %v，想要 %v", got, want)
 	}
 }

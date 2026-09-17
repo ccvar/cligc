@@ -328,13 +328,20 @@
   "admin.tokens.selectNone": "全不選",
   "admin.site.basicSection": "站點資訊",
   "admin.site.name": "站點名稱",
-  "admin.site.nameHint": "出現在導覽、分頁標題和分享卡片上。留空則用啟動參數 -title 的值。",
+  "admin.site.nameHint": "出現在導覽列、分頁標題和分享卡片上。",
   "admin.site.desc": "站點描述",
-  "admin.site.descHint": "首頁的一句話介紹，同時作為 meta description 和分享卡片的描述。控制在 60 個漢字以內——超出的部分搜尋結果裡會被截斷。留空則用 -desc。多語言站要按語言區分的話，在 -lang-dir 的目錄裡放 site.title / site.description。",
+  "admin.site.descHint": "首頁的一句話介紹，同時作為 meta description 和分享卡片的描述。控制在 60 個漢字以內——超出的部分搜尋結果裡會被截斷。",
   "admin.cats.desc": "描述",
   "admin.cats.descHint": "板塊頁的 meta description。板塊頁沒有內文可以自動擷取摘要，不寫就只能拿站點描述湊。",
   "admin.cats.drag": "拖動排序",
   "admin.cats.saveOrder": "儲存順序",
-  "admin.cats.orderHint": "拖動列首的把手調整順序，改完點儲存。"
+  "admin.cats.orderHint": "拖動列首的把手調整順序，改完點儲存。",
+  "admin.site.langSection": "語言",
+  "admin.site.langHint": "勾選的語言才對外提供：出現在切換器裡、進 hreflang 和 sitemap。沒勾的語言路徑直接 404——留著一個內容為空的列表頁被爬到，比不提供這個語言更糟。預設語言不能關閉。後台介面語言不受這裡影響。",
+  "admin.site.langNotReady": "翻譯完成度不足 80%，暫不可選",
+  "admin.site.langDefault": "預設語言",
+  "admin.site.langEmpty": "還沒有內容",
+  "admin.site.copyHint": "每個語言各存一份。<title> 和 meta description 會直接進搜尋結果，英文版掛著中文標題等於白做。某個語言留空就回退到預設語言那一份。",
+  "admin.site.fromCatalog": "這一項由 -lang-dir 詞表提供，在這裡填的不生效。"
  }
 }

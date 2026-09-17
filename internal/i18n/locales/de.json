@@ -334,13 +334,20 @@
   "admin.tokens.selectNone": "Auswahl aufheben",
   "admin.site.basicSection": "Website",
   "admin.site.name": "Name der Website",
-  "admin.site.nameHint": "Steht im Kopfbereich, im Browser-Tab und auf Share-Karten. Leer greift der Wert von -title.",
+  "admin.site.nameHint": "Erscheint im Kopfbereich, im Browser-Tab und auf Teilen-Karten.",
   "admin.site.desc": "Beschreibung",
-  "admin.site.descHint": "Der Einzeiler auf der Startseite, zugleich meta description und Text der Share-Karten. Unter etwa 155 Zeichen halten – Suchmaschinen schneiden den Rest ab. Leer greift -desc. Für sprachabhängige Fassungen site.title / site.description in den -lang-dir-Katalog legen.",
+  "admin.site.descHint": "Die einzeilige Vorstellung auf der Startseite, zugleich Meta-Description und Beschreibung auf Teilen-Karten. Bleib bei etwa 155 Zeichen – den Rest schneiden die Suchergebnisse ab.",
   "admin.cats.desc": "Beschreibung",
   "admin.cats.descHint": "Die meta description der Bereichsseite. Solche Seiten haben keinen Fließtext zum Zusammenfassen – ohne das greift die Beschreibung der Website.",
   "admin.cats.drag": "Sortieren",
   "admin.cats.saveOrder": "Reihenfolge speichern",
-  "admin.cats.orderHint": "Zieh den Griff am Zeilenanfang und speichere danach."
+  "admin.cats.orderHint": "Zieh den Griff am Zeilenanfang und speichere danach.",
+  "admin.site.langSection": "Sprachen",
+  "admin.site.langHint": "Nur angehakte Sprachen werden öffentlich angeboten: Sie erscheinen im Umschalter, in hreflang und in der Sitemap. Nicht angehakte Präfixe liefern 404 – eine leere Listenseite crawlbar zu lassen ist schlimmer, als die Sprache gar nicht anzubieten. Die Standardsprache lässt sich nicht abschalten. Die Sprache des Verwaltungsbereichs bleibt davon unberührt.",
+  "admin.site.langNotReady": "Unter 80 % übersetzt, noch nicht wählbar",
+  "admin.site.langDefault": "Standard",
+  "admin.site.langEmpty": "Noch keine Inhalte",
+  "admin.site.copyHint": "Wird je Sprache gespeichert. <title> und Meta-Description landen unverändert in den Suchergebnissen – eine englische Seite mit deutschem Titel ist vergebene Mühe. Lässt du eine Sprache leer, gilt die der Standardsprache.",
+  "admin.site.fromCatalog": "Dieser Wert kommt aus deinem -lang-dir-Wörterbuch; was du hier einträgst, bleibt wirkungslos."
  }
 }

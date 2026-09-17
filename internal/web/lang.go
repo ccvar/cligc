@@ -33,6 +33,25 @@ func (s *Server) WithLang(next http.Handler) http.Handler {
 
 		if seg, rest, ok := splitFirstSegment(p); ok && seg != "" {
 			if l, found := i18n.ByPrefix(seg); found && l.Prefix != "" {
+				// 站长没启用的语言，**公开页**直接 404。
+				//
+				// 光把它从切换器和 hreflang 里去掉不够：那些路径仍然能被
+				// 直接访问，也就仍然能被爬到——而它们是内容为空的列表页。
+				// 一个站上出现十个空列表页，正是搜索引擎判定"低质量"的典型
+				// 形态，而且它们还会分掉抓取预算。
+				//
+				// 但后台不受这条限制：后台的界面语言是站长自己的偏好，和
+				// "这个站对外提供哪些语言"完全是两回事。只写中文的站，
+				// 站长照样可能想用英文后台。
+				target := rest
+				if target == "" {
+					target = "/"
+				}
+				if !isAdminPath(target) &&
+					!s.db.Settings(r.Context()).LangEnabled(l.Code, i18n.Default().Code) {
+					http.NotFound(w, r)
+					return
+				}
 				lang = l
 				// /en -> /，/en/p/x -> /p/x
 				if rest == "" {
@@ -94,4 +113,12 @@ func (s *Server) tr(r *http.Request, key string, args ...string) string {
 // trn 按当前语言取一条带数量的文案。
 func (s *Server) trn(r *http.Request, key string, n int) string {
 	return i18n.N(LangFrom(r.Context()).Code, key, n)
+}
+
+// isAdminPath 报告这个路径是不是后台页面（语言前缀已经剥掉）。
+//
+// 单独一个函数而不是内联判断：render() 里也要用同一套规则决定加载哪层
+// 样式，两处各写一遍迟早对不上。
+func isAdminPath(p string) bool {
+	return strings.HasPrefix(p, "/admin") || strings.HasPrefix(p, "/login")
 }

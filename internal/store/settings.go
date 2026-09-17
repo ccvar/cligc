@@ -13,13 +13,20 @@ import (
 // 基本不动。放在库里而不是命令行参数上，是因为"改一个统计 ID 要重启服务"
 // 不是一个合理的流程。
 type SiteSettings struct {
-	// SiteTitle / SiteDescription 是站点自己的名字和一句话描述。
+	// SiteTitles / SiteDescs 是**按语言**的站名和描述，key 是语言代码。
 	//
-	// 放在这里而不是只当命令行参数：这两个是站长随时会改的内容，
-	// 而且直接决定 <title> 和 meta description——改一次要重启服务不合理。
-	// 留空则退回命令行的 -title / -desc。
-	SiteTitle       string
-	SiteDescription string
+	// 按语言存而不是只存一份：站点开了英文版，<title> 和 meta description
+	// 却还是中文的话，那一版在英文搜索结果里根本读不通。
+	// 取值时先找当前语言，找不到退回默认语言，再找不到退回命令行参数。
+	SiteTitles map[string]string
+	SiteDescs  map[string]string
+
+	// EnabledLangs 是站点实际对外提供的语言，空表示只有默认语言。
+	//
+	// 这不只是界面开关。没有它的话，站上明明只写中文，却会给 11 种语言
+	// 都发 hreflang——而那些页面是空的。等于主动告诉搜索引擎"这里有德语版"，
+	// 然后给它一个没有任何文章的列表页。
+	EnabledLangs []string
 
 	// GoogleVerify 是 Search Console 的 google-site-verification 值。
 	GoogleVerify string
@@ -46,8 +53,10 @@ const (
 	keyGA4          = "ga4_id"
 	keyIndexNow     = "indexnow_key"
 	keyCommentsOff  = "comments_off"
-	keySiteTitle    = "site_title"
-	keySiteDesc     = "site_desc"
+	keyEnabledLangs = "enabled_langs"
+	// 按语言的站名/描述用前缀 + 语言代码，如 site_title:en
+	prefixSiteTitle = "site_title:"
+	prefixSiteDesc  = "site_desc:"
 )
 
 // Settings 返回当前设置。读的是内存快照——它在每个页面的 <head> 里都要用到，
@@ -62,7 +71,11 @@ func (d *DB) Settings(ctx context.Context) SiteSettings {
 }
 
 func (d *DB) loadSettings(ctx context.Context) SiteSettings {
-	s := SiteSettings{CommentsEnabled: true} // 没设过就是开着
+	s := SiteSettings{
+		CommentsEnabled: true, // 没设过就是开着
+		SiteTitles:      map[string]string{},
+		SiteDescs:       map[string]string{},
+	}
 	rows, err := d.R.QueryContext(ctx, `select key, value from settings`)
 	if err != nil {
 		return s
@@ -84,40 +97,73 @@ func (d *DB) loadSettings(ctx context.Context) SiteSettings {
 			s.IndexNowKey = v
 		case keyCommentsOff:
 			s.CommentsEnabled = v == ""
-		case keySiteTitle:
-			s.SiteTitle = v
-		case keySiteDesc:
-			s.SiteDescription = v
+		case keyEnabledLangs:
+			if v != "" {
+				s.EnabledLangs = strings.Split(v, ",")
+			}
+		default:
+			if code, ok := strings.CutPrefix(k, prefixSiteTitle); ok {
+				s.SiteTitles[code] = v
+			} else if code, ok := strings.CutPrefix(k, prefixSiteDesc); ok {
+				s.SiteDescs[code] = v
+			}
 		}
 	}
 	return s
 }
 
 // SaveSettings 整体写入并刷新缓存。
+//
+// 按语言的站名/描述是动态 key，条数随语言数变，所以不能像固定项那样
+// 逐个 upsert 完事——取消勾选一个语言之后，它那两行必须真的消失，
+// 否则重新启用时会冒出一份没人记得设过的旧文案。
 func (d *DB) SaveSettings(ctx context.Context, in SiteSettings) error {
 	in.GoogleVerify = strings.TrimSpace(in.GoogleVerify)
 	in.BingVerify = strings.TrimSpace(in.BingVerify)
 	in.GA4ID = strings.TrimSpace(in.GA4ID)
 	in.IndexNowKey = strings.ToLower(strings.TrimSpace(in.IndexNowKey))
-	in.SiteTitle = strings.TrimSpace(in.SiteTitle)
-	in.SiteDescription = strings.TrimSpace(in.SiteDescription)
+
+	fixed := []struct{ k, v string }{
+		{keyGoogleVerify, in.GoogleVerify},
+		{keyBingVerify, in.BingVerify},
+		{keyGA4, in.GA4ID},
+		{keyIndexNow, in.IndexNowKey},
+		{keyCommentsOff, boolOff(in.CommentsEnabled)},
+		{keyEnabledLangs, strings.Join(in.EnabledLangs, ",")},
+	}
 
 	err := d.tx(ctx, func(t *sql.Tx) error {
 		now := time.Now().Unix()
-		for _, kv := range []struct{ k, v string }{
-			{keyGoogleVerify, in.GoogleVerify},
-			{keyBingVerify, in.BingVerify},
-			{keyGA4, in.GA4ID},
-			{keyIndexNow, in.IndexNowKey},
-			{keyCommentsOff, boolOff(in.CommentsEnabled)},
-			{keySiteTitle, in.SiteTitle},
-			{keySiteDesc, in.SiteDescription},
-		} {
-			if _, err := t.ExecContext(ctx,
+		up := func(k, v string) error {
+			_, err := t.ExecContext(ctx,
 				`insert into settings(key,value,updated_at) values(?,?,?)
 				 on conflict(key) do update set value=excluded.value, updated_at=excluded.updated_at`,
-				kv.k, kv.v, now); err != nil {
+				k, v, now)
+			return err
+		}
+		for _, kv := range fixed {
+			if err := up(kv.k, kv.v); err != nil {
 				return err
+			}
+		}
+		// 动态 key 先清后写
+		if _, err := t.ExecContext(ctx,
+			`delete from settings where key like ? or key like ?`,
+			prefixSiteTitle+"%", prefixSiteDesc+"%"); err != nil {
+			return err
+		}
+		for code, v := range in.SiteTitles {
+			if v = strings.TrimSpace(v); v != "" {
+				if err := up(prefixSiteTitle+code, v); err != nil {
+					return err
+				}
+			}
+		}
+		for code, v := range in.SiteDescs {
+			if v = strings.TrimSpace(v); v != "" {
+				if err := up(prefixSiteDesc+code, v); err != nil {
+					return err
+				}
 			}
 		}
 		return nil
@@ -125,8 +171,53 @@ func (d *DB) SaveSettings(ctx context.Context, in SiteSettings) error {
 	if err != nil {
 		return err
 	}
-	d.settings.Store(&in)
+	// 缓存存的是刚写进去的那份，顺手把空值清掉，免得读回来和库里不一致
+	clean := in
+	clean.SiteTitles = trimMap(in.SiteTitles)
+	clean.SiteDescs = trimMap(in.SiteDescs)
+	d.settings.Store(&clean)
 	return nil
+}
+
+func trimMap(m map[string]string) map[string]string {
+	out := map[string]string{}
+	for k, v := range m {
+		if v = strings.TrimSpace(v); v != "" {
+			out[k] = v
+		}
+	}
+	return out
+}
+
+// SiteTitleFor 按语言取站名，找不到就退回默认语言那一份。
+// 两者都没有时返回空串，由调用方退回命令行参数。
+func (s SiteSettings) SiteTitleFor(code, defaultCode string) string {
+	return pickLang(s.SiteTitles, code, defaultCode)
+}
+
+// SiteDescFor 同上，取描述。
+func (s SiteSettings) SiteDescFor(code, defaultCode string) string {
+	return pickLang(s.SiteDescs, code, defaultCode)
+}
+
+func pickLang(m map[string]string, code, defaultCode string) string {
+	if v := m[code]; v != "" {
+		return v
+	}
+	return m[defaultCode]
+}
+
+// LangEnabled 报告某个语言是否对外提供。空列表表示只有默认语言。
+func (s SiteSettings) LangEnabled(code, defaultCode string) bool {
+	if code == defaultCode {
+		return true // 默认语言永远开着，否则站点没有任何入口
+	}
+	for _, c := range s.EnabledLangs {
+		if c == code {
+			return true
+		}
+	}
+	return false
 }
 
 // boolOff 把"开着"编码成空串。见 SiteSettings.CommentsEnabled 的注释。

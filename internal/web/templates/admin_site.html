@@ -1,26 +1,82 @@
 {{define "content"}}
 {{$d := .Data}}
 {{$s := .Settings}}
+{{$def := $d.DefaultLang}}
 <div class="toolbar"><h1>{{t "admin.site.title"}}</h1></div>
 {{template "admintabs" $}}
 
-<form class="settings" method="post" action="{{lurl "/admin/site"}}">
+<form class="settings" method="post" action="{{lurl "/admin/site"}}"
+      {{if $d.MultiLang}}data-multilang{{end}}>
 
-  {{/* 站点名称和描述放在最前面：它们决定 <title> 和 meta description，
-       是这一页里最影响搜索结果长相的两项。 */}}
+  {{/* 语言放在最前面：它决定下面有几份站名和描述要填，也决定 hreflang
+       和 sitemap 里出现哪些语言。先选语言再写文案，顺序是对的。 */}}
+  <h2 class="section-title">{{t "admin.site.langSection"}}</h2>
+  <p class="hint">{{t "admin.site.langHint"}}</p>
+
+  <div class="langpick">
+    {{range $d.Langs}}
+    {{$on := $s.LangEnabled .Code $def}}
+    {{$fixed := eq .Code $def}}
+    <label class="check langrow{{if not .Ready}} muted{{end}}">
+      <input type="checkbox" name="langs" value="{{.Code}}"
+             {{if $on}}checked{{end}}
+             {{if or $fixed (not .Ready)}}disabled{{end}}
+             data-langpick="{{.Code}}">
+      <span class="langrow-text">
+        <span class="langrow-name" lang="{{.Code}}" dir="{{.Dir}}">{{.Name}}</span>
+        <code class="langrow-code">{{.Code}}</code>
+        <span class="hint">
+          {{- if $fixed}}{{t "admin.site.langDefault"}} · {{end -}}
+          {{- if not .Ready}}{{t "admin.site.langNotReady"}}
+          {{- else}}{{$n := index $d.Counts .Code}}
+            {{- if $n}}{{tn "common.count" $n}}{{else}}{{t "admin.site.langEmpty"}}{{end}}
+          {{- end}}
+        </span>
+      </span>
+    </label>
+    {{end}}
+  </div>
+
+  {{/* 站名和描述决定 <title> 和 meta description，是这一页里最影响
+       搜索结果长相的两项。按语言各存一份——英文页挂中文标题，等于
+       把那一版的搜索结果作废。 */}}
   <h2 class="section-title">{{t "admin.site.basicSection"}}</h2>
+  <p class="hint multilang-only">{{t "admin.site.copyHint"}}</p>
 
-  <label class="field">
-    <span class="label">{{t "admin.site.name"}}</span>
-    <input type="text" name="site_title" value="{{$s.SiteTitle}}" placeholder="{{$d.FallbackTitle}}">
-    <span class="hint">{{t "admin.site.nameHint"}}</span>
-  </label>
+  {{range $d.Langs}}
+  {{if .Ready}}
+  <section class="sitecopy" data-langblock="{{.Code}}"
+           {{if not ($s.LangEnabled .Code $def)}}data-langoff{{end}}>
+    <h3 class="sitecopy-head">
+      <span lang="{{.Code}}" dir="{{.Dir}}">{{.Name}}</span>
+      <code>{{.Code}}</code>
+      {{if eq .Code $def}}<span class="badge b-draft plain">{{t "admin.site.langDefault"}}</span>{{end}}
+    </h3>
 
-  <label class="field">
-    <span class="label">{{t "admin.site.desc"}}</span>
-    <textarea name="site_desc" rows="2" placeholder="{{$d.FallbackDesc}}">{{$s.SiteDescription}}</textarea>
-    <span class="hint">{{t "admin.site.descHint"}}</span>
-  </label>
+    <label class="field">
+      <span class="label">{{t "admin.site.name"}}</span>
+      <input type="text" name="site_title:{{.Code}}" lang="{{.Code}}" dir="{{.Dir}}"
+             value="{{index $s.SiteTitles .Code}}" placeholder="{{$d.FallbackTitle}}"
+             {{if index $d.TitleFixed .Code}}disabled{{end}}>
+      <span class="hint">
+        {{- if index $d.TitleFixed .Code}}{{t "admin.site.fromCatalog"}}
+        {{- else}}{{t "admin.site.nameHint"}}{{end -}}
+      </span>
+    </label>
+
+    <label class="field">
+      <span class="label">{{t "admin.site.desc"}}</span>
+      <textarea name="site_desc:{{.Code}}" rows="2" lang="{{.Code}}" dir="{{.Dir}}"
+                placeholder="{{$d.FallbackDesc}}"
+                {{if index $d.DescFixed .Code}}disabled{{end}}>{{index $s.SiteDescs .Code}}</textarea>
+      <span class="hint">
+        {{- if index $d.DescFixed .Code}}{{t "admin.site.fromCatalog"}}
+        {{- else}}{{t "admin.site.descHint"}}{{end -}}
+      </span>
+    </label>
+  </section>
+  {{end}}
+  {{end}}
 
   <h2 class="section-title">{{t "admin.site.seoSection"}}</h2>
 

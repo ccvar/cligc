@@ -98,7 +98,7 @@ func (s *Server) writeSitemapChunk(w http.ResponseWriter, r *http.Request, n int
 	set := urlSet{NS: sitemapNS}
 	if withHome {
 		// 每个语言的首页都要收录
-		for _, l := range i18n.ReadyLanguages() {
+		for _, l := range s.enabledLangs(r.Context()) {
 			set.URLs = append(set.URLs, urlEntry{Loc: s.cfg.BaseURL + langPath(l, "/")})
 		}
 	}

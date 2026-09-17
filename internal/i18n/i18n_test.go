@@ -197,3 +197,26 @@ func TestCoverageIgnoresUntranslatedPlaceholders(t *testing.T) {
 		t.Error("翻译了条目之后覆盖率没有上升")
 	}
 }
+
+// TestOwnDoesNotFallBack Own 只认这个语言自己声明了的那一条。
+//
+// 站名和描述的优先级链依赖这一点。用会回退的 T 的话，-lang-dir 里只给
+// 中文写了一条 site.title，英文页就会拿中文那条去盖掉站长在后台填的
+// 英文站名——一个只想给中文站起名的人，把英文站的名字也改了。
+func TestOwnDoesNotFallBack(t *testing.T) {
+	load(t)
+	if err := Load([]byte(`{"lang":"zh-Hans","name":"中文","messages":{
+		"site.title":"我的博客"}}`)); err != nil {
+		t.Fatal(err)
+	}
+	if v, ok := Own("zh-Hans", "site.title"); !ok || v != "我的博客" {
+		t.Errorf(`Own("zh-Hans") = %q, %v；想要 "我的博客", true`, v, ok)
+	}
+	if v, ok := Own("en", "site.title"); ok {
+		t.Errorf(`Own("en") = %q, true；英文词表没声明 site.title，不该回退到中文那条`, v)
+	}
+	// 对照：T 就是会回退的那一个，所以它不能用在这条链上。
+	if got := T("en", "site.title"); got != "我的博客" {
+		t.Errorf(`T("en") = %q；这里正是要它回退，用来说明为什么不能用 T`, got)
+	}
+}

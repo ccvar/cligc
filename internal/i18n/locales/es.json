@@ -334,13 +334,20 @@
   "admin.tokens.selectNone": "Ninguno",
   "admin.site.basicSection": "Sitio",
   "admin.site.name": "Nombre del sitio",
-  "admin.site.nameHint": "Aparece en la cabecera, en la pestaña del navegador y en las tarjetas al compartir. Vacío usa el valor de -title.",
+  "admin.site.nameHint": "Aparece en la cabecera, en la pestaña del navegador y en las tarjetas para compartir.",
   "admin.site.desc": "Descripción del sitio",
-  "admin.site.descHint": "La frase de presentación de la portada; también es la meta description y el texto de las tarjetas al compartir. No pases de unos 155 caracteres: los buscadores cortan el resto. Vacío usa -desc. Para versiones por idioma, pon site.title / site.description en tu catálogo de -lang-dir.",
+  "admin.site.descHint": "La presentación de una línea de la portada; sirve también de meta description y de descripción en las tarjetas para compartir. No pases de unos 155 caracteres: los resultados de búsqueda cortan el resto.",
   "admin.cats.desc": "Descripción",
   "admin.cats.descHint": "La meta description de la página de sección. Esas páginas no tienen texto que resumir, así que sin esto se usa la descripción del sitio.",
   "admin.cats.drag": "Reordenar",
   "admin.cats.saveOrder": "Guardar el orden",
-  "admin.cats.orderHint": "Arrastra el asa al principio de la fila y luego guarda."
+  "admin.cats.orderHint": "Arrastra el asa al principio de la fila y luego guarda.",
+  "admin.site.langSection": "Idiomas",
+  "admin.site.langHint": "Solo se ofrecen públicamente los idiomas marcados: salen en el selector, en hreflang y en el sitemap. Los prefijos no marcados devuelven 404 — dejar rastreable una página de listado vacía es peor que no ofrecer el idioma. El idioma por defecto no se puede desactivar. El idioma de la administración no depende de esto.",
+  "admin.site.langNotReady": "Menos del 80% traducido, todavía no se puede elegir",
+  "admin.site.langDefault": "Predeterminado",
+  "admin.site.langEmpty": "Todavía sin contenido",
+  "admin.site.copyHint": "Se guarda por idioma. El <title> y la meta description van directos a los resultados de búsqueda, así que una página en inglés con el título en español es trabajo perdido. El idioma que dejes vacío hereda el del idioma predeterminado.",
+  "admin.site.fromCatalog": "Este valor viene de tu catálogo -lang-dir; lo que escribas aquí no surte efecto."
  }
 }

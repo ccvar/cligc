@@ -316,14 +316,21 @@
   "admin.tokens.selectNone": "全不选",
   "admin.site.basicSection": "站点信息",
   "admin.site.name": "站点名称",
-  "admin.site.nameHint": "出现在导航、标签页标题和分享卡片上。留空则用启动参数 -title 的值。",
+  "admin.site.nameHint": "出现在导航、标签页标题和分享卡片上。",
   "admin.site.desc": "站点描述",
-  "admin.site.descHint": "首页的一句话介绍，同时作为 meta description 和分享卡片的描述。控制在 60 个汉字以内——超出的部分搜索结果里会被截断。留空则用 -desc。多语言站要按语言区分的话，在 -lang-dir 的目录里放 site.title / site.description。",
+  "admin.site.descHint": "首页的一句话介绍，同时作为 meta description 和分享卡片的描述。控制在 60 个汉字以内——超出的部分搜索结果里会被截断。",
   "admin.cats.desc": "描述",
   "admin.cats.descHint": "板块页的 meta description。板块页没有正文可以自动截取摘要，不写就只能拿站点描述凑。",
   "admin.cats.drag": "拖动排序",
   "admin.cats.saveOrder": "保存顺序",
-  "admin.cats.orderHint": "拖动行首的手柄调整顺序，改完点保存。"
+  "admin.cats.orderHint": "拖动行首的手柄调整顺序，改完点保存。",
+  "admin.site.langSection": "语言",
+  "admin.site.langHint": "勾上的语言才对外提供：出现在切换器里、进 hreflang 和 sitemap。没勾的语言路径直接 404——留着一个内容为空的列表页被爬到，比不提供这个语言更糟。默认语言不能关闭。后台界面语言不受这里影响。",
+  "admin.site.langNotReady": "翻译完成度不足 80%，暂不可选",
+  "admin.site.langDefault": "默认语言",
+  "admin.site.langEmpty": "还没有内容",
+  "admin.site.copyHint": "每个语言各存一份。<title> 和 meta description 直接进搜索结果，英文版挂着中文标题等于白做。某个语言留空就回退到默认语言那一份。",
+  "admin.site.fromCatalog": "这一项由 -lang-dir 词表提供，在这里填的不生效。"
  },
  "name": "中文"
 }

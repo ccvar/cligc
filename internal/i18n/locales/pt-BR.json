@@ -334,13 +334,20 @@
   "admin.tokens.selectNone": "Limpar",
   "admin.site.basicSection": "Site",
   "admin.site.name": "Nome do site",
-  "admin.site.nameHint": "Aparece no cabeçalho, na aba do navegador e nos cartões de compartilhamento. Em branco, vale o -title.",
+  "admin.site.nameHint": "Aparece no cabeçalho, na aba do navegador e nos cartões de compartilhamento.",
   "admin.site.desc": "Descrição do site",
-  "admin.site.descHint": "A frase de apresentação da home; também é a meta description e o texto dos cartões de compartilhamento. Fique abaixo de uns 155 caracteres — os buscadores cortam o resto. Em branco, vale o -desc. Para versões por idioma, ponha site.title / site.description no catálogo do -lang-dir.",
+  "admin.site.descHint": "A apresentação de uma linha da página inicial, que também serve de meta description e de descrição nos cartões de compartilhamento. Fique em cerca de 155 caracteres — os resultados de busca cortam o resto.",
   "admin.cats.desc": "Descrição",
   "admin.cats.descHint": "A meta description da página da seção. Essas páginas não têm texto para resumir, então sem isso vale a descrição do site.",
   "admin.cats.drag": "Reordenar",
   "admin.cats.saveOrder": "Salvar a ordem",
-  "admin.cats.orderHint": "Arraste a alça no início da linha e depois salve."
+  "admin.cats.orderHint": "Arraste a alça no início da linha e depois salve.",
+  "admin.site.langSection": "Idiomas",
+  "admin.site.langHint": "Só os idiomas marcados são oferecidos publicamente: aparecem no seletor, no hreflang e no sitemap. Prefixos não marcados devolvem 404 — deixar uma página de listagem vazia rastreável é pior do que não oferecer o idioma. O idioma padrão não pode ser desligado. O idioma da administração não depende disto.",
+  "admin.site.langNotReady": "Menos de 80% traduzido, ainda não selecionável",
+  "admin.site.langDefault": "Padrão",
+  "admin.site.langEmpty": "Ainda sem conteúdo",
+  "admin.site.copyHint": "Guardado por idioma. O <title> e a meta description vão direto para os resultados de busca, então uma página em inglês com título em português é trabalho jogado fora. O idioma que ficar vazio herda o do idioma padrão.",
+  "admin.site.fromCatalog": "Este valor vem do seu catálogo -lang-dir; o que você digitar aqui não tem efeito."
  }
 }

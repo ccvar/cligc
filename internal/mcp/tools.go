@@ -42,8 +42,9 @@ func toolDefs() []tool {
 		{
 			Name: "whoami",
 			Description: "Show which account this connection acts as, what this token is allowed to do " +
-				"(scopes), and how many posts may still be published today. Call this first when you are " +
-				"unsure whether you are allowed to publish.",
+				"(scopes), how many posts may still be published today, and which languages the site " +
+				"publishes (site_langs). Call this first when you are unsure whether you are allowed to " +
+				"publish, or before writing in a language other than the site's primary one.",
 			InputSchema: obj(map[string]any{}),
 		},
 		{
@@ -56,7 +57,7 @@ func toolDefs() []tool {
 				"scope":  map[string]any{"type": "string", "enum": []string{"mine", "site"}, "description": "'mine' (default) searches this account's posts in any status, including drafts. 'site' searches published posts by all authors."},
 				"status": map[string]any{"type": "string", "enum": []string{"draft", "published", "archived"}, "description": "Restrict to one status. Only meaningful with scope=mine."},
 				"tag":    str("Restrict to one tag slug."),
-				"lang":   map[string]any{"type": "string", "enum": []string{"zh-Hans", "en"}, "description": "Restrict to one language. Omit to search across all languages — useful for finding the original of a post you are translating."},
+				"lang":   str("Restrict to one language, as a BCP 47 code. Omit to search across all languages — useful for finding the original of a post you are translating."),
 				"limit":  num("Max results, default 20, cap 50."),
 				"offset": num("Skip this many results, for paging."),
 			}),
@@ -91,7 +92,7 @@ func toolDefs() []tool {
 				"slug":            str("Optional URL slug. Non-ASCII titles fall back to a random short code, so pass an ASCII slug if the URL matters."),
 				"source":          map[string]any{"type": "string", "enum": []string{"human", "ai-assisted", "ai-generated"}, "description": "Who wrote it. Default 'ai-assisted' when created through this tool."},
 				"canonical_url":   str("Set only if this text was first published elsewhere. Points search engines at the original and marks this copy noindex."),
-				"lang":            map[string]any{"type": "string", "enum": []string{"zh-Hans", "en"}, "description": "Language of THIS post. Defaults to the site's primary language."},
+				"lang":            str("Language of THIS post, as a BCP 47 code. Defaults to the site's primary language. Use only a code listed in whoami's site_langs: any other language has no public pages, so the post would be published to a URL that 404s. An unrecognised code is silently filed under the primary language."),
 				"translation_of":  num("Numeric id of the same content in another language. Links the two so the site emits reciprocal hreflang. Use this when writing a translation."),
 				"idempotency_key": str("Stable key for this creation, e.g. a hash of the title plus date. Strongly recommended."),
 			}, "title", "body_md"),
@@ -110,7 +111,7 @@ func toolDefs() []tool {
 				"source":        map[string]any{"type": "string", "enum": []string{"human", "ai-assisted", "ai-generated"}},
 				"canonical_url": str("External original URL, or empty string to clear."),
 				"indexable":     bl("Whether search engines may index this page."),
-				"lang":          map[string]any{"type": "string", "enum": []string{"zh-Hans", "en"}},
+				"lang":          str("Language of this post, as a BCP 47 code. Same rule as create_draft: stick to whoami's site_langs."),
 			}, "id"),
 		},
 		{

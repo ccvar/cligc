@@ -938,7 +938,7 @@ func TestSettingsCacheIsPerDB(t *testing.T) {
 	if err := a.SaveSettings(ctx, SiteSettings{}); err != nil {
 		t.Fatal(err)
 	}
-	if got := a.Settings(ctx); got != (SiteSettings{}) {
+	if got := a.Settings(ctx); got.GA4ID != "" || got.IndexNowKey != "" {
 		t.Errorf("清空后仍留着 %+v", got)
 	}
 }

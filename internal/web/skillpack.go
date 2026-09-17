@@ -84,7 +84,7 @@ type apiOp struct {
 func openAPISpec(base, title string) string {
 	ops := []apiOp{
 		{"get", "/me", "whoami", "当前身份、权限和今日剩余发布配额", "posts:read"},
-		{"patch", "/me", "updateProfile", "修改显示名、主页地址、简介（不含邮箱和密码）", "site:admin"},
+		{"patch", "/me", "updateProfile", "修改显示名、作者页地址、简介（不含邮箱和密码）", "site:admin"},
 		{"get", "/posts", "listPosts", "列出文章，只返回标题和摘要", "posts:read"},
 		{"get", "/posts/{id}", "getPost", "取一篇文章，含正文", "posts:read"},
 		{"post", "/posts", "createDraft", "新建草稿。始终是草稿，不会上线", "posts:write"},
@@ -111,8 +111,8 @@ func openAPISpec(base, title string) string {
 		{"get", "/tokens", "listTokens", "列出本账号的 API token", "tokens:manage"},
 		{"post", "/tokens", "createToken", "签发新 token，不得超出当前 token 自身的权限", "tokens:manage"},
 		{"post", "/tokens/{id}/revoke", "revokeToken", "吊销 token，立即生效", "tokens:manage"},
-		{"get", "/site", "getSite", "读取站点接入设置", "site:admin"},
-		{"patch", "/site", "updateSite", "修改验证码、GA4、IndexNow 密钥", "site:admin"},
+		{"get", "/site", "getSite", "读取站点设置：对外语言、各语言的站名和描述、验证码、GA4、IndexNow", "site:admin"},
+		{"patch", "/site", "updateSite", "修改对外语言（enabled_langs）、各语言的站名和描述、验证码、GA4、IndexNow 密钥", "site:admin"},
 	}
 
 	paths := map[string]map[string]any{}

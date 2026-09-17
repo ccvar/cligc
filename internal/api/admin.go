@@ -218,13 +218,16 @@ func (s *Server) handleGetSite(w http.ResponseWriter, r *http.Request) {
 func (s *Server) handlePatchSite(w http.ResponseWriter, r *http.Request) {
 	cur := s.db.Settings(r.Context())
 	var in struct {
-		SiteTitle       *string `json:"site_title"`
-		SiteDescription *string `json:"site_description"`
-		CommentsEnabled *bool   `json:"comments_enabled"`
-		GoogleVerify    *string `json:"google_verify"`
-		BingVerify      *string `json:"bing_verify"`
-		GA4ID           *string `json:"ga4_id"`
-		IndexNowKey     *string `json:"indexnow_key"`
+		// 按语言的站名/描述：{"en":"My Blog"}。给了哪几个语言就只改哪几个，
+		// 没给的保持不变——整份覆盖的话，只想改英文标题的调用会把中文的抹掉。
+		SiteTitles      map[string]string `json:"site_titles"`
+		SiteDescs       map[string]string `json:"site_descriptions"`
+		EnabledLangs    *[]string         `json:"enabled_langs"`
+		CommentsEnabled *bool             `json:"comments_enabled"`
+		GoogleVerify    *string           `json:"google_verify"`
+		BingVerify      *string           `json:"bing_verify"`
+		GA4ID           *string           `json:"ga4_id"`
+		IndexNowKey     *string           `json:"indexnow_key"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&in); err != nil {
 		badRequest(w, "body must be JSON")
@@ -232,11 +235,14 @@ func (s *Server) handlePatchSite(w http.ResponseWriter, r *http.Request) {
 	}
 	// 指针语义：没给的字段保持不变，给了空串才是清空。全量覆盖的话，
 	// 一次只想改 GA4 的调用会把另外三项一并抹掉。
-	if in.SiteTitle != nil {
-		cur.SiteTitle = *in.SiteTitle
+	for code, v := range in.SiteTitles {
+		cur.SiteTitles[code] = v
 	}
-	if in.SiteDescription != nil {
-		cur.SiteDescription = *in.SiteDescription
+	for code, v := range in.SiteDescs {
+		cur.SiteDescs[code] = v
+	}
+	if in.EnabledLangs != nil {
+		cur.EnabledLangs = *in.EnabledLangs
 	}
 	if in.CommentsEnabled != nil {
 		cur.CommentsEnabled = *in.CommentsEnabled
@@ -265,13 +271,14 @@ func (s *Server) handlePatchSite(w http.ResponseWriter, r *http.Request) {
 
 func siteDTO(st store.SiteSettings) map[string]any {
 	return map[string]any{
-		"site_title":       st.SiteTitle,
-		"site_description": st.SiteDescription,
-		"comments_enabled": st.CommentsEnabled,
-		"google_verify":    st.GoogleVerify,
-		"bing_verify":      st.BingVerify,
-		"ga4_id":           st.GA4ID,
-		"indexnow_key":     st.IndexNowKey,
+		"site_titles":       st.SiteTitles,
+		"site_descriptions": st.SiteDescs,
+		"enabled_langs":     st.EnabledLangs,
+		"comments_enabled":  st.CommentsEnabled,
+		"google_verify":     st.GoogleVerify,
+		"bing_verify":       st.BingVerify,
+		"ga4_id":            st.GA4ID,
+		"indexnow_key":      st.IndexNowKey,
 		"notes": map[string]string{
 			"ga4_id":       "Setting this loads a third-party script and opens script-src to googletagmanager.com. Leave empty for no third-party requests.",
 			"indexnow_key": "8-128 hex chars. Notifies Bing/Yandex/Seznam/Naver on every change. Google does not support IndexNow.",

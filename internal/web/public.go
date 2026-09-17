@@ -40,15 +40,23 @@ func (s *Server) handleIndex(w http.ResponseWriter, r *http.Request) {
 	if pg > 1 {
 		canonical = s.cfg.BaseURL + langPath(lang, r.URL.RequestURI())
 	}
+	// 各语言首页互为版本，只在第一页发 hreflang：/en/?page=2 不是
+	// /?page=2 的译版——两边文章数不一样，第 2 页装的根本不是同一批。
+	var alts []Alternate
+	if pg == 1 {
+		alts = s.homeAlternates(r.Context(), lang)
+	}
+
 	s.render(w, r, "index.html", page{
 		// 不在这里填 Desc：站点描述可以按语言覆盖，而那个解析发生在 render()
 		// 里。直接读 cfg.Description 会绕过覆盖，英文页拿到中文描述。
 		// 留空即可，render() 会退回解析后的 SiteDesc。
 		// 第 2 页及以后不进索引：分页页面本身没有独立价值，
 		// 却会稀释整站的抓取预算。文章本体在 sitemap 里，不会漏收。
-		NoIndex:   pg > 1,
-		Canonical: canonical,
-		Prev:      prev, Next: next,
+		NoIndex:    pg > 1,
+		Canonical:  canonical,
+		Alternates: alts,
+		Prev:       prev, Next: next,
 		Data: map[string]any{
 			"Posts": posts, "Total": total, "Page": pg, "Featured": featured,
 			"RailTags": s.railTags(r),

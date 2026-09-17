@@ -7,6 +7,7 @@
 package web
 
 import (
+	"context"
 	"crypto/sha256"
 	"embed"
 	"encoding/hex"
@@ -339,24 +340,29 @@ func (s *Server) render(w http.ResponseWriter, r *http.Request, name string, p p
 	// 站名和描述的优先级：词表 > 后台设置 > 命令行。
 	//
 	//   命令行  部署时定的兜底值
-	//   后台    站长随时改的，多数站只用到这一层
-	//   词表    多语言站按语言区分时用，放自己的 -lang-dir 目录
+	//   后台    站长随时改的，按语言各存一份，多数站只用到这一层
+	//   词表    把文案跟着翻译一起进版本库时用，放自己的 -lang-dir 目录
 	//
 	// 内置词表**不带** site.title / site.description。带了的话，站长在
 	// 后台里输入的名字会被内置文案无声盖掉——那是在替别人的站做主。
+	//
+	// 词表这一层用 Own 而不是 T：T 会回退到默认语言，于是 -lang-dir 里
+	// 只给中文写了一条 site.title，英文页就会拿中文那条去盖掉站长在后台
+	// 填的英文站名。词表只应该管它自己声明了的那个语言。
+	def := i18n.Default().Code
 	siteTitle := s.cfg.Title
-	if v := p.Settings.SiteTitle; v != "" {
+	if v := p.Settings.SiteTitleFor(lang.Code, def); v != "" {
 		siteTitle = v
 	}
-	if v := i18n.T(lang.Code, "site.title"); v != "site.title" {
+	if v, ok := i18n.Own(lang.Code, "site.title"); ok {
 		siteTitle = v
 	}
 
 	p.SiteDesc = s.cfg.Description
-	if v := p.Settings.SiteDescription; v != "" {
+	if v := p.Settings.SiteDescFor(lang.Code, def); v != "" {
 		p.SiteDesc = v
 	}
-	if v := i18n.T(lang.Code, "site.description"); v != "site.description" {
+	if v, ok := i18n.Own(lang.Code, "site.description"); ok {
 		p.SiteDesc = v
 	}
 
@@ -367,7 +373,7 @@ func (s *Server) render(w http.ResponseWriter, r *http.Request, name string, p p
 		p.MultiAuthor = n > 1
 	}
 	// 语言前缀已经被 WithLang 剥掉，这里看到的是规范化后的路径。
-	p.IsAdmin = strings.HasPrefix(r.URL.Path, "/admin") || strings.HasPrefix(r.URL.Path, "/login")
+	p.IsAdmin = isAdminPath(r.URL.Path)
 	if !p.IsAdmin {
 		p.Categories, _ = s.db.ListCategories(r.Context())
 	}
@@ -434,7 +440,9 @@ func (s *Server) funcs(lang i18n.Lang) template.FuncMap {
 		"lang": func() i18n.Lang { return lang },
 		// langs 只给**达标**的语言：用户选了一种语言结果看到一半中文，
 		// 比根本没有那个选项更糟——他会以为站点坏了。
-		"langs": i18n.ReadyLanguages,
+		// 切换器只列站点实际提供的语言。ReadyLanguages 是"翻译够完整"，
+		// 和"这个站对外提供它"是两回事——前者是词表的属性，后者是站长的决定。
+		"langs": func() []i18n.Lang { return s.enabledLangs(context.Background()) },
 
 		"itoa":     strconv.Itoa,
 		"itoa64":   func(n int64) string { return strconv.FormatInt(n, 10) },
@@ -697,6 +705,30 @@ func (s *Server) alternatesFor(p *store.Post, others []store.Post) []Alternate {
 	return out
 }
 
+// homeAlternates 给首页算各语言版本，用来发 hreflang。
+//
+// 文章页的对应关系靠译文分组一篇篇连起来，首页没有那种东西——但它的
+// 对应关系是定义出来的：站点开了哪些语言，那几个首页就互为版本。
+//
+// 这件事直到语言由站长显式声明才成立。在那之前"站上有哪些语言"是词表
+// 的属性，照着发 hreflang 等于替十种语言的空列表页做担保。
+func (s *Server) homeAlternates(ctx context.Context, cur i18n.Lang) []Alternate {
+	langs := s.enabledLangs(ctx)
+	if len(langs) < 2 {
+		return nil // 只有一种语言，没有"其它版本"这回事
+	}
+	out := make([]Alternate, 0, len(langs))
+	for _, l := range langs {
+		out = append(out, Alternate{
+			Code: l.Code,
+			URL:  s.cfg.BaseURL + langPath(l, "/"),
+			Name: l.Name,
+			Self: l.Code == cur.Code,
+		})
+	}
+	return out
+}
+
 // xDefaultOf 返回 hreflang="x-default" 该指向哪一版：默认语言的那一版，
 // 没有就退回第一个。
 func xDefaultOf(alts []Alternate) string {
@@ -723,4 +755,21 @@ func splitBrand(title string) (bool, string) {
 		return false, t
 	}
 	return true, strings.TrimSpace(t[len(brand):])
+}
+
+// enabledLangs 返回站点实际对外提供的语言，按词表顺序。
+//
+// 和 i18n.ReadyLanguages() 的区别：那个回答"翻译够不够完整"，是词表的属性；
+// 这个回答"站长愿不愿意对外提供"，是站点的决定。只写中文的站不该给 11 种
+// 语言都发 hreflang——那些页面是空的。
+func (s *Server) enabledLangs(ctx context.Context) []i18n.Lang {
+	st := s.db.Settings(ctx)
+	def := i18n.Default().Code
+	var out []i18n.Lang
+	for _, l := range i18n.ReadyLanguages() {
+		if st.LangEnabled(l.Code, def) {
+			out = append(out, l)
+		}
+	}
+	return out
 }

@@ -527,3 +527,59 @@ tr.dragging { opacity: 0.4; }
 /* 分类表的描述列吃掉剩余宽度，别让名称和地址被挤扁 */
 table.data.cats td input[name="description"] { width: 100%; }
 table.data.cats td { white-space: normal; }
+
+/* --- 站点设置：语言 --- */
+
+/* 一行一个语言，名字旁边就是那个语种已发布多少篇。勾上一个语言等于
+   对搜索引擎宣称"这里有这个语种"，得让人在勾之前看见那边有没有东西。 */
+.langpick { margin-bottom: var(--s5); }
+.langpick .check { padding-block: 0.45rem; }
+.langrow-text { display: flex; align-items: baseline; gap: 0.4rem; flex-wrap: wrap; }
+.langrow-name { font-weight: 500; }
+.langrow-code {
+  font-family: var(--font-mono);
+  font-size: var(--t-xs);
+  color: var(--muted);
+  background: var(--surface-2);
+  border-radius: var(--radius);
+  padding: 0.05rem 0.3rem;
+}
+.langrow .hint { margin: 0; font-size: var(--t-xs); }
+.langrow.muted { opacity: 0.5; }
+.langpick .check:has(input:disabled) { cursor: default; }
+.langpick .check:has(input:disabled):hover { background: none; }
+
+/* 每个语言一份站名和描述。左边一道竖线把它们和上下文分开——
+   不然一连串同名字段叠在一起，分不清哪两个是一组。 */
+.sitecopy {
+  border-inline-start: 2px solid var(--line);
+  padding-inline-start: var(--s4);
+  margin-bottom: var(--s5);
+}
+.sitecopy .field:last-child { margin-bottom: 0; }
+.sitecopy-head {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0 0 var(--s3);
+  font-size: var(--t-sm);
+  font-weight: 600;
+}
+.sitecopy-head code {
+  font-size: var(--t-xs);
+  font-weight: 400;
+  color: var(--muted);
+}
+/* 没启用的语言不占地方。服务端按已保存的状态渲染这个属性，
+   所以关掉 JS 也说得通：勾上、保存，它就出现了。 */
+.sitecopy[data-langoff] { display: none; }
+
+/* 只开一种语言时把这层外壳收起来：只有一份文案，"这一份是哪个语言的"
+   不是问题，竖线和小标题就只是噪音。开第二种语言的那一刻它们才出现，
+   也正是那一刻才需要它们。 */
+.settings:not([data-multilang]) .multilang-only { display: none; }
+.settings:not([data-multilang]) .sitecopy {
+  border-inline-start: none;
+  padding-inline-start: 0;
+}
+.settings:not([data-multilang]) .sitecopy-head { display: none; }

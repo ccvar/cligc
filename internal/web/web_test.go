@@ -43,6 +43,19 @@ type env struct {
 
 func setup(t *testing.T) *env { return setupWithQueueCap(t, 0) }
 
+// enableLangs 打开这些语言的对外提供。
+//
+// 默认只开默认语言——不这么设的话，站上明明只写中文，却会给 11 种语言
+// 都发 hreflang，而那些页面是空的。验多语言行为的测试要自己先开。
+func (e *env) enableLangs(codes ...string) {
+	e.t.Helper()
+	st := e.db.Settings(e.t.Context())
+	st.EnabledLangs = codes
+	if err := e.db.SaveSettings(e.t.Context(), st); err != nil {
+		e.t.Fatal(err)
+	}
+}
+
 // setupWithQueueCap 起一个待审队列上限可控的实例。0 沿用默认值。
 func setupWithQueueCap(t *testing.T, queueCap int) *env {
 	t.Helper()
@@ -803,6 +816,8 @@ func TestHreflangIsReciprocalAndSelfCanonical(t *testing.T) {
 	ctx := t.Context()
 	a := store.Actor{UserID: e.uid, IsAdmin: true}
 
+	e.enableLangs("en")
+
 	zh := e.publish("中文版", "正文内容", nil)
 	en, err := e.db.CreatePost(ctx, store.Actor{UserID: e.uid},
 		store.CreatePostInput{Title: "English", BodyMD: "Body", Lang: "en", Slug: "english"})
@@ -844,6 +859,7 @@ func TestHreflangIsReciprocalAndSelfCanonical(t *testing.T) {
 // TestLanguageRouting 语言前缀的路由行为。
 func TestLanguageRouting(t *testing.T) {
 	e := setup(t)
+	e.enableLangs("en")
 	if code, body := e.get("/"); code != 200 || !strings.Contains(body, `<html lang="zh-Hans"`) {
 		t.Errorf("默认语言 = %d，html lang 不对", code)
 	}
@@ -867,6 +883,7 @@ func TestLanguageRouting(t *testing.T) {
 // 对搜索引擎是语言信号混乱。
 func TestListsAreLanguageScoped(t *testing.T) {
 	e := setup(t)
+	e.enableLangs("en")
 	ctx := t.Context()
 	zh := e.publish("只有中文的文章", "正文", nil)
 	en, _ := e.db.CreatePost(ctx, store.Actor{UserID: e.uid},
@@ -956,6 +973,7 @@ func TestCommentRateLimitMatchesItsMessage(t *testing.T) {
 // 而同一行的其他文字已经是阿拉伯语了。
 func TestNonDefaultUILanguageHasNoChineseChrome(t *testing.T) {
 	e := setup(t)
+	e.enableLangs("en")
 	e.publish("A Latin Title", "Body text.", nil)
 
 	sid, _, err := e.db.CreateSession(t.Context(), e.uid)
@@ -1038,6 +1056,14 @@ func TestBrandCompanionRespectsOperatorTitle(t *testing.T) {
 			MediaRoot: dir, PerPage: 5})
 		if err != nil {
 			db.Close()
+			t.Fatal(err)
+		}
+		// 这个测试要逐个语言看品牌副名，先把它们全开。
+		st := db.Settings(t.Context())
+		for _, l := range i18n.ReadyLanguages() {
+			st.EnabledLangs = append(st.EnabledLangs, l.Code)
+		}
+		if err := db.SaveSettings(t.Context(), st); err != nil {
 			t.Fatal(err)
 		}
 		mux := http.NewServeMux()
@@ -1455,8 +1481,11 @@ func TestSiteTitlePrecedence(t *testing.T) {
 		t.Error("没设置过时，应当用命令行的值")
 	}
 	// 后台设置要能盖过命令行
+	def := i18n.Default().Code
 	if err := db.SaveSettings(t.Context(), store.SiteSettings{
-		CommentsEnabled: true, SiteTitle: "后台设的名字", SiteDescription: "后台设的描述",
+		CommentsEnabled: true,
+		SiteTitles:      map[string]string{def: "后台设的名字"},
+		SiteDescs:       map[string]string{def: "后台设的描述"},
 	}); err != nil {
 		t.Fatal(err)
 	}

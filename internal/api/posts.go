@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"errors"
 	"io"
 	"net/http"
@@ -8,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"cligc.com/internal/i18n"
 	"cligc.com/internal/store"
 )
 
@@ -83,7 +85,25 @@ func (s *Server) handleMe(w http.ResponseWriter, r *http.Request) {
 		"daily_publish_cap": s.cfg.DailyPublishCap,
 		"publish_remaining": remaining(s.cfg.DailyPublishCap, used),
 		"base_url":          strings.TrimRight(s.cfg.BaseURL, "/"),
+		// 站点对外提供哪些语言。放在 whoami 里是因为这是 AI 的第一次调用，
+		// 而"我能给哪些语种写东西"正是它接下来要做的判断——没开的语言，
+		// 翻译好、发布了，读者点进去仍然是 404。site 那个接口要 site:admin，
+		// 多数 token 没有，光靠它这条信息就到不了写文章的那一端。
+		"site_langs": s.publicLangs(r.Context()),
 	})
+}
+
+// publicLangs 返回站点对外提供的语言代码，默认语言排在第一个。
+func (s *Server) publicLangs(ctx context.Context) []string {
+	st := s.db.Settings(ctx)
+	def := i18n.Default().Code
+	out := []string{def}
+	for _, l := range i18n.ReadyLanguages() {
+		if l.Code != def && st.LangEnabled(l.Code, def) {
+			out = append(out, l.Code)
+		}
+	}
+	return out
 }
 
 func remaining(cap, used int) any {

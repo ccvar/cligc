@@ -330,14 +330,21 @@
   "admin.tokens.selectNone": "Clear",
   "admin.site.basicSection": "Site",
   "admin.site.name": "Site name",
-  "admin.site.nameHint": "Shown in the header, the browser tab and share cards. Empty falls back to the -title flag.",
+  "admin.site.nameHint": "Shown in the header, the browser tab and share cards.",
   "admin.site.desc": "Site description",
-  "admin.site.descHint": "The one-line introduction on the home page, also used as the meta description and in share cards. Keep it under about 155 characters — search results cut off the rest. Empty falls back to -desc. For per-language versions, put site.title / site.description in your -lang-dir catalogue.",
+  "admin.site.descHint": "The one-line introduction on the home page, also used as the meta description and in share cards. Keep it under about 155 characters — search results cut off the rest.",
   "admin.cats.desc": "Description",
   "admin.cats.descHint": "The section page's meta description. Section pages have no body text to summarise, so without this they fall back to the site description.",
   "admin.cats.drag": "Reorder",
   "admin.cats.saveOrder": "Save order",
-  "admin.cats.orderHint": "Drag the handle at the start of a row, then save."
+  "admin.cats.orderHint": "Drag the handle at the start of a row, then save.",
+  "admin.site.langSection": "Languages",
+  "admin.site.langHint": "Only ticked languages are offered publicly: they appear in the switcher, in hreflang and in the sitemap. Unticked prefixes return 404 — leaving an empty listing page crawlable is worse than not offering the language at all. The default language cannot be turned off. The admin's own interface language is unaffected.",
+  "admin.site.langNotReady": "Less than 80% translated, not selectable yet",
+  "admin.site.langDefault": "Default",
+  "admin.site.langEmpty": "No content yet",
+  "admin.site.copyHint": "Stored per language. The <title> and meta description go straight into search results, so an English page carrying a Chinese title is wasted work. Leave a language empty and it falls back to the default one.",
+  "admin.site.fromCatalog": "This one comes from your -lang-dir catalogue; what you type here has no effect."
  },
  "name": "English"
 }

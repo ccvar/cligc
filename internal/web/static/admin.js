@@ -150,4 +150,26 @@
     // 两者本来就一致——不需要再同步一遍。
     form.addEventListener('submit', () => { touched = false; });
   }
+
+  // 5. 站点设置：勾上一个语言，它那份站名/描述当场出现。
+  //    这两块在页面上隔着一段距离，不联动的话得先保存一次、等页面
+  //    重画出来才能填——而人是在勾的那一刻想填的。
+  for (const cb of document.querySelectorAll('[data-langpick]')) {
+    cb.addEventListener('change', () => {
+      const box = document.querySelector(`[data-langblock="${cb.value}"]`);
+      if (box && !cb.checked) box.setAttribute('data-langoff', '');
+      if (box && cb.checked) {
+        box.removeAttribute('data-langoff');
+        const first = box.querySelector('input:not([disabled])');
+        if (first) first.focus({ preventScroll: true });
+        box.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      }
+      // 只剩一种语言时，"这一份是哪个语言的"不是问题，那层小标题和
+      // 竖线就只是噪音。勾上第二种的那一刻才让它们出现。
+      const form = cb.closest('form');
+      if (!form) return;
+      const on = form.querySelectorAll('.sitecopy:not([data-langoff])').length;
+      form.toggleAttribute('data-multilang', on > 1);
+    });
+  }
 })();

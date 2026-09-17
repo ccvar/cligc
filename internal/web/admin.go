@@ -435,7 +435,56 @@ func (s *Server) handleRevokeToken(w http.ResponseWriter, r *http.Request) {
 // 这几项刻意不做成命令行参数：它们是从各家网页控制台复制粘贴过来的凭据，
 // 拿到就贴一次。要求站长开 shell 改启动参数再重启服务，这个流程本身就不对。
 // 而 -addr / -db / -base-url 那些留在参数里——那是部署时定死的东西。
+// 表单里按语言的站名/描述字段名，如 site_title:en。
+const (
+	fieldSiteTitle = "site_title:"
+	fieldSiteDesc  = "site_desc:"
+)
+
 func (s *Server) handleSite(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	st := s.db.Settings(ctx)
+	def := i18n.Default().Code
+
+	// 每个语言已发布多少篇。勾上一个语言等于告诉搜索引擎"这里有德语版"，
+	// 所以得让人在勾之前看见那边到底有没有东西。
+	counts, err := s.db.CountByLang(ctx)
+	if err != nil {
+		counts = map[string]int{}
+	}
+
+	// -lang-dir 词表自带 site.title 的语言，这两格填了也不生效。
+	// 与其让人填完保存完再纳闷为什么页面没变，不如把话写在格子底下。
+	titleFixed, descFixed := map[string]bool{}, map[string]bool{}
+	for _, l := range i18n.Languages() {
+		if _, ok := i18n.Own(l.Code, "site.title"); ok {
+			titleFixed[l.Code] = true
+		}
+		if _, ok := i18n.Own(l.Code, "site.description"); ok {
+			descFixed[l.Code] = true
+		}
+	}
+
+	// 只开一种语言的站是常态。给它套上"每个语言一份"的那层外壳——
+	// 语言小标题、左侧竖线、按语言分组的说明——是拿多语言站的代价
+	// 去收多语言站的好处，而它一分好处也用不上。
+	multi := 0
+	for _, l := range i18n.ReadyLanguages() {
+		if st.LangEnabled(l.Code, def) {
+			multi++
+		}
+	}
+
+	// 占位符显示"留空会变成什么"：其他语言回退到默认语言那份，
+	// 默认语言自己回退到命令行的 -title / -desc。
+	fbTitle, fbDesc := s.cfg.Title, s.cfg.Description
+	if v := st.SiteTitles[def]; v != "" {
+		fbTitle = v
+	}
+	if v := st.SiteDescs[def]; v != "" {
+		fbDesc = v
+	}
+
 	s.render(w, r, "admin_site.html", page{
 		Title: s.tr(r, "admin.site.title"), NoIndex: true, Wide: true, AdminTab: "site",
 		Flash: r.URL.Query().Get("flash"),
@@ -445,9 +494,14 @@ func (s *Server) handleSite(w http.ResponseWriter, r *http.Request) {
 			// 命令行关死时把勾选框置灰：让人点一个点了不生效的开关，
 			// 比不给这个开关更糟。
 			"CommentsHardOff": !s.cfg.CommentsEnabled,
-			// 占位符显示命令行给的兜底值，让人一眼看出"留空会变成什么"
-			"FallbackTitle": s.cfg.Title,
-			"FallbackDesc":  s.cfg.Description,
+			"Langs":           i18n.Languages(),
+			"DefaultLang":     def,
+			"MultiLang":       multi > 1,
+			"Counts":          counts,
+			"TitleFixed":      titleFixed,
+			"DescFixed":       descFixed,
+			"FallbackTitle":   fbTitle,
+			"FallbackDesc":    fbDesc,
 		},
 	})
 }
@@ -457,14 +511,38 @@ func (s *Server) handleSiteSave(w http.ResponseWriter, r *http.Request) {
 		s.renderError(w, r, http.StatusBadRequest, s.tr(r, "err.badForm"))
 		return
 	}
+	cur := s.db.Settings(r.Context())
+
+	titles, descs := map[string]string{}, map[string]string{}
+	for _, l := range i18n.Languages() {
+		titles[l.Code] = r.FormValue(fieldSiteTitle + l.Code)
+		descs[l.Code] = r.FormValue(fieldSiteDesc + l.Code)
+	}
+
+	// 表单只能表达"翻译达标的语言"——没达标的根本没渲染成勾选框。
+	// 直接按表单覆盖的话，一个因为词表改动暂时掉到 80% 以下的语言，
+	// 会在下一次随便保存点别的设置时被无声关掉。
+	enabled := r.Form["langs"]
+	inForm := map[string]bool{}
+	for _, l := range i18n.ReadyLanguages() {
+		inForm[l.Code] = true
+	}
+	for _, code := range cur.EnabledLangs {
+		if !inForm[code] {
+			enabled = append(enabled, code)
+		}
+	}
+
 	in := store.SiteSettings{
+		SiteTitles:      titles,
+		SiteDescs:       descs,
+		EnabledLangs:    enabled,
 		CommentsEnabled: r.FormValue("comments") != "",
-		SiteTitle:       r.FormValue("site_title"),
-		SiteDescription: r.FormValue("site_desc"),
-		GoogleVerify:    r.FormValue("google_verify"),
-		BingVerify:      r.FormValue("bing_verify"),
-		GA4ID:           r.FormValue("ga4_id"),
-		IndexNowKey:     r.FormValue("indexnow_key"),
+
+		GoogleVerify: r.FormValue("google_verify"),
+		BingVerify:   r.FormValue("bing_verify"),
+		GA4ID:        r.FormValue("ga4_id"),
+		IndexNowKey:  r.FormValue("indexnow_key"),
 	}
 	if err := s.db.SaveSettings(r.Context(), in); err != nil {
 		redirectFlash(w, r, "/admin/site", s.tr(r, "flash.saveFailed", err.Error()))

@@ -334,13 +334,20 @@
   "admin.tokens.selectNone": "Tout décocher",
   "admin.site.basicSection": "Site",
   "admin.site.name": "Nom du site",
-  "admin.site.nameHint": "Apparaît dans l’en-tête, l’onglet du navigateur et les cartes de partage. Vide, c’est la valeur de -title qui sert.",
+  "admin.site.nameHint": "Apparaît dans l’en-tête, dans l’onglet du navigateur et sur les cartes de partage.",
   "admin.site.desc": "Description du site",
-  "admin.site.descHint": "La phrase de présentation en page d’accueil, qui sert aussi de meta description et de texte pour les cartes de partage. Reste sous ~155 caractères : les moteurs coupent le reste. Vide, c’est -desc. Pour des versions par langue, mets site.title / site.description dans ton catalogue -lang-dir.",
+  "admin.site.descHint": "La présentation en une ligne de la page d’accueil, qui sert aussi de meta description et de description sur les cartes de partage. Reste sous les 155 caractères environ : les résultats de recherche coupent le reste.",
   "admin.cats.desc": "Description",
   "admin.cats.descHint": "La meta description de la page de rubrique. Ces pages n’ont pas de texte à résumer : sans ça, c’est la description du site qui sert.",
   "admin.cats.drag": "Réordonner",
   "admin.cats.saveOrder": "Enregistrer l’ordre",
-  "admin.cats.orderHint": "Fais glisser la poignée en début de ligne, puis enregistre."
+  "admin.cats.orderHint": "Fais glisser la poignée en début de ligne, puis enregistre.",
+  "admin.site.langSection": "Langues",
+  "admin.site.langHint": "Seules les langues cochées sont proposées au public : elles apparaissent dans le sélecteur, dans les hreflang et dans le sitemap. Les préfixes décochés renvoient 404 — laisser une page de liste vide accessible aux robots est pire que de ne pas proposer la langue. La langue par défaut ne peut pas être désactivée. La langue de l’administration n’est pas concernée.",
+  "admin.site.langNotReady": "Moins de 80 % traduit, pas encore sélectionnable",
+  "admin.site.langDefault": "Par défaut",
+  "admin.site.langEmpty": "Pas encore de contenu",
+  "admin.site.copyHint": "Enregistré par langue. Le <title> et la meta description partent tels quels dans les résultats de recherche : une page anglaise coiffée d’un titre français, c’est du travail perdu. Une langue laissée vide reprend celle de la langue par défaut.",
+  "admin.site.fromCatalog": "Cette valeur vient de ton catalogue -lang-dir ; ce que tu saisis ici n’a aucun effet."
  }
 }
