@@ -85,18 +85,22 @@ else
   # /dev/tty 存在不代表读得到：容器和某些 CI 里它可打开、但一读就是 EOF。
   # 所以不靠 [ -r /dev/tty ] 判断，直接试着读一次，读不到就转为给指引——
   # 装到一半因为"没人回答提问"而失败，是最糟的一种失败。
-  say "创建管理员账号"
+  # 先探一次能不能用。[ -w /dev/tty ] 不够：容器里它可能存在、权限也对，
+  # 一打开却是 "Device not configured"，而那条报错是重定向本身发出的，
+  # 挂在命令上的 2>/dev/null 拦不住。
   EMAIL=''
-  if [ -w /dev/tty ]; then
-    printf '  邮箱（直接回车跳过建号）: ' > /dev/tty 2>/dev/null || true
-    read -r EMAIL < /dev/tty 2>/dev/null || EMAIL=''
+  if { : > /dev/tty; } 2>/dev/null; then
+    say "创建管理员账号"
+    printf '  邮箱（直接回车跳过）: ' > /dev/tty
+    read -r EMAIL < /dev/tty || EMAIL=''
+    if [ -n "$EMAIL" ]; then
+      printf '  显示名: ' > /dev/tty
+      read -r NAME < /dev/tty || NAME=''
+      [ -n "$NAME" ] || NAME="$EMAIL"
+      ( cd "$DIR" && ./cligc user add -db data/cligc.db -email "$EMAIL" -name "$NAME" -admin )
+    fi
   fi
-  if [ -n "$EMAIL" ]; then
-    printf '  显示名: ' > /dev/tty
-    read -r NAME < /dev/tty 2>/dev/null || NAME=''
-    [ -n "$NAME" ] || NAME="$EMAIL"
-    ( cd "$DIR" && ./cligc user add -db data/cligc.db -email "$EMAIL" -name "$NAME" -admin )
-  else
+  if [ -z "$EMAIL" ]; then
     say "跳过建账号"
     info "需要时运行： cd $DIR && ./cligc user add -email you@example.com -name 你的名字 -admin"
   fi
