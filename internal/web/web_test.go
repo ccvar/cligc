@@ -252,7 +252,7 @@ func TestRobotsAndFeed(t *testing.T) {
 
 func TestAdminRequiresLogin(t *testing.T) {
 	e := setup(t)
-	for _, p := range []string{"/admin", "/admin/new", "/admin/tokens"} {
+	for _, p := range []string{"/admin", "/admin/new", "/admin/site"} {
 		w := httptest.NewRecorder()
 		e.h.ServeHTTP(w, httptest.NewRequest("GET", p, nil))
 		if w.Code != http.StatusSeeOther {
@@ -681,7 +681,7 @@ func TestIconButtonsHaveAccessibleNames(t *testing.T) {
 	// 匹配一个 icon-btn 开标签的全部属性
 	tag := regexp.MustCompile(`<(?:a|button)[^>]*class="icon-btn[^"]*"[^>]*>`)
 	total := 0
-	for _, path := range []string{"/admin", "/admin/comments?status=all", "/admin/tokens", "/admin/media"} {
+	for _, path := range []string{"/admin", "/admin/comments?status=all", "/admin/site", "/admin/media"} {
 		r := httptest.NewRequest("GET", path, nil)
 		r.AddCookie(&http.Cookie{Name: sessionCookie, Value: sid})
 		w := httptest.NewRecorder()
@@ -982,7 +982,7 @@ func TestNonDefaultUILanguageHasNoChineseChrome(t *testing.T) {
 		t.Fatal(err)
 	}
 	for _, path := range []string{"/en/admin", "/en/admin/comments", "/en/admin/media",
-		"/en/admin/tokens", "/en/admin/site", "/en/admin/categories", "/en/search?q=latin"} {
+		"/en/admin/site", "/en/admin/categories", "/en/search?q=latin"} {
 		r := httptest.NewRequest("GET", path, nil)
 		r.AddCookie(&http.Cookie{Name: sessionCookie, Value: sid})
 		w := httptest.NewRecorder()

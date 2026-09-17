@@ -242,3 +242,45 @@ func TestCategoryRowSaveKeepsOrder(t *testing.T) {
 		t.Errorf("排序被改成了 %d，表单里没有这个字段就不该动它", got.Sort)
 	}
 }
+
+// TestSettingsPageAbsorbedTabs 账号和 API Token 并进了设置页，
+// 老地址保留为跳转——它们可能在书签里。
+func TestSettingsPageAbsorbedTabs(t *testing.T) {
+	e := setup(t)
+
+	for _, old := range []string{"/admin/profile", "/admin/tokens"} {
+		if code, _ := e.authGet(old); code != http.StatusFound {
+			t.Errorf("%s = %d，想要 302 跳到 /admin/site", old, code)
+		}
+	}
+
+	_, body := e.authGet("/admin/site")
+	for _, want := range []string{
+		`name="section" value="langs"`, // 语言
+		`name="ga4_id"`,                // 统计
+		`action="/admin/profile"`,      // 资料
+		`action="/admin/tokens"`,       // 新建 token 的表单
+	} {
+		if !strings.Contains(body, want) {
+			t.Errorf("设置页上少了 %s", want)
+		}
+	}
+	// 顶部导航里不该再有这两个标签
+	for _, gone := range []string{`href="/admin/profile"`, `href="/admin/tokens"`} {
+		if strings.Contains(body, gone) {
+			t.Errorf("导航里还留着 %s", gone)
+		}
+	}
+
+	// 建一个 token 要回到设置页，并且把明文带回来显示一次
+	w := e.post("/admin/tokens", url.Values{
+		"name": {"t1"}, "days": {"7"}, "scopes": {"posts:read"},
+	}, true)
+	if w.Code != http.StatusSeeOther {
+		t.Fatalf("创建 token = %d", w.Code)
+	}
+	loc := w.Header().Get("Location")
+	if !strings.HasPrefix(loc, "/admin/site?") || !strings.Contains(loc, "token=") {
+		t.Errorf("创建后跳到了 %q，想要 /admin/site?token=…", loc)
+	}
+}

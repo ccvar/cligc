@@ -1011,13 +1011,22 @@ form.inline { display: inline; }
   top: calc(100% + 4px);
   inset-inline-end: 0;
   z-index: 40;
-  min-width: 12rem;
+  /* 按内容收。原先是写死的 12rem，于是「管理 / 退出」这种两项两字的
+     菜单会拉出一大片空白。min-width 留一点，免得只有一项时窄得像误触；
+     max-width 挡住某一项特别长时顶出屏幕。 */
+  width: max-content;
+  min-width: 7rem;
+  max-width: min(20rem, 88vw);
   padding: 0.25rem;
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
 }
+/* 语言菜单里有过滤框和一长串语种名，按内容收会把过滤框挤成一条。
+   它保留原来的下限。 */
+.lang-menu .menu-pop { min-width: 12rem; }
+
 .lang-filter {
   width: 100%;
   margin-bottom: 0.25rem;

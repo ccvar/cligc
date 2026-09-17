@@ -440,24 +440,10 @@ func (s *Server) handleAdminDelete(w http.ResponseWriter, r *http.Request) {
 
 // --- API token 管理 ---
 
+// handleTokens 把老的 Token 页并进了站点设置。保留这个路由是因为它
+// 可能存在于书签里——直接 404 会让人以为功能被删了。
 func (s *Server) handleTokens(w http.ResponseWriter, r *http.Request) {
-	u := userFrom(r.Context())
-	tokens, err := s.db.ListTokens(r.Context(), u.ID)
-	if err != nil {
-		s.renderError(w, r, http.StatusInternalServerError, s.tr(r, "err.internal"))
-		return
-	}
-	s.render(w, r, "admin_tokens.html", page{
-		Title: "API Token", NoIndex: true, Wide: true, AdminTab: "tokens", Flash: r.URL.Query().Get("flash"),
-		Data: map[string]any{
-			"Tokens":    tokens,
-			"AllScopes": store.AllScopes, "ScopeGroups": store.ScopeGroups,
-			// 新建成功后把明文带回来显示一次。放在查询串里是刻意的取舍：
-			// 它只会出现在这一次跳转里，不落库、不进模板缓存；代价是可能
-			// 进浏览器历史，所以页面上明确提示"只显示这一次"。
-			"NewToken": r.URL.Query().Get("token"),
-		},
-	})
+	http.Redirect(w, r, langPath(LangFrom(r.Context()), "/admin/site"), http.StatusFound)
 }
 
 func (s *Server) handleCreateToken(w http.ResponseWriter, r *http.Request) {
@@ -475,10 +461,10 @@ func (s *Server) handleCreateToken(w http.ResponseWriter, r *http.Request) {
 	plain, _, err := s.db.CreateToken(r.Context(), u.ID,
 		r.FormValue("name"), r.Form["scopes"], ttl)
 	if err != nil {
-		redirectFlash(w, r, "/admin/tokens", s.tr(r, "admin.tokens.createFailed", err.Error()))
+		redirectFlash(w, r, "/admin/site", s.tr(r, "admin.tokens.createFailed", err.Error()))
 		return
 	}
-	http.Redirect(w, r, "/admin/tokens?"+url.Values{"token": {plain}}.Encode(), http.StatusSeeOther)
+	http.Redirect(w, r, "/admin/site?"+url.Values{"token": {plain}}.Encode(), http.StatusSeeOther)
 }
 
 func (s *Server) handleRevokeToken(w http.ResponseWriter, r *http.Request) {
@@ -488,10 +474,10 @@ func (s *Server) handleRevokeToken(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err := s.db.RevokeToken(r.Context(), userFrom(r.Context()).ID, id); err != nil {
-		redirectFlash(w, r, "/admin/tokens", s.tr(r, "flash.opFailed", err.Error()))
+		redirectFlash(w, r, "/admin/site", s.tr(r, "flash.opFailed", err.Error()))
 		return
 	}
-	redirectFlash(w, r, "/admin/tokens", s.tr(r, "admin.tokens.revokeDone"))
+	redirectFlash(w, r, "/admin/site", s.tr(r, "admin.tokens.revokeDone"))
 }
 
 // handleSite 是站点接入设置页：搜索平台验证、IndexNow、GA4。
@@ -550,6 +536,10 @@ func (s *Server) handleSite(w http.ResponseWriter, r *http.Request) {
 
 	// 占位符显示"留空会变成什么"：其他语言回退到默认语言那份，
 	// 默认语言自己回退到命令行的 -title / -desc。
+	// 取不到就当没有 token：这一页主要是站点设置，token 那一块挂了
+	// 不该让整页打不开。
+	tokens, _ := s.db.ListTokens(ctx, userFrom(ctx).ID)
+
 	fbTitle, fbDesc := s.cfg.Title, s.cfg.Description
 	if v := st.SiteTitles[def]; v != "" {
 		fbTitle = v
@@ -580,6 +570,14 @@ func (s *Server) handleSite(w http.ResponseWriter, r *http.Request) {
 			"FallbackTitle": fbTitle,
 			"FallbackDesc":  fbDesc,
 			"Me":            userFrom(ctx),
+			// API Token 原先是一个独占的标签页。它和站点设置的区别只是
+			// "给程序用的钥匙"和"给人看的设置"，而两者都是"这个站怎么配"。
+			"Tokens":      tokens,
+			"ScopeGroups": store.ScopeGroups,
+			// 新建成功后把明文带回来显示一次。放在查询串里是刻意的取舍：
+			// 它只会出现在这一次跳转里，不落库、不进模板缓存；代价是可能
+			// 进浏览器历史，所以页面上明确提示"只显示这一次"。
+			"NewToken": r.URL.Query().Get("token"),
 		},
 	})
 }
