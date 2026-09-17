@@ -167,7 +167,6 @@ func immutable(h http.Handler) http.Handler {
 
 // Routes 注册所有页面路由。
 func (s *Server) Routes(mux *http.ServeMux) {
-	cfg := s.cfg
 	// 兜底：未匹配的路径走样式化的 404 页，而不是 net/http 的裸文本。
 	// Go 1.22 起 ServeMux 按"最具体的模式优先"匹配，"/" 是最不具体的，
 	// 所以它不会抢走下面任何一条路由。
@@ -236,13 +235,23 @@ func (s *Server) Routes(mux *http.ServeMux) {
 	mux.Handle("POST /admin/profile", a(s.handleProfileSave))
 	mux.Handle("POST /admin/profile/password", a(s.handleChangePassword))
 
-	// 评论路由只在开放评论时注册。关掉开关后这些路径直接走 404，
-	// 而不是"表单藏起来但接口还在"——后者等于没关。
-	if cfg.CommentsEnabled {
-		mux.HandleFunc("POST /p/{slug}/comments", s.handleCommentSubmit)
-		mux.Handle("GET /admin/comments", a(s.handleCommentQueue))
-		mux.Handle("POST /admin/comments/{id}/{action}", a(s.handleCommentModerate))
-	}
+	// 评论开关现在在后台设置页，随时可改，所以路由必须常驻，由 handler
+	// 在每次请求时查一遍设置。
+	//
+	// 原先是"关掉就不注册路由"。那样更干净，但代价是改一次开关要重启服务。
+	// 换成常驻之后，关掉的效果不变——handler 第一件事就是查开关然后 404，
+	// 而不是"表单藏起来但接口还在"。有测试守着这一条。
+	mux.HandleFunc("POST /p/{slug}/comments", s.handleCommentSubmit)
+	mux.Handle("GET /admin/comments", a(s.handleCommentQueue))
+	mux.Handle("POST /admin/comments/{id}/{action}", a(s.handleCommentModerate))
+}
+
+// commentsOn 报告当前是否开放评论。
+//
+// 命令行的 -comments=false 是一道硬开关：设了它，后台里怎么勾都打不开。
+// 这样容器化部署可以把"这个站不要评论"焊死，而不是寄希望于没人去点。
+func (s *Server) commentsOn(r *http.Request) bool {
+	return s.cfg.CommentsEnabled && s.db.Settings(r.Context()).CommentsEnabled
 }
 
 // page 是每个页面都要填的公共部分。
@@ -277,6 +286,9 @@ type page struct {
 
 	// Categories 是公开页的板块导航。为空时那条导航整个不渲染。
 	Categories []store.Category
+
+	// CommentsOn 决定后台标签栏里出不出"评论"那一项。
+	CommentsOn bool
 
 	// IsAdmin 决定加载 admin.css/js 还是 site.css/js。
 	//
@@ -328,6 +340,7 @@ func (s *Server) render(w http.ResponseWriter, r *http.Request, name string, p p
 	p.SiteTitle = siteTitle
 	p.BrandMark, p.BrandText = splitBrand(siteTitle)
 	p.Settings = s.db.Settings(r.Context())
+	p.CommentsOn = s.commentsOn(r)
 	// 语言前缀已经被 WithLang 剥掉，这里看到的是规范化后的路径。
 	p.IsAdmin = strings.HasPrefix(r.URL.Path, "/admin") || strings.HasPrefix(r.URL.Path, "/login")
 	if !p.IsAdmin {
@@ -363,7 +376,7 @@ func (s *Server) render(w http.ResponseWriter, r *http.Request, name string, p p
 	if p.Canonical == "" {
 		p.Canonical = s.cfg.BaseURL + r.URL.Path
 	}
-	if p.AdminTab != "" && s.cfg.CommentsEnabled {
+	if p.AdminTab != "" && s.commentsOn(r) {
 		p.PendingComments, _ = s.db.CountComments(r.Context(), store.CommentPending)
 	}
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")

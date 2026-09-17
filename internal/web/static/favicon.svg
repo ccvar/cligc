@@ -1,8 +1,18 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="cligc">
-  <!-- 带底色的方版：favicon 画在浏览器标签栏上，而标签栏的底色随系统主题
-       和浏览器而变。不带底色的话，浅色描边在浅色标签栏上会直接消失。
-       几何与导航栏的站标同构，按比例缩小并留出圆角边距。 -->
-  <rect width="32" height="32" rx="7" fill="#14161c"/>
-  <circle cx="14.54" cy="14.54" r="7.51" fill="none" stroke="#c6c9d4" stroke-width="1.67"/>
-  <circle cx="20.8" cy="20.8" r="5" fill="#3b6bff"/>
+  <!-- 不带底板：底板在深色标签栏上会变成一个突兀的黑方块，而它本来只是
+       为了解决"浅色描边在浅色标签栏上看不见"。那个问题用 SVG 里的
+       prefers-color-scheme 直接解决更干净——描边跟着标签栏底色走。
+
+       实心圆用蓝色，两种底色下都立得住，所以不需要跟着变。
+       几何与导航栏的站标同构，按比例放大填满画布。 -->
+  <style>
+    .ring { stroke: #4a4d57; }
+    .disc { fill: #2b4acb; }
+    @media (prefers-color-scheme: dark) {
+      .ring { stroke: #c6c9d4; }
+      .disc { fill: #3b6bff; }
+    }
+  </style>
+  <circle class="ring" cx="13.5" cy="13.5" r="9.2" fill="none" stroke-width="2.6"/>
+  <circle class="disc" cx="21.6" cy="21.6" r="6.3"/>
 </svg>

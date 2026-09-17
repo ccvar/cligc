@@ -304,7 +304,16 @@
   "admin.posts.allCats": "全部分类",
   "admin.posts.uncategorized": "未分类",
   "list.catDesc": "{0} 板块下的文章",
-  "list.catHeading": "板块：{0}"
+  "list.catHeading": "板块：{0}",
+  "admin.site.commentsSection": "评论",
+  "admin.site.comments": "开放评论",
+  "admin.site.commentsHint": "关掉之后，文章页不再出现评论表单，提交接口直接 404，后台的评论标签页也会隐藏。已有的评论留在库里，重新打开就回来了。命令行的 -comments=false 是一道更硬的开关：设了它，这里勾上也打不开。",
+  "scopeGroup.content": "文章",
+  "scopeGroup.media": "媒体库",
+  "scopeGroup.comments": "评论",
+  "scopeGroup.admin": "站点管理",
+  "admin.tokens.selectAll": "全选",
+  "admin.tokens.selectNone": "全不选"
  },
  "name": "中文"
 }

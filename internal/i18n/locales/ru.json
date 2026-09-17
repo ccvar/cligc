@@ -337,6 +337,15 @@
   "admin.posts.allCats": "Все разделы",
   "admin.posts.uncategorized": "Без раздела",
   "list.catDesc": "Статьи раздела {0}",
-  "list.catHeading": "Раздел: {0}"
+  "list.catHeading": "Раздел: {0}",
+  "admin.site.commentsSection": "Комментарии",
+  "admin.site.comments": "Принимать комментарии",
+  "admin.site.commentsHint": "Выключено — форма пропадает со страниц, адрес отправки отвечает 404, вкладка в панели скрыта. Уже написанные комментарии остаются в базе и вернутся, когда включите обратно. Ключ -comments=false жёстче: пока он задан, эта галочка ничего не меняет.",
+  "scopeGroup.content": "Статьи",
+  "scopeGroup.media": "Медиа",
+  "scopeGroup.comments": "Комментарии",
+  "scopeGroup.admin": "Управление сайтом",
+  "admin.tokens.selectAll": "Выбрать всё",
+  "admin.tokens.selectNone": "Снять всё"
  }
 }

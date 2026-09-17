@@ -351,6 +351,15 @@
   "admin.posts.allCats": "كل الأقسام",
   "admin.posts.uncategorized": "غير مصنّف",
   "list.catDesc": "مقالات قسم {0}",
-  "list.catHeading": "القسم: {0}"
+  "list.catHeading": "القسم: {0}",
+  "admin.site.commentsSection": "التعليقات",
+  "admin.site.comments": "استقبال التعليقات",
+  "admin.site.commentsHint": "عند الإيقاف يختفي النموذج من المقالات، ويردّ عنوان الإرسال بـ 404، ويُخفى تبويب الإدارة. أما التعليقات الموجودة فتبقى في قاعدة البيانات وتعود عند إعادة التشغيل. والخيار ‎-comments=false‎ مفتاح أشدّ: ما دام مضبوطًا فلن يغيّر تفعيل هذا الخيار شيئًا.",
+  "scopeGroup.content": "المقالات",
+  "scopeGroup.media": "الوسائط",
+  "scopeGroup.comments": "التعليقات",
+  "scopeGroup.admin": "إدارة الموقع",
+  "admin.tokens.selectAll": "تحديد الكل",
+  "admin.tokens.selectNone": "إلغاء التحديد"
  }
 }

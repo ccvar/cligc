@@ -473,3 +473,27 @@ input[type="file"]::file-selector-button {
   font-size: var(--t-base);
 }
 .queue-actions { display: flex; flex-wrap: wrap; gap: var(--s2); align-items: center; }
+
+/* --- 权限分组 ------------------------------------------------------------ */
+
+/* 八个平铺的勾选框要人逐条读完才能判断"这个客户端到底要什么"。
+   按作用对象分成四组之后，大多数情况下只需要看一组。 */
+.scope-group + .scope-group {
+  margin-top: var(--s3);
+  padding-top: var(--s3);
+  border-top: 1px solid var(--line);
+}
+.scope-group-label {
+  margin: 0 0 0.35rem;
+  font-size: var(--t-xs);
+  font-weight: 600;
+  color: var(--faint);
+  letter-spacing: 0.04em;
+}
+/* 全选按钮跟在 legend 里，和标题同一行 */
+[data-scopes] legend {
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+  width: 100%;
+}

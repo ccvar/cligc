@@ -317,6 +317,15 @@
   "admin.posts.allCats": "全部分類",
   "admin.posts.uncategorized": "未分類",
   "list.catDesc": "{0} 板塊底下的文章",
-  "list.catHeading": "板塊：{0}"
+  "list.catHeading": "板塊：{0}",
+  "admin.site.commentsSection": "留言",
+  "admin.site.comments": "開放留言",
+  "admin.site.commentsHint": "關掉之後，文章頁不再出現留言表單，提交介面直接 404，後台的留言標籤頁也會隱藏。已有的留言留在資料庫裡，重新打開就回來了。命令列的 -comments=false 是更硬的開關：設了它，這裡勾上也打不開。",
+  "scopeGroup.content": "文章",
+  "scopeGroup.media": "媒體庫",
+  "scopeGroup.comments": "留言",
+  "scopeGroup.admin": "站點管理",
+  "admin.tokens.selectAll": "全選",
+  "admin.tokens.selectNone": "全不選"
  }
 }

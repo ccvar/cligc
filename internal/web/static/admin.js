@@ -78,4 +78,27 @@
       input.dispatchEvent(new Event('input', { bubbles: true }));
     });
   }
+
+  // 权限全选 / 全不选
+  //
+  // 一个按钮而不是两个：八个框里勾了三个时，"全选"和"全不选"并排放着，
+  // 人还得先判断该点哪个。按当前状态切换，永远只有一个决定要做。
+  for (const fs of document.querySelectorAll('[data-scopes]')) {
+    const btn = fs.querySelector('[data-scope-toggle]');
+    const boxes = [...fs.querySelectorAll('input[type="checkbox"]')];
+    if (!btn || !boxes.length) continue;
+
+    const sync = () => {
+      const allOn = boxes.every((b) => b.checked);
+      btn.textContent = allOn ? btn.dataset.none : btn.dataset.all;
+      return allOn;
+    };
+    btn.addEventListener('click', () => {
+      const allOn = boxes.every((b) => b.checked);
+      for (const b of boxes) b.checked = !allOn;
+      sync();
+    });
+    fs.addEventListener('change', sync);
+    sync();
+  }
 })();

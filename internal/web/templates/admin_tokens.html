@@ -38,9 +38,20 @@
     </label>
   </div>
 
-  <fieldset>
-    <legend>{{t "admin.tokens.scopes"}}</legend>
-    {{range $.Data.AllScopes}}
+  <fieldset data-scopes>
+    <legend>
+      {{t "admin.tokens.scopes"}}
+      {{/* 全选/全不选是一个按钮：八个框里勾了三个时，"全选"和"全不选"
+           并排放着，人还得先判断该点哪个。一个按钮按当前状态切换，
+           永远只有一个决定要做。 */}}
+      <button type="button" class="btn small" data-scope-toggle
+              data-all="{{t "admin.tokens.selectAll"}}"
+              data-none="{{t "admin.tokens.selectNone"}}">{{t "admin.tokens.selectAll"}}</button>
+    </legend>
+    {{range $.Data.ScopeGroups}}
+    <div class="scope-group">
+      <p class="scope-group-label">{{t (printf "scopeGroup.%s" .Key)}}</p>
+      {{range .Scopes}}
       <label class="check scope-row">
         <input type="checkbox" name="scopes" value="{{.}}">
         <span>
@@ -50,6 +61,8 @@
           {{if eq . "comments:moderate"}}<span class="warn">{{t "admin.tokens.moderateWarn"}}</span>{{end}}
         </span>
       </label>
+      {{end}}
+    </div>
     {{end}}
   </fieldset>
 

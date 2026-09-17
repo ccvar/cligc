@@ -87,7 +87,7 @@ func (s *Server) handlePost(w http.ResponseWriter, r *http.Request) {
 	// 只有已发布的文章才加载评论：草稿和归档没有公开评论入口，
 	// 多一次查询没有意义。
 	var comments []store.Comment
-	if s.cfg.CommentsEnabled && p.IsPublished() {
+	if s.commentsOn(r) && p.IsPublished() {
 		if comments, err = s.db.CommentsForPost(r.Context(), p.ID); err != nil {
 			// 评论读不出来不该让整篇文章 500，降级成"没有评论"即可
 			comments = nil
@@ -109,7 +109,7 @@ func (s *Server) handlePost(w http.ResponseWriter, r *http.Request) {
 		Flash:      r.URL.Query().Get("flash"),
 		Data: map[string]any{
 			"Post": p, "Comments": comments,
-			"CommentsEnabled": s.cfg.CommentsEnabled && p.IsPublished(),
+			"CommentsEnabled": s.commentsOn(r) && p.IsPublished(),
 		},
 	})
 }

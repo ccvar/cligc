@@ -65,6 +65,23 @@ var AllScopes = []string{
 	ScopeCommentsModerate, ScopeTokensManage, ScopeSiteAdmin,
 }
 
+// ScopeGroup 是勾选界面上的一组权限。
+//
+// 分组不是为了好看：八个平铺的勾选框要人逐条读完才能判断"这个客户端
+// 到底要什么"，而按"它能碰什么"分成四组之后，大多数情况下只需要看一组。
+type ScopeGroup struct {
+	Key    string // 文案 key 的后缀，见 scopeGroup.* 词条
+	Scopes []string
+}
+
+// ScopeGroups 按作用对象分组。顺序即界面顺序：从最常用到最少用。
+var ScopeGroups = []ScopeGroup{
+	{"content", []string{ScopePostsRead, ScopePostsWrite, ScopePostsPublish}},
+	{"media", []string{ScopeMediaWrite, ScopeMediaDelete}},
+	{"comments", []string{ScopeCommentsModerate}},
+	{"admin", []string{ScopeTokensManage, ScopeSiteAdmin}},
+}
+
 // User 是作者/管理员。
 type User struct {
 	ID        int64

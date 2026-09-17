@@ -19,7 +19,7 @@ const (
 // 垃圾场，而搜索引擎把"疏于管理的 UGC 垃圾"明确列为站点级降权理由——
 // 这不是洁癖，是整站的排名风险。
 func (s *Server) handleCommentSubmit(w http.ResponseWriter, r *http.Request) {
-	if !s.cfg.CommentsEnabled {
+	if !s.commentsOn(r) {
 		s.renderError(w, r, http.StatusNotFound, s.tr(r, "err.commentsOff"))
 		return
 	}
@@ -99,7 +99,7 @@ func (s *Server) renderCommentError(w http.ResponseWriter, r *http.Request, p *s
 		Flash:     msg,
 		Data: map[string]any{
 			"Post": p, "Comments": comments,
-			"CommentsEnabled": s.cfg.CommentsEnabled,
+			"CommentsEnabled": s.commentsOn(r),
 			"DraftBody":       r.FormValue("body"),
 			"DraftName":       r.FormValue("author_name"),
 		},

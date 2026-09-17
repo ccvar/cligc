@@ -317,6 +317,15 @@
   "admin.posts.allCats": "모든 분류",
   "admin.posts.uncategorized": "미분류",
   "list.catDesc": "{0} 섹션의 글",
-  "list.catHeading": "섹션: {0}"
+  "list.catHeading": "섹션: {0}",
+  "admin.site.commentsSection": "댓글",
+  "admin.site.comments": "댓글 받기",
+  "admin.site.commentsHint": "끄면 글에서 양식이 사라지고 제출 주소는 404를 돌려주며 관리 탭도 숨겨집니다. 기존 댓글은 데이터베이스에 남아 있다가 다시 켜면 돌아옵니다. 명령줄의 -comments=false는 더 강한 스위치라, 그게 설정돼 있으면 여기를 켜도 열리지 않습니다.",
+  "scopeGroup.content": "글",
+  "scopeGroup.media": "미디어",
+  "scopeGroup.comments": "댓글",
+  "scopeGroup.admin": "사이트 관리",
+  "admin.tokens.selectAll": "전체 선택",
+  "admin.tokens.selectNone": "선택 해제"
  }
 }

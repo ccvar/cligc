@@ -323,6 +323,15 @@
   "admin.posts.allCats": "Alle Kategorien",
   "admin.posts.uncategorized": "Nicht zugeordnet",
   "list.catDesc": "Beiträge im Bereich {0}",
-  "list.catHeading": "Bereich: {0}"
+  "list.catHeading": "Bereich: {0}",
+  "admin.site.commentsSection": "Kommentare",
+  "admin.site.comments": "Kommentare annehmen",
+  "admin.site.commentsHint": "Ausgeschaltet verschwindet das Formular aus den Beiträgen, die Sende-URL antwortet mit 404 und der Verwaltungsreiter ist ausgeblendet. Vorhandene Kommentare bleiben in der Datenbank und kommen beim Wiedereinschalten zurück. Die Option -comments=false ist der härtere Schalter: solange sie gesetzt ist, ändert dieses Häkchen nichts.",
+  "scopeGroup.content": "Beiträge",
+  "scopeGroup.media": "Medien",
+  "scopeGroup.comments": "Kommentare",
+  "scopeGroup.admin": "Verwaltung",
+  "admin.tokens.selectAll": "Alle auswählen",
+  "admin.tokens.selectNone": "Auswahl aufheben"
  }
 }

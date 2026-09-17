@@ -317,6 +317,15 @@
   "admin.posts.allCats": "すべてのカテゴリ",
   "admin.posts.uncategorized": "未分類",
   "list.catDesc": "{0} の記事",
-  "list.catHeading": "セクション：{0}"
+  "list.catHeading": "セクション：{0}",
+  "admin.site.commentsSection": "コメント",
+  "admin.site.comments": "コメントを受け付ける",
+  "admin.site.commentsHint": "オフにすると記事からフォームが消え、送信先は 404 を返し、管理画面のタブも隠れます。既存のコメントはデータベースに残り、オンに戻せばそのまま戻ります。コマンドラインの -comments=false はより強い指定で、それが設定されている間はここをオンにしても開きません。",
+  "scopeGroup.content": "記事",
+  "scopeGroup.media": "メディア",
+  "scopeGroup.comments": "コメント",
+  "scopeGroup.admin": "サイト管理",
+  "admin.tokens.selectAll": "すべて選択",
+  "admin.tokens.selectNone": "選択を解除"
  }
 }

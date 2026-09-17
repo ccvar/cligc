@@ -1021,3 +1021,30 @@ func TestCategoryIsNavigationNotOwnership(t *testing.T) {
 		t.Errorf("删分类后应有 2 篇未分类，实际 %d", n)
 	}
 }
+
+// TestCommentsDefaultOnForUntouchedSite 守住"从没进过设置页的站，评论是开的"。
+//
+// 库里存的是反过来的 comments_off，就是为了这一条：布尔值直接存的话，
+// 一个从没保存过设置的站会读到空值 → false → 评论被悄悄关掉，而站长
+// 什么也没做过。默认值不能依赖"有人来设置过"。
+func TestCommentsDefaultOnForUntouchedSite(t *testing.T) {
+	ctx := context.Background()
+	d := open(t)
+	if !d.Settings(ctx).CommentsEnabled {
+		t.Fatal("全新的站评论默认是关的 —— 站长什么都没做就被关掉了")
+	}
+	// 显式关掉要能存住
+	if err := d.SaveSettings(ctx, SiteSettings{CommentsEnabled: false}); err != nil {
+		t.Fatal(err)
+	}
+	if d.Settings(ctx).CommentsEnabled {
+		t.Error("关掉之后又变回开了")
+	}
+	// 再开回来
+	if err := d.SaveSettings(ctx, SiteSettings{CommentsEnabled: true}); err != nil {
+		t.Fatal(err)
+	}
+	if !d.Settings(ctx).CommentsEnabled {
+		t.Error("开回来失败了")
+	}
+}

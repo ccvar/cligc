@@ -218,10 +218,11 @@ func (s *Server) handleGetSite(w http.ResponseWriter, r *http.Request) {
 func (s *Server) handlePatchSite(w http.ResponseWriter, r *http.Request) {
 	cur := s.db.Settings(r.Context())
 	var in struct {
-		GoogleVerify *string `json:"google_verify"`
-		BingVerify   *string `json:"bing_verify"`
-		GA4ID        *string `json:"ga4_id"`
-		IndexNowKey  *string `json:"indexnow_key"`
+		CommentsEnabled *bool   `json:"comments_enabled"`
+		GoogleVerify    *string `json:"google_verify"`
+		BingVerify      *string `json:"bing_verify"`
+		GA4ID           *string `json:"ga4_id"`
+		IndexNowKey     *string `json:"indexnow_key"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&in); err != nil {
 		badRequest(w, "body must be JSON")
@@ -229,6 +230,9 @@ func (s *Server) handlePatchSite(w http.ResponseWriter, r *http.Request) {
 	}
 	// 指针语义：没给的字段保持不变，给了空串才是清空。全量覆盖的话，
 	// 一次只想改 GA4 的调用会把另外三项一并抹掉。
+	if in.CommentsEnabled != nil {
+		cur.CommentsEnabled = *in.CommentsEnabled
+	}
 	if in.GoogleVerify != nil {
 		cur.GoogleVerify = *in.GoogleVerify
 	}
@@ -253,10 +257,11 @@ func (s *Server) handlePatchSite(w http.ResponseWriter, r *http.Request) {
 
 func siteDTO(st store.SiteSettings) map[string]any {
 	return map[string]any{
-		"google_verify": st.GoogleVerify,
-		"bing_verify":   st.BingVerify,
-		"ga4_id":        st.GA4ID,
-		"indexnow_key":  st.IndexNowKey,
+		"comments_enabled": st.CommentsEnabled,
+		"google_verify":    st.GoogleVerify,
+		"bing_verify":      st.BingVerify,
+		"ga4_id":           st.GA4ID,
+		"indexnow_key":     st.IndexNowKey,
 		"notes": map[string]string{
 			"ga4_id":       "Setting this loads a third-party script and opens script-src to googletagmanager.com. Leave empty for no third-party requests.",
 			"indexnow_key": "8-128 hex chars. Notifies Bing/Yandex/Seznam/Naver on every change. Google does not support IndexNow.",

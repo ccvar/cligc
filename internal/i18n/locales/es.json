@@ -323,6 +323,15 @@
   "admin.posts.allCats": "Todas las categorías",
   "admin.posts.uncategorized": "Sin clasificar",
   "list.catDesc": "Artículos de {0}",
-  "list.catHeading": "Sección: {0}"
+  "list.catHeading": "Sección: {0}",
+  "admin.site.commentsSection": "Comentarios",
+  "admin.site.comments": "Aceptar comentarios",
+  "admin.site.commentsHint": "Desactivado, el formulario desaparece de los artículos, el endpoint devuelve 404 y la pestaña de administración se oculta. Los comentarios existentes siguen en la base de datos y vuelven al reactivarlo. La opción -comments=false es un interruptor más duro: con ella puesta, marcar esta casilla no cambia nada.",
+  "scopeGroup.content": "Artículos",
+  "scopeGroup.media": "Medios",
+  "scopeGroup.comments": "Comentarios",
+  "scopeGroup.admin": "Administración",
+  "admin.tokens.selectAll": "Seleccionar todo",
+  "admin.tokens.selectNone": "Ninguno"
  }
 }

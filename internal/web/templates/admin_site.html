@@ -43,6 +43,15 @@
     </span>
   </label>
 
+  <h2 class="section-title">{{t "admin.site.commentsSection"}}</h2>
+
+  <label class="check">
+    <input type="checkbox" name="comments" value="1" {{if $s.CommentsEnabled}}checked{{end}}
+           {{if not $d.CommentsHardOff}}{{else}}disabled{{end}}>
+    <span>{{t "admin.site.comments"}}</span>
+  </label>
+  <p class="hint">{{t "admin.site.commentsHint"}}</p>
+
   <h2 class="section-title">{{t "admin.site.analyticsSection"}}</h2>
 
   <label class="field">

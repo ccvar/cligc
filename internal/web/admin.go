@@ -387,7 +387,7 @@ func (s *Server) handleTokens(w http.ResponseWriter, r *http.Request) {
 		Title: "API Token", NoIndex: true, Wide: true, AdminTab: "tokens", Flash: r.URL.Query().Get("flash"),
 		Data: map[string]any{
 			"Tokens":    tokens,
-			"AllScopes": store.AllScopes,
+			"AllScopes": store.AllScopes, "ScopeGroups": store.ScopeGroups,
 			// 新建成功后把明文带回来显示一次。放在查询串里是刻意的取舍：
 			// 它只会出现在这一次跳转里，不落库、不进模板缓存；代价是可能
 			// 进浏览器历史，所以页面上明确提示"只显示这一次"。
@@ -442,6 +442,9 @@ func (s *Server) handleSite(w http.ResponseWriter, r *http.Request) {
 		Data: map[string]any{
 			"BaseURL":    s.cfg.BaseURL,
 			"KeyFileURL": s.cfg.BaseURL + indexnow.KeyPath,
+			// 命令行关死时把勾选框置灰：让人点一个点了不生效的开关，
+			// 比不给这个开关更糟。
+			"CommentsHardOff": !s.cfg.CommentsEnabled,
 		},
 	})
 }
@@ -452,10 +455,11 @@ func (s *Server) handleSiteSave(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	in := store.SiteSettings{
-		GoogleVerify: r.FormValue("google_verify"),
-		BingVerify:   r.FormValue("bing_verify"),
-		GA4ID:        r.FormValue("ga4_id"),
-		IndexNowKey:  r.FormValue("indexnow_key"),
+		CommentsEnabled: r.FormValue("comments") != "",
+		GoogleVerify:    r.FormValue("google_verify"),
+		BingVerify:      r.FormValue("bing_verify"),
+		GA4ID:           r.FormValue("ga4_id"),
+		IndexNowKey:     r.FormValue("indexnow_key"),
 	}
 	if err := s.db.SaveSettings(r.Context(), in); err != nil {
 		redirectFlash(w, r, "/admin/site", s.tr(r, "flash.saveFailed", err.Error()))

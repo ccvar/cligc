@@ -319,7 +319,16 @@
   "admin.posts.allCats": "All categories",
   "admin.posts.uncategorized": "Uncategorised",
   "list.catDesc": "Posts in {0}",
-  "list.catHeading": "Section: {0}"
+  "list.catHeading": "Section: {0}",
+  "admin.site.commentsSection": "Comments",
+  "admin.site.comments": "Accept comments",
+  "admin.site.commentsHint": "Turned off, the form disappears from posts, the submit endpoint returns 404, and the admin tab is hidden. Existing comments stay in the database and come back when you turn it on again. The -comments=false flag is a harder switch: with it set, ticking this box changes nothing.",
+  "scopeGroup.content": "Posts",
+  "scopeGroup.media": "Media",
+  "scopeGroup.comments": "Comments",
+  "scopeGroup.admin": "Site admin",
+  "admin.tokens.selectAll": "Select all",
+  "admin.tokens.selectNone": "Clear"
  },
  "name": "English"
 }

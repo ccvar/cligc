@@ -21,7 +21,7 @@
 {{define "admintabs"}}
 <nav class="admin-tabs">
   <a href="{{lurl "/admin"}}"{{if eq .AdminTab "posts"}} class="on"{{end}}>{{t "admin.tab.posts"}}</a>
-  {{if .Site.CommentsEnabled}}
+  {{if .CommentsOn}}
   <a href="{{lurl "/admin/comments"}}"{{if eq .AdminTab "comments"}} class="on"{{end}}>
     {{t "admin.tab.comments"}}{{if gt .PendingComments 0}} <span class="pill">{{.PendingComments}}</span>{{end}}
   </a>
