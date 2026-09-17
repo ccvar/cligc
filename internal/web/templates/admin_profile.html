@@ -38,11 +38,15 @@
         <span class="label">{{t "admin.profile.name"}}</span>
         <input type="text" name="name" value="{{$me.Name}}" required>
       </label>
+      {{/* 主页地址只在多作者时出现。单人站上 /u/{slug} 和首页是同一批
+           文章，署名行也不再链过去——留一个没人会走的入口只是噪音。 */}}
+      {{if $.MultiAuthor}}
       <label class="field">
         <span class="label">{{t "admin.profile.slug"}}</span>
         <input type="text" name="slug" value="{{$me.Slug}}" placeholder="{{t "admin.profile.slugPlace"}}">
         <span class="hint">{{tf "admin.profile.slugHint" (printf "<code>/u/%s</code>" $me.Slug) | safeHTML}}</span>
       </label>
+      {{end}}
       <label class="field">
         <span class="label">{{t "admin.profile.bio"}}</span>
         <textarea name="bio" rows="4" placeholder="{{t "admin.profile.bioPlace"}}">{{$me.Bio}}</textarea>

@@ -13,17 +13,17 @@
   {{if .Featured}}
   <section class="featured" aria-label="{{t "home.featured"}}">
     <p class="featured-label">{{t "home.featured"}}</p>
-    <div class="featured-lead">{{template "featured-card" index .Featured 0}}</div>
+    <div class="featured-lead">{{template "featured-card" dict "P" (index .Featured 0) "Multi" $.MultiAuthor}}</div>
     {{if gt (len .Featured) 1}}
     <div class="featured-rest">
-      {{range $i, $p := .Featured}}{{if gt $i 0}}{{template "featured-card" $p}}{{end}}{{end}}
+      {{range $i, $p := .Featured}}{{if gt $i 0}}{{template "featured-card" dict "P" $p "Multi" $.MultiAuthor}}{{end}}{{end}}
     </div>
     {{end}}
   </section>
   {{end}}
 
   {{if .Posts}}
-    <div class="post-list">{{range .Posts}}{{template "postcard" .}}{{end}}</div>
+    <div class="post-list">{{range .Posts}}{{template "postcard" dict "P" . "Multi" $.MultiAuthor}}{{end}}</div>
   {{else if not .Featured}}
     {{template "empty" dict "Big" (t "home.emptyTitle") "Hint" (t "home.emptyHint")}}
   {{end}}

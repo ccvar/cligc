@@ -291,6 +291,13 @@ type page struct {
 	// CommentsOn 决定后台标签栏里出不出"评论"那一项。
 	CommentsOn bool
 
+	// MultiAuthor 为真时，署名才链到作者页。
+	//
+	// 单人站上 /u/{slug} 列的和首页是同一批文章——对读者是一条通向
+	// 同样内容的多余链接，对搜索引擎是重复内容。所以单人站不链它，
+	// 但路由留着：已经存在的外链和书签不该因此断掉。
+	MultiAuthor bool
+
 	// IsAdmin 决定加载 admin.css/js 还是 site.css/js。
 	//
 	// 由路径推导而不是让每个 handler 自己设：靠人记得设标志的方案，
@@ -356,6 +363,9 @@ func (s *Server) render(w http.ResponseWriter, r *http.Request, name string, p p
 	p.SiteTitle = siteTitle
 	p.BrandMark, p.BrandText = splitBrand(siteTitle)
 	p.CommentsOn = s.commentsOn(r)
+	if n, err := s.db.CountUsers(r.Context()); err == nil {
+		p.MultiAuthor = n > 1
+	}
 	// 语言前缀已经被 WithLang 剥掉，这里看到的是规范化后的路径。
 	p.IsAdmin = strings.HasPrefix(r.URL.Path, "/admin") || strings.HasPrefix(r.URL.Path, "/login")
 	if !p.IsAdmin {

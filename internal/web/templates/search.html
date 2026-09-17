@@ -22,7 +22,7 @@
         {{/* TitleHTML 与 Snippet 都已在 render.Highlight 里转义，只含我们插入的 <mark> */}}
         <h2><a href="{{lurl (printf "/p/%s" .Post.Slug)}}">{{safeHTML .TitleHTML}}</a></h2>
         <p class="meta">
-          <a href="{{lurl (printf "/u/%s" .Post.AuthorSlug)}}">{{.Post.AuthorName}}</a>
+          {{if $.MultiAuthor}}<a href="{{lurl (printf "/u/%s" .Post.AuthorSlug)}}">{{.Post.AuthorName}}</a>{{else}}<span>{{.Post.AuthorName}}</span>{{end}}
           {{if .Post.PublishedAt}}<time datetime="{{rfc3339 .Post.PublishedAt.UTC}}">{{datep .Post.PublishedAt}}</time>{{end}}
           <span>{{readtime .Post.WordCount}}</span>
         </p>

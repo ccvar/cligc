@@ -163,12 +163,18 @@ func (s *Server) handleAuthor(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	prev, next := pager(langPath(lang, "/u/"+url.PathEscape(u.Slug)), nil, pg, s.cfg.PerPage, total)
+	multiAuthor := false
+	if n, err := s.db.CountUsers(r.Context()); err == nil {
+		multiAuthor = n > 1
+	}
 	s.render(w, r, "list.html", page{
 		Title: u.Name,
 		Desc:  s.tr(r, "list.authorDesc", u.Name),
 		// 空作者页是纯粹的垃圾索引项；有内容的作者页仍然是聚合页，
 		// 只在第一页允许收录。
-		NoIndex: total == 0 || pg > 1,
+		// 单人站上这一页和首页列的是同一批文章，进索引就是重复内容。
+		// 路由保留（外链不断），但不让搜索引擎收。
+		NoIndex: total == 0 || pg > 1 || !multiAuthor,
 		Prev:    prev, Next: next,
 		Data: map[string]any{"Posts": posts, "Total": total, "Page": pg,
 			"Heading": u.Name, "Bio": u.Bio, "RailTags": s.railTags(r)},

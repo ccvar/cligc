@@ -8,7 +8,7 @@
   <p class="sub">{{tn "common.count" .Total}}</p>
 </div>
 {{if .Posts}}
-  <div class="post-list">{{range .Posts}}{{template "postcard" .}}{{end}}</div>
+  <div class="post-list">{{range .Posts}}{{template "postcard" dict "P" . "Multi" $.MultiAuthor}}{{end}}</div>
 {{else}}
   {{template "empty" dict "Big" (t "list.empty")}}
 {{end}}

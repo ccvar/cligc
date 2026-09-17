@@ -14,7 +14,7 @@
         <h1>{{$p.Title}}</h1>
         <p class="meta">
           {{if $p.CategoryName}}<a class="sec-tag" href="{{lurl (printf "/c/%s" $p.CategorySlug)}}">{{$p.CategoryName}}</a>{{end}}
-          <a href="{{lurl (printf "/u/%s" $p.AuthorSlug)}}">{{$p.AuthorName}}</a>
+          {{if $.MultiAuthor}}<a href="{{lurl (printf "/u/%s" $p.AuthorSlug)}}">{{$p.AuthorName}}</a>{{else}}<span>{{$p.AuthorName}}</span>{{end}}
           {{if $p.PublishedAt}}<time datetime="{{rfc3339 $p.PublishedAt.UTC}}">{{datep $p.PublishedAt}}</time>{{end}}
           <span>{{tn "common.words" $p.WordCount}} · {{readtime $p.WordCount}}</span>
           {{if ne $p.Source "human"}}<span class="badge b-ai">{{sourceLabel $p.Source}}</span>{{end}}
