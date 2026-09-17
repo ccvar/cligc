@@ -81,19 +81,25 @@ DB="$DIR/data/cligc.db"
 if [ -f "$DB" ]; then
   say "已有数据库，跳过建账号"
   info "$DB"
-elif [ -r /dev/tty ] && [ -w /dev/tty ]; then
-  say "创建管理员账号"
-  printf '  邮箱: ' > /dev/tty
-  read -r EMAIL < /dev/tty
-  [ -n "$EMAIL" ] || die "邮箱不能为空"
-  printf '  显示名: ' > /dev/tty
-  read -r NAME < /dev/tty
-  [ -n "$NAME" ] || NAME="$EMAIL"
-  ( cd "$DIR" && ./cligc user add -db data/cligc.db -email "$EMAIL" -name "$NAME" -admin )
 else
-  # 完全无人值守（CI、容器构建）：不猜，让人自己建
-  say "没有可用的终端，跳过建账号"
-  info "装好后运行： cd $DIR && ./cligc user add -email you@example.com -name 你的名字 -admin"
+  # /dev/tty 存在不代表读得到：容器和某些 CI 里它可打开、但一读就是 EOF。
+  # 所以不靠 [ -r /dev/tty ] 判断，直接试着读一次，读不到就转为给指引——
+  # 装到一半因为"没人回答提问"而失败，是最糟的一种失败。
+  say "创建管理员账号"
+  EMAIL=''
+  if [ -w /dev/tty ]; then
+    printf '  邮箱（直接回车跳过建号）: ' > /dev/tty 2>/dev/null || true
+    read -r EMAIL < /dev/tty 2>/dev/null || EMAIL=''
+  fi
+  if [ -n "$EMAIL" ]; then
+    printf '  显示名: ' > /dev/tty
+    read -r NAME < /dev/tty 2>/dev/null || NAME=''
+    [ -n "$NAME" ] || NAME="$EMAIL"
+    ( cd "$DIR" && ./cligc user add -db data/cligc.db -email "$EMAIL" -name "$NAME" -admin )
+  else
+    say "跳过建账号"
+    info "需要时运行： cd $DIR && ./cligc user add -email you@example.com -name 你的名字 -admin"
+  fi
 fi
 
 # --- 收尾 -----------------------------------------------------------------
